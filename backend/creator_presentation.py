@@ -212,6 +212,26 @@ def cover():
         p['cover'] = {'url':'/api/creator/covers/'+name,'timestamp':now()}
     return change(update)
 
+@bp.post('/api/creator/project-link')
+def project_link():
+    from creator_links import normalize
+    value = body()
+    pid = project_id(value.get('project_id'))
+    try:
+        link = normalize(value.get('url'))
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+    def update(data):
+        if value.get('revision') != data['revision']:
+            abort(409)
+        meta = data['projects'].setdefault(pid, {})
+        if meta.get('hidden'):
+            abort(409)
+        if meta.get('link') != link:
+            meta['link'] = link
+            meta.setdefault('history', []).append({'type':'PROJECT_LINK','timestamp':now(),'source':'USER','text':'你更新了專案連結' if link else '你移除了專案連結'})
+    return change(update)
+
 @bp.post('/api/creator/cover/remove')
 def remove_cover():
     pid = project_id(body().get('project_id'))

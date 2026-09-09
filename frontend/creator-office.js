@@ -139,6 +139,7 @@
   let activeProjectIds = [],
     projectDragId = null;
   let browserStatus = { connected: false, observations: [] };
+  const playingLinks = new Map();
   const houseObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries)
@@ -174,6 +175,10 @@
       signal: AbortSignal.timeout(12000),
       ...options,
     });
+    if (r.status === 400) {
+      const error = await r.json().catch(() => null);
+      throw Error(error?.error || "輸入內容無效，請確認後再試。");
+    }
     if (!r.ok)
       throw Error(
         r.status === 409
@@ -1015,6 +1020,95 @@
       .sort((a, b) => epoch(b.timestamp) - epoch(a.timestamp))
       .slice(0, 4);
   }
+  function editProjectLink(p) {
+    const link = presentation.projects[p.project_id]?.link;
+    const d = modal(link ? "修改連結" : "設定連結");
+    const form = node("form", undefined, "co-link-form");
+    const label = node("label", "專案網址");
+    const input = node("input");
+    input.type = "text";
+    input.inputMode = "url";
+    input.autocomplete = "url";
+    input.maxLength = 4096;
+    input.placeholder = "https://… 或 YouTube 影片連結";
+    input.value = link?.url || "";
+    input.setAttribute("aria-label", "專案網址");
+    label.append(input);
+    const hint = node("p", "YouTube 影片可在封面播放；其他網址會另開分頁。", "co-muted");
+    const submit = button("儲存連結", () => {} , "co-button primary");
+    submit.type = "submit";
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (submit.disabled) return;
+      if (!input.value.trim()) {
+        input.setCustomValidity("請貼上網址；要清除已存連結，請按移除連結。");
+        input.reportValidity();
+        return;
+      }
+      submit.disabled = true;
+      if (await save("project-link", { project_id: p.project_id, url: input.value, revision: presentation.revision })) {
+        d.close();
+        toast("連結已儲存");
+      }
+      submit.disabled = false;
+    });
+    input.addEventListener("input", () => input.setCustomValidity(""));
+    form.append(label, hint, submit);
+    if (link) form.append(button("移除連結", async () => {
+      if (await save("project-link", { project_id: p.project_id, url: "", revision: presentation.revision })) {
+        d.close();
+        toast("已移除連結，封面仍保留");
+      }
+    }, "co-button quiet"));
+    d.append(form);
+    input.focus();
+  }
+  function playProjectVideo(p) {
+    const link = presentation.projects[p.project_id]?.link;
+    if (!/^[A-Za-z0-9_-]{11}$/.test(link?.youtube_id || "")) return;
+    const card = [...root.querySelectorAll(".co-project")].find(c => c.dataset.projectId === p.project_id);
+    const cover = card?.querySelector(".co-cover");
+    if (!cover) return;
+    const frame = node("iframe", undefined, "co-video-player");
+    const params = new URLSearchParams({ autoplay: "1", playsinline: "1", rel: "0", start: String(link.start || 0) });
+    frame.src = "https://www.youtube-nocookie.com/embed/" + link.youtube_id + "?" + params;
+    frame.title = projectName(p) + " · YouTube 影片";
+    frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+    cover.replaceChildren(frame);
+    cover.classList.add("is-playing");
+    playingLinks.set(p.project_id, link.url);
+    signature = "";
+    render();
+  }
+  function projectLinkActions(p) {
+    const link = presentation.projects[p.project_id]?.link;
+    const actions = node("div", undefined, "co-link-actions");
+    const edit = button(link ? "修改連結" : "＋ 設定連結", () => editProjectLink(p));
+    edit.disabled = !storeReady;
+    if (link?.url) {
+      const open = node("a", "↗ 開啟連結", "co-button");
+      open.href = link.url;
+      open.target = "_blank";
+      open.rel = "noopener noreferrer";
+      actions.append(open);
+      if (link.youtube_id) {
+        if (playingLinks.get(p.project_id) === link.url) {
+          actions.append(button("返回封面", () => {
+            playingLinks.delete(p.project_id);
+            signature = "";
+            render();
+          }));
+        } else actions.append(button("▶ 播放影片", () => playProjectVideo(p), "co-button primary"));
+      }
+    }
+    actions.append(edit);
+    const area = node("div", undefined, "co-project-link");
+    area.append(actions);
+    if (link?.youtube_id) area.append(node("small", "若影片限制嵌入，請使用「開啟連結」觀看。", "co-muted"));
+    return area;
+  }
   function projectCard(p) {
     const card = node("article", undefined, "co-project");
     card.dataset.projectId = p.project_id;
@@ -1052,6 +1146,8 @@
           "co-button quiet",
         ),
       );
+    const mediaActions = projectLinkActions(p);
+    mediaActions.querySelector(".co-link-actions").prepend(...coverActions.children);
     card.append(projectHouse(p, cover));
     const body = node("div", undefined, "co-project-body");
     const heading = node("div", undefined, "co-project-heading");
@@ -1066,7 +1162,7 @@
     heading.append(node("h3", projectName(p)), rename);
     body.append(
       heading,
-      coverActions,
+      mediaActions,
       node(
         "p",
         "對應企劃 · " + (p.source_name || "尚未指定"),
@@ -1821,6 +1917,40 @@
     }
     card.querySelector(".co-project-body").prepend(bar);
   }
+  function reconcileProjectCards(groups) {
+    const existing = new Map([...root.querySelectorAll(".co-project")].map(card => [card.dataset.projectId, card]));
+    const desired = new Map();
+    for (const [target, cards] of groups) {
+      desired.set(target, cards.map(fresh => {
+        const id = fresh.dataset.projectId;
+        const previous = existing.get(id);
+        if (previous) {
+          if (!previous.querySelector(".co-video-player") || playingLinks.get(id) !== presentation.projects[id]?.link?.url) {
+            previous.querySelector(".co-house").replaceWith(fresh.querySelector(".co-house"));
+            playingLinks.delete(id);
+          }
+          // Keep the card and any playing iframe connected during live updates.
+          previous.querySelector(".co-project-body").replaceWith(fresh.querySelector(".co-project-body"));
+          return previous;
+        }
+        playingLinks.delete(id);
+        return fresh;
+      }));
+    }
+    const retained = new Set([...desired.values()].flat());
+    for (const target of groups.keys()) for (const child of [...target.children]) {
+      if (!retained.has(child)) child.remove();
+    }
+    for (const [target, cards] of desired) cards.forEach((card, index) => {
+      if (target.children[index] === card) return;
+      const before = target.children[index] || null;
+      if (card.isConnected && typeof target.moveBefore === "function") target.moveBefore(card, before);
+      else target.insertBefore(card, before);
+    });
+    for (const id of playingLinks.keys()) {
+      if (![...retained].some(card => card.dataset.projectId === id)) playingLinks.delete(id);
+    }
+  }
   function render() {
     if (!root || dragging || editingName) return;
     const payload = response.projection || lastGood;
@@ -1868,15 +1998,12 @@
           (isHuman(b) ? 1 : 0) - (isHuman(a) ? 1 : 0) ||
           (epoch(lastStamp(b)) || 0) - (epoch(lastStamp(a)) || 0),
       );
-      projectsRoot.replaceChildren();
-      otherProjectsRoot.replaceChildren();
-      completedRoot.replaceChildren();
+      const cardGroups = new Map([[projectsRoot, []], [otherProjectsRoot, []], [completedRoot, []]]);
       const activeProjects = projects.filter((p) => !projectDone(p));
       activeProjectIds = activeProjects.map((p) => p.project_id);
       activeProjects.forEach((p, index) => {
         const card = projectCard(p);
-        projectSorting(card, p, index);
-        (index < 2 ? projectsRoot : otherProjectsRoot).append(card);
+        cardGroups.get(index < 2 ? projectsRoot : otherProjectsRoot).push(card);
       });
       otherProjectsToggle.hidden = activeProjects.length <= 2;
       otherProjectsToggle.querySelector("summary").textContent =
@@ -1889,7 +2016,10 @@
       for (const p of done.filter(
         (p) => Date.now() / 1000 - epoch(stampDone(p)) <= 14 * 86400,
       ))
-        completedRoot.append(projectCard(p));
+        cardGroups.get(completedRoot).push(projectCard(p));
+      reconcileProjectCards(cardGroups);
+      const renderedCards = new Map([...root.querySelectorAll(".co-project")].map(card => [card.dataset.projectId, card]));
+      activeProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index));
       if (!projectsRoot.children.length)
         projectsRoot.append(
           node(
