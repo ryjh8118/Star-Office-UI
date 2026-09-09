@@ -39,9 +39,9 @@ MEMORY_DIR = os.path.join(os.path.dirname(ROOT_DIR), "memory")
 FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 FRONTEND_INDEX_FILE = os.path.join(FRONTEND_DIR, "index.html")
 FRONTEND_ELECTRON_STANDALONE_FILE = os.path.join(FRONTEND_DIR, "electron-standalone.html")
-STATE_FILE = os.path.join(ROOT_DIR, "state.json")
-AGENTS_STATE_FILE = os.path.join(ROOT_DIR, "agents-state.json")
-JOIN_KEYS_FILE = os.path.join(ROOT_DIR, "join-keys.json")
+STATE_FILE = os.path.join(os.environ.get('RENGUIN_OFFICE_STATE_ROOT', ROOT_DIR), "state.json")
+AGENTS_STATE_FILE = os.path.join(os.environ.get('RENGUIN_OFFICE_STATE_ROOT', ROOT_DIR), "agents-state.json")
+JOIN_KEYS_FILE = os.path.join(os.environ.get('RENGUIN_OFFICE_STATE_ROOT', ROOT_DIR), "join-keys.json")
 FRONTEND_PATH = Path(FRONTEND_DIR)
 ASSET_ALLOWED_EXTS = {".png", ".webp", ".jpg", ".jpeg", ".gif", ".svg", ".avif"}
 ASSET_TEMPLATE_ZIP = os.path.join(ROOT_DIR, "assets-replace-template.zip")
@@ -83,6 +83,70 @@ STATE_TO_AREA_MAP = {
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="/static")
 app.secret_key = os.getenv("FLASK_SECRET_KEY") or os.getenv("STAR_OFFICE_SECRET") or "star-office-dev-secret-change-me"
+from creator_presentation import bp as creator_presentation_bp
+app.config['USER_PRESENTATION_ROOT'] = os.environ.get('RENGUIN_PRESENTATION_ROOT', os.path.join(ROOT_DIR, '.user-presentation'))
+app.register_blueprint(creator_presentation_bp)
+from creator_history import bp as creator_history_bp
+app.register_blueprint(creator_history_bp)
+
+
+@app.get("/api/renguin/operations")
+def renguin_operations():
+    from renguin_boundary import producer
+    try:
+        producer()
+        from operations_contract import board
+        root = os.environ.get("RENGUIN_CANONICAL_ROOT", r"E:\Renguin_AISystem\Content_OS")
+        from creator_activity import enrich
+        return jsonify(enrich(board(root), os.environ.get('RENGUIN_NATIVE_HOME', str(Path.home()))))
+    except (OSError, ValueError, RuntimeError, ImportError) as error:
+        return jsonify({"jobs": [], "coverage_complete": False, "error": str(error)}), 503
+
+
+@app.post("/api/renguin/collision")
+def renguin_collision():
+    # Analysis only: never dispatches work or acquires/releases a reservation.
+    if not request.content_length or request.content_length > 32768:
+        return jsonify({"error": "REQUEST_SIZE_BUDGET"}), 400
+    from renguin_boundary import producer
+    try:
+        producer()
+        from operations_contract import board, analyze
+        root = os.environ.get("RENGUIN_CANONICAL_ROOT", r"E:\Renguin_AISystem\Content_OS")
+        current = board(root)
+        return jsonify(analyze(request.get_json(), current["jobs"], coverage_complete=current["coverage_complete"]))
+    except (OSError, ValueError, RuntimeError, ImportError) as error:
+        return jsonify({"result": "CAUTION", "label": "目前無法確認", "reasons": [str(error)], "safe_scope": []}), 503
+
+
+@app.get("/api/renguin/projects")
+def renguin_projects():
+    from renguin_boundary import projects
+    result = projects(FRONTEND_DIR)
+    return jsonify(result), (503 if result["status"] == "SYNC_ERROR" else 200)
+
+
+@app.after_request
+def _renguin_no_cache(response):
+    """Always deliver the current Renguin UI and live activity feeds."""
+    renguin_paths = {
+        "/static/renguin-star-office-extension.js",
+        "/static/renguin-projects-v2.json",
+        "/static/renguin-control-room.js",
+        "/static/creator-office.js",
+        "/static/creator-office.css",
+        "/static/renguin-operations.js",
+        "/static/renguin-readiness.js",
+        "/static/renguin-control-semantics.js",
+        "/static/renguin-freshness.js",
+        "/static/codex_activity.json",
+        "/static/bionic_activity.json",
+    }
+    if request.path == "/" or request.path in renguin_paths:
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 # Session hardening
 app.config.update(
@@ -1295,6 +1359,8 @@ def set_state_endpoint():
         if not isinstance(data, dict):
             return jsonify({"status": "error", "msg": "invalid json"}), 400
         state = load_state()
+        if ((state.get("renguin") or {}).get("source") == "RUN_PROGRESS"):
+            return jsonify({"status": "readonly", "source": "RUN_PROGRESS"})
         if "state" in data:
             s = data["state"]
             if s in VALID_AGENT_STATES:

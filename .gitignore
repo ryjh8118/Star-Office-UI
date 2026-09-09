@@ -37,3 +37,19 @@ desktop-pet/src-tauri/icons/*Logo.png
 electron-shell/node_modules/
 electron-shell/release/
 join-keys.json
+
+.preview-runtime/
+
+.local-browser/
+
+# Office-owned user metadata and uploaded covers
+.user-presentation/
+.qa-runtime/
+
+# Read-only bridge snapshots and local achievement assets are runtime inputs.
+frontend/codex_activity.json
+frontend/bionic_activity.json
+frontend/renguin-projects.json
+frontend/renguin-projects-v2.json
+frontend/renguin-achievements.json
+frontend/renguin-achievements/

@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
+    <script src="/static/renguin-readiness.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Star 的像素办公室</title>
@@ -1287,6 +1288,11 @@
         <button id="lang-btn-cn" onclick="setUILanguage('zh')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">CN</button>
     </div>
 
+<script src="/static/renguin-freshness.js"></script>
+    <script src="/static/renguin-control-semantics.js"></script>
+    <script src="/static/renguin-operations.js"></script>
+<link rel="stylesheet" href="/static/creator-office.css?v={{VERSION_TIMESTAMP}}">
+<script src="/static/creator-office.js?v={{VERSION_TIMESTAMP}}"></script>
     <script src="/static/vendor/phaser-3.80.1.min.js?v={{VERSION_TIMESTAMP}}"></script>
     <script>
         // 简易中英文切换
@@ -1614,11 +1620,11 @@
 
         const STATES = {
             idle: { name: '待命', area: 'breakroom' },
-            writing: { name: '整理文档', area: 'writing' },
-            researching: { name: '搜索信息', area: 'researching' },
-            executing: { name: '执行任务', area: 'writing' },
-            syncing: { name: '同步备份', area: 'writing' },
-            error: { name: '出错了', area: 'error' }
+            writing: { name: '整理文件', area: 'writing' },
+            researching: { name: '搜尋資訊', area: 'researching' },
+            executing: { name: '執行任務', area: 'writing' },
+            syncing: { name: '同步備份', area: 'writing' },
+            error: { name: '發生錯誤', area: 'error' }
         };
 
         const BUBBLE_TEXTS = {
@@ -3687,7 +3693,7 @@ function toggleBrokerPanel() {
 
             const statusThoughtsMap = {
                 idle: ['我在休息区待命', '先放松一下，等下一步任务', '我在休息充电中'],
-                writing: ['我在工作区处理任务', '正在整理文档与执行中', '工作区专注推进中'],
+                writing: ['我在工作区处理任务', '正在整理文件与执行中', '工作区专注推进中'],
                 researching: ['我在调研模式，搜集信息', '正在查资料和验证线索', '研究中，稍后同步结论'],
                 executing: ['执行中，正在跑流程', '我在工作区推进任务', '正在把计划落地执行'],
                 syncing: ['同步中，马上更新状态', '正在同步进度到系统', '数据同步中请稍候'],
@@ -3742,9 +3748,9 @@ function toggleBrokerPanel() {
                 idle: '我去休息区躺一下',
                 writing: '我在工作中',
                 researching: '我在调研中',
-                executing: '我在执行任务',
+                executing: '我在執行任務',
                 syncing: '我在同步状态',
-                error: '出错了！我去报警区'
+                error: '發生錯誤！我去报警区'
                 },
                 en: {
                     idle: 'Taking a break in the lounge.',
@@ -4070,10 +4076,10 @@ function toggleBrokerPanel() {
             star = game.physics.add.sprite(areas.breakroom.x, areas.breakroom.y, 'star_idle');
             star.setOrigin(0.5);
             star.setScale(IDLE_STAR_SCALE);
-            star.setAlpha(0.95);
+            star.setAlpha(0);
             star.setDepth(20); // Put Star on top of everything
             // Default: idle shows Star idle animation
-            star.setVisible(true);
+            star.setVisible(false);
             star.anims.play('star_idle', true);
 
             // Sofa stays static when idle (no longer the main idle animation)
@@ -4598,7 +4604,7 @@ function toggleBrokerPanel() {
                     window.starWorking.anims.stop();
                 }
 
-                star.setVisible(true);
+                star.setVisible(false);
                 star.setScale(IDLE_STAR_SCALE);
                 star.anims.play('star_idle', true);
                 star.setPosition(IDLE_SOFA_ANCHOR.x, IDLE_SOFA_ANCHOR.y);
@@ -4630,7 +4636,7 @@ function toggleBrokerPanel() {
                 star.setVisible(false);
                 star.anims.stop();
                 if (window.starWorking) {
-                    window.starWorking.setVisible(true);
+                    window.starWorking.setVisible(false);
                     window.starWorking.anims.play('star_working', true);
                 }
             }
@@ -4759,7 +4765,7 @@ function toggleBrokerPanel() {
                                     window.starWorking.setVisible(false);
                                     window.starWorking.anims.stop();
                                 }
-                                star.setVisible(true);
+                                star.setVisible(false);
                                 star.setScale(IDLE_STAR_SCALE);
                                 star.anims.play('star_idle', true);
                                 star.setPosition(IDLE_SOFA_ANCHOR.x, IDLE_SOFA_ANCHOR.y);
@@ -4770,7 +4776,7 @@ function toggleBrokerPanel() {
                                 star.setVisible(false);
                                 star.anims.stop();
                                 if (window.starWorking) {
-                                    window.starWorking.setVisible(true);
+                                    window.starWorking.setVisible(false);
                                     window.starWorking.anims.play('star_working', true);
                                 }
                             }
@@ -4787,7 +4793,7 @@ function toggleBrokerPanel() {
                                 window.starWorking.setVisible(false);
                                 window.starWorking.anims.stop();
                             }
-                            star.setVisible(true);
+                            star.setVisible(false);
                             star.setScale(IDLE_STAR_SCALE);
                             star.anims.play('star_idle', true);
                             star.setPosition(IDLE_SOFA_ANCHOR.x, IDLE_SOFA_ANCHOR.y);
@@ -4798,7 +4804,7 @@ function toggleBrokerPanel() {
                             star.setVisible(false);
                             star.anims.stop();
                             if (window.starWorking) {
-                                window.starWorking.setVisible(true);
+                                window.starWorking.setVisible(false);
                                 window.starWorking.anims.play('star_working', true);
                             }
                             sofa.anims.stop();
@@ -4814,7 +4820,7 @@ function toggleBrokerPanel() {
             if (!isMoving && currentState !== 'idle' && pendingDesiredState === null && (time - lastWanderAt) > 3500) {
                 targetX = baseTarget.x + (Math.random() - 0.5) * 60;
                 targetY = baseTarget.y + (Math.random() - 0.5) * 40;
-                star.setVisible(true);
+                star.setVisible(false);
                 star.anims.play('star_idle', true);
                 isMoving = true;
                 lastWanderAt = time;
@@ -4885,5 +4891,7 @@ function toggleBrokerPanel() {
         // 启动游戏
         initGame();
     </script>
+  <script src="/static/renguin-star-office-extension.js?v=renguin-workflow-v37-project-sections"></script>
+
 </body>
 </html>

@@ -101,11 +101,11 @@ function hideLoadingOverlay() {
 
 const STATES = {
   idle: { name: '待命', area: 'breakroom' },
-  writing: { name: '整理文档', area: 'writing' },
-  researching: { name: '搜索信息', area: 'researching' },
-  executing: { name: '执行任务', area: 'writing' },
-  syncing: { name: '同步备份', area: 'writing' },
-  error: { name: '出错了', area: 'error' }
+  writing: { name: '整理文件', area: 'writing' },
+  researching: { name: '搜尋資訊', area: 'researching' },
+  executing: { name: '執行任務', area: 'writing' },
+  syncing: { name: '同步備份', area: 'writing' },
+  error: { name: '發生錯誤', area: 'error' }
 };
 
 const BUBBLE_TEXTS = {

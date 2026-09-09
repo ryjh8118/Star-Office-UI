@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <link
+    rel="stylesheet"
+    href="http://127.0.0.1:19129/static/creator-office.css"
+  />
+  <style>
+    body {
+      background: #1a1a2e;
+      display: grid;
+      place-content: center;
+      min-height: 100vh;
+    }
+    #creator-office {
+      max-width: 660px;
+    }
+    .fixture-note {
+      color: #f0e6cf;
+      font: 16px system-ui;
+      margin: 0 0 20px;
+    }
+  </style>
+  <p class="fixture-note">
+    路線樣式驗證 · 以下為測試情境，不代表實際企劃或 Agent 活動
+  </p>
+  <main id="creator-office">
+    <article class="co-project">
+      <div class="co-project-body">
+        <h3>七站製作路線</h3>
+        <nav class="co-route" aria-label="測試路線">
+          <button class="is-done">✓ 素材</button
+          ><span class="co-link is-done"></span>
+          <button class="is-done">✓ 校正</button
+          ><span class="co-link is-done"></span>
+          <button class="is-active">導演</button><span class="co-link"></span>
+          <button>工單</button><span class="co-link"></span>
+          <button class="is-human">確認</button><span class="co-link"></span>
+          <button class="is-failed">粗剪</button><span class="co-link"></span>
+          <button>定剪</button>
+        </nav>
+        <p class="co-state">完成 · 進行中 · 尚未開始 · 等待人工 · 失敗</p>
+        <p class="co-muted">歷史完成色保留；只有可信即時狀態使用呼吸效果。</p>
+      </div>
+    </article>
+  </main>
+</html>
