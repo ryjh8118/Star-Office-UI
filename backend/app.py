@@ -88,6 +88,8 @@ app.config['USER_PRESENTATION_ROOT'] = os.environ.get('RENGUIN_PRESENTATION_ROOT
 app.register_blueprint(creator_presentation_bp)
 from creator_history import bp as creator_history_bp
 app.register_blueprint(creator_history_bp)
+from creator_browser_activity import bp as creator_browser_activity_bp
+app.register_blueprint(creator_browser_activity_bp)
 
 
 @app.get("/api/renguin/operations")
@@ -135,6 +137,9 @@ def _renguin_no_cache(response):
         "/static/renguin-control-room.js",
         "/static/creator-office.js",
         "/static/creator-office.css",
+        "/static/creator-scene.js",
+        "/static/creator-contexts.js",
+        "/static/creator-residents.js",
         "/static/renguin-operations.js",
         "/static/renguin-readiness.js",
         "/static/renguin-control-semantics.js",

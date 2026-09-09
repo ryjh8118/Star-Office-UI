@@ -18,10 +18,15 @@ const context = vm.createContext({
   Map,
   JSON,
   console,
+  IntersectionObserver: class {
+    observe() {}
+    disconnect() {}
+  },
 });
 for (const name of [
   "renguin-freshness.js",
   "renguin-control-semantics.js",
+  "creator-contexts.js",
   "creator-office.js",
 ])
   vm.runInContext(fs.readFileSync(path.join(base, name), "utf8"), context);

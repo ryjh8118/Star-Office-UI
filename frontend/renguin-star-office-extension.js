@@ -478,7 +478,6 @@
     latestProjection = data || latestProjection || {};
     const layer = ensureLayer();
     if (window.CreatorOffice) {
-      roster.forEach(person => setCharacterPosition(layer.querySelector(`#renguin-scene-${person.key}`), waiting[person.key]));
       window.CreatorOffice.syncMap();
       return;
     }

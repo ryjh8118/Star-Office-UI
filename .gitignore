@@ -53,3 +53,5 @@ frontend/renguin-projects.json
 frontend/renguin-projects-v2.json
 frontend/renguin-achievements.json
 frontend/renguin-achievements/
+
+.qa-workflow-state/

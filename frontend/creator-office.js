@@ -9,6 +9,12 @@
     GATE: "確認",
     AI_ROUGH_CUT: "粗剪",
     HUMAN_FINAL_CUT: "定剪",
+    FINAL_CUT_LEARNING: "定剪學習",
+    AI_POST: "後製",
+    POST_LEARNING: "後製學習",
+    PUBLISH: "上映",
+    MEMBER_PUBLISH: "會員影片",
+    SHORT_PUBLISH: "短影音",
   };
   const labels = {
     ...routeLabels,
@@ -40,7 +46,7 @@
   };
   const agents = {
     CHATGPT_WORK: ["ChatGPT", "director/renguin.png"],
-    ASTRA: ["ASTRA", "director/renguin.png"],
+    ASTRA: ["ASTRA", "astra/eric.png"],
     CLAUDE: ["Claude", "editor/dola.png"],
     BIONIC: ["BIONIC", "scanner/xuebao.png"],
   };
@@ -53,7 +59,20 @@
   const button = (text, fn, cls = "co-button") => {
     const e = node("button", text, cls);
     e.type = "button";
-    e.addEventListener("click", fn);
+    e.addEventListener("click", async (event) => {
+      if (e.disabled) return;
+      const result = fn(event);
+      if (result?.then) {
+        e.disabled = true;
+        e.setAttribute("aria-busy", "true");
+        try {
+          await result;
+        } finally {
+          e.disabled = false;
+          e.removeAttribute("aria-busy");
+        }
+      }
+    });
     return e;
   };
   const epoch = (value) => {
@@ -97,6 +116,8 @@
   let root,
     membersRoot,
     projectsRoot,
+    otherProjectsRoot,
+    otherProjectsToggle,
     inboxRoot,
     completedRoot,
     syncButton,
@@ -109,7 +130,36 @@
   let inboxItems = [],
     selectedAgent = null,
     mutationPending = false,
-    mutationQueue = Promise.resolve();
+    mutationQueue = Promise.resolve(),
+    editingName = false,
+    loaded = false,
+    polling = false,
+    pollTimer = null,
+    retryDelay = 5000;
+  let activeProjectIds = [],
+    projectDragId = null;
+  let browserStatus = { connected: false, observations: [] };
+  const houseObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries)
+        entry.target.classList.toggle("is-on-screen", entry.isIntersecting);
+    },
+    { rootMargin: "60px" },
+  );
+  const projectName = (p) =>
+    presentation.projects[p.project_id]?.display_name || p.project_name;
+  const workflow = (p) => presentation.projects[p.project_id]?.workflow || {};
+  const sourceId = (p) =>
+    Object.hasOwn(p, "source_project_id") ? p.source_project_id : p.project_id;
+  const enabledSteps = (p) =>
+    Object.keys(routeLabels).filter(
+      (id) =>
+        !(presentation.projects[p.project_id]?.disabled_steps || []).includes(
+          id,
+        ),
+    );
+  const completedSteps = (p) =>
+    enabledSteps(p).filter((id) => workflow(p)[id]?.status === "COMPLETED");
 
   function toast(text) {
     document.querySelector(".co-toast")?.remove();
@@ -126,11 +176,13 @@
     });
     if (!r.ok)
       throw Error(
-        r.status === 415
-          ? "封面格式不符，請選擇 JPG、PNG 或 WEBP 圖片。"
-          : r.status === 413
-            ? "封面超過 5 MB，請縮小後再試。"
-            : "儲存或讀取失敗，請稍後再試。",
+        r.status === 409
+          ? "進度剛剛有更新，請重新確認後再操作。"
+          : r.status === 415
+            ? "封面格式不符，請選擇 JPG、PNG 或 WEBP 圖片。"
+            : r.status === 413
+              ? "封面超過 5 MB，請縮小後再試。"
+              : "儲存或讀取失敗，請稍後再試。",
       );
     return r.json();
   }
@@ -150,6 +202,8 @@
               body: JSON.stringify(value),
             }),
       });
+      if (["projects", "project-source"].includes(path))
+        presentation = await json("/api/creator/presentation");
       storeReady = true;
       signature = "";
       render();
@@ -183,14 +237,43 @@
     dialog.showModal();
     return dialog;
   }
-  function allProjects() {
+  function sourceProjects() {
     return (response.projection || lastGood)?.projects || [];
+  }
+  function allProjects() {
+    const sources = sourceProjects();
+    return [
+      ...sources,
+      ...Object.values(presentation.local_projects || {}),
+    ].map((card) => {
+      const meta = presentation.projects[card.project_id] || {};
+      const sid = Object.hasOwn(meta, "source_project_id")
+        ? meta.source_project_id
+        : sources.some((p) => p.project_id === card.project_id)
+          ? card.project_id
+          : null;
+      const source = sources.find((p) => p.project_id === sid);
+      const empty = {
+        classification: card.classification,
+        project_type: card.project_type,
+        timeline: [],
+        workflow: [],
+      };
+      return {
+        ...(source || empty),
+        project_id: card.project_id,
+        project_name: card.project_name,
+        source_project_id: sid,
+        source_name: source?.project_name || "",
+      };
+    });
   }
   function primary() {
     return allProjects().filter(
       (p) =>
         p.classification === "REGISTERED" &&
-        ["YOUTUBE", "VIDEO_PROJECT"].includes(p.project_type),
+        ["YOUTUBE", "VIDEO_PROJECT"].includes(p.project_type) &&
+        !presentation.projects[p.project_id]?.hidden,
     );
   }
   function rowKnown(row, p) {
@@ -199,13 +282,13 @@
       !!(
         row.ledger_entry_id ||
         (row.evidence_provenance?.verified === true &&
-          row.evidence_provenance.canonical_project_id === p.project_id)
+          row.evidence_provenance.canonical_project_id === sourceId(p))
       )
     );
   }
   function displayStatus(p, row, events = eventStatuses) {
     const evidence = events[row.ledger_entry_id];
-    return evidence?.project_id === p.project_id &&
+    return evidence?.project_id === sourceId(p) &&
       epoch(evidence.timestamp) === epoch(row.updated_at) &&
       evidence.status === "FAILED"
       ? "FAILED"
@@ -248,17 +331,22 @@
     );
   }
   function projectDone(p) {
-    return manual(p)?.done === true || canonicalDone(p);
+    return (
+      manual(p)?.done === true ||
+      completedSteps(p).length === enabledSteps(p).length
+    );
   }
   function stampDone(p) {
     return manual(p)?.done
       ? manual(p).timestamp
-      : timeline(p)
-          .filter(
-            (r) => ["PUBLISH", "ARCHIVE"].includes(r.id) && r.status === "DONE",
-          )
-          .sort((a, b) => epoch(b.updated_at) - epoch(a.updated_at))[0]
-          ?.updated_at;
+      : workflow(p)[enabledSteps(p).at(-1)]?.completed_at ||
+          timeline(p)
+            .filter(
+              (r) =>
+                ["PUBLISH", "ARCHIVE"].includes(r.id) && r.status === "DONE",
+            )
+            .sort((a, b) => epoch(b.updated_at) - epoch(a.updated_at))[0]
+            ?.updated_at;
   }
   function historical(p) {
     return !window.RenguinFreshness.project(response, p).fresh;
@@ -292,6 +380,17 @@
 
   function memberView(key) {
     const board = window.RenguinOperations?.current || {};
+    const combinedObservations = [
+      ...(board.native_coverage?.observations || []),
+      ...(browserStatus.observations || []),
+    ];
+    const contexts = window.CreatorContexts.collect({
+      jobs: board.jobs || [],
+      observations: combinedObservations,
+      projects: sourceProjects(),
+      preferences: presentation.projects,
+      effective: window.RenguinOperations.effective,
+    }).filter((context) => context.agent === key);
     const jobs = (board.jobs || []).filter((j) => j.agent === key);
     const running = jobs.find(
       (j) => window.RenguinOperations.effective(j) === "RUNNING",
@@ -301,10 +400,20 @@
         window.RenguinOperations.effective(j),
       ),
     );
-    const observations = (
-      board.native_coverage?.observations ||
-      jobs.flatMap((j) => j.native_observations || [])
-    ).filter((o) => o.agent === key);
+    const observations = combinedObservations.filter((o) => o.agent === key);
+    const nativeWorking = observations
+      .filter(
+        (o) =>
+          o.visual_activity?.state === "WORKING" &&
+          validTime(o.visual_activity.timestamp) &&
+          Date.now() / 1000 - epoch(o.visual_activity.timestamp) <
+            o.visual_activity.expires_after_seconds,
+      )
+      .sort(
+        (a, b) =>
+          epoch(b.visual_activity.timestamp) -
+          epoch(a.visual_activity.timestamp),
+      )[0];
     const times = [
       ...jobs.flatMap((j) => [j.finished_at, j.last_heartbeat]),
       ...observations.flatMap((o) => [
@@ -324,41 +433,81 @@
         current.project_name);
     let text = running
       ? "● " + (project ? "正在處理 " + clean(project, "目前工作") : "正在工作")
-      : waiting
-        ? {
-            WAITING_USER: "◐ 等待你處理",
-            WAITING_AGENT: "◐ 等待協作",
-            STARTING: "◐ 正在啟動",
-            BLOCKED: "◐ 等待處理",
-          }[window.RenguinOperations.effective(waiting)]
-        : stamp
-          ? "○ 最近活動 " +
-            new Date(epoch(stamp) * 1000).toLocaleTimeString("zh-TW", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
-          : "○ 尚無同步紀錄";
+      : nativeWorking
+        ? "● " + nativeWorking.visual_activity.action
+        : waiting
+          ? {
+              WAITING_USER: "◐ 等待你處理",
+              WAITING_AGENT: "◐ 等待協作",
+              STARTING: "◐ 正在啟動",
+              BLOCKED: "◐ 等待處理",
+            }[window.RenguinOperations.effective(waiting)]
+          : stamp
+            ? "○ 最近活動 " +
+              new Date(epoch(stamp) * 1000).toLocaleTimeString("zh-TW", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
+            : "○ 尚無同步紀錄";
     const latestTerminal = jobs
       .filter((j) =>
         ["COMPLETED", "FAILED"].includes(window.RenguinOperations.effective(j)),
       )
       .sort((a, b) => b.finished_at - a.finished_at)[0];
-    const summary = current
-      ? clean(current.task, project ? "處理 " + project : "工作進行中")
-      : latestTerminal && epoch(latestTerminal.finished_at) >= epoch(stamp)
-        ? latestTerminal.effective_status === "FAILED"
-          ? "上次工作未完成"
-          : "上次工作已完成"
-        : stamp
-          ? "已保留最近工作紀錄"
-          : "尚未收到工作紀錄";
+    const lastObservation = [...observations].sort(
+      (a, b) =>
+        epoch(
+          b.last_work_event?.timestamp ||
+            b.last_native_event?.timestamp ||
+            b.last_native_event?.updated_timestamp,
+        ) -
+        epoch(
+          a.last_work_event?.timestamp ||
+            a.last_native_event?.timestamp ||
+            a.last_native_event?.updated_timestamp,
+        ),
+    )[0];
+    const recentAction =
+      lastObservation?.last_work_event?.action ||
+      {
+        task_complete: "工作已完成",
+        task_failed: "工作未完成",
+        task_started: "開始工作",
+        forkPoint: "建立工作分支",
+        error: "工作遇到問題",
+      }[lastObservation?.last_native_event?.type] ||
+      "更新工作紀錄";
+    const summary =
+      nativeWorking && !current
+        ? nativeWorking.source === "CHATGPT_BROWSER_UI"
+          ? "Chrome · " + nativeWorking.browser_context.name
+          : "工作更新來自 " +
+            (key === "ASTRA" ? "ASTRA" : "Codex") +
+            " · 剛收到操作紀錄"
+        : current
+          ? clean(current.task, project ? "處理 " + project : "工作進行中")
+          : latestTerminal && epoch(latestTerminal.finished_at) >= epoch(stamp)
+            ? latestTerminal.effective_status === "FAILED"
+              ? "上次工作未完成"
+              : "上次工作已完成"
+            : stamp
+              ? "最近紀錄 · " + recentAction.replace("正在", "")
+              : "尚未收到工作紀錄";
     return {
       key,
       text,
       stamp,
       summary,
-      running: !!running,
+      contexts,
+      sourceLabel:
+        lastObservation?.source === "CHATGPT_BROWSER_UI"
+          ? "Chrome · ChatGPT"
+          : key === "CHATGPT_WORK"
+            ? "Codex 工作紀錄"
+            : agents[key][0] + " 工作紀錄",
+      running: !!running || !!nativeWorking,
+      nativeWorking: !!nativeWorking,
       diagnostic: {
         jobs,
         observations,
@@ -370,7 +519,14 @@
     if (!membersRoot) return;
     const views = Object.keys(agents).map(memberView);
     const hash = JSON.stringify(
-      views.map((v) => [v.key, v.text, v.stamp, v.summary]),
+      views.map((v) => [
+        v.key,
+        v.text,
+        v.stamp,
+        v.summary,
+        v.contexts,
+        browserStatus.connected,
+      ]),
     );
     if (hash !== memberSignature) {
       memberSignature = hash;
@@ -385,28 +541,65 @@
             d.append(
               node("p", v.text),
               node("p", v.summary),
-              node("p", date(v.stamp), "co-muted"),
+              node("p", date(v.stamp) + " · " + v.sourceLabel, "co-muted"),
               technical(v.diagnostic),
             );
+            if (v.key === "CHATGPT_WORK") browserConnection(d);
           },
           "co-member" + (v.running ? " is-running" : ""),
         );
         card.dataset.agent = v.key;
-        const img = node("img");
-        img.src = "/static/renguin-characters/" + agents[v.key][1];
-        img.alt = "";
         card.append(
-          img,
           node("h3", agents[v.key][0]),
           node("strong", v.text),
           node("p", v.summary),
           node("p", date(v.stamp), "co-muted"),
         );
+        if (v.contexts.length) card.append(contextFrames(v.contexts));
+        if (v.key === "CHATGPT_WORK")
+          card.append(
+            node(
+              "p",
+              browserStatus.connected
+                ? "Chrome · ChatGPT 已連線"
+                : "ChatGPT 網頁尚未連線",
+              "co-muted co-browser-status",
+            ),
+          );
         membersRoot.append(card);
       }
       renderMemberSelection();
     }
     syncMap();
+  }
+  function contextFrames(contexts, compact = false) {
+    const list = node(
+      "span",
+      undefined,
+      "co-work-contexts" + (compact ? " is-compact" : ""),
+    );
+    for (const context of contexts) {
+      const frame = node("span", undefined, "co-work-context");
+      frame.dataset.kind = context.kind;
+      frame.title =
+        (context.kind === "REPO" ? "REPO · " : "") +
+        context.name +
+        " · " +
+        context.action;
+      frame.append(
+        node(
+          "small",
+          context.kind === "REPO"
+            ? "REPO"
+            : context.kind === "PROJECT"
+              ? "企劃"
+              : "工作",
+        ),
+        node("span", context.name, "co-context-name"),
+      );
+      list.append(frame);
+    }
+    return list;
   }
   function renderMemberSelection() {
     membersRoot
@@ -427,7 +620,7 @@
       avatar.style.left = "80%";
       avatar.style.top = "74%";
       const img = node("img");
-      img.src = "/static/renguin-characters/director/renguin.png";
+      img.src = "/static/renguin-characters/astra/eric.png";
       img.alt = "ASTRA";
       avatar.append(img, node("div", "", "rsc-label"));
       layer.append(avatar);
@@ -443,8 +636,16 @@
       if (!el) continue;
       const v = memberView(key);
       const label = el.querySelector(".rsc-label");
-      if (label) label.textContent = agents[key][0] + "｜" + v.text;
+      if (label) label.title = v.text;
+      window.CreatorScene?.sync(el, key, v, agents[key][0]);
+      const contextHash = JSON.stringify(v.contexts);
+      if (el.dataset.contextHash !== contextHash) {
+        el.dataset.contextHash = contextHash;
+        el.querySelector(".co-work-contexts")?.remove();
+        if (v.contexts.length) el.append(contextFrames(v.contexts, true));
+      }
       el.classList.toggle("is-working", v.running);
+      el.classList.toggle("is-waiting", !v.running);
       if (!el.dataset.creatorBound) {
         el.dataset.creatorBound = "true";
         el.setAttribute("role", "button");
@@ -479,7 +680,7 @@
     } else showDetails(p);
   }
   function showDetails(p) {
-    const d = modal(p.project_name);
+    const d = modal(projectName(p));
     const s = lastState(p);
     d.append(
       node("p", s ? rowText(s) : "尚無同步紀錄"),
@@ -512,19 +713,14 @@
         );
       d.append(actions);
     }
-    d.append(
-      technical({
-        canonical: p,
-        presentation: presentation.projects[p.project_id] || {},
-        freshness: window.RenguinFreshness.project(response, p),
-      }),
-    );
+    if (p.release_date) d.append(node("p", "預計上映 · " + p.release_date));
+    d.append(button("移除專案", () => confirmRemove(p), "co-button danger"));
   }
   async function showTimeline(p, stageId) {
     const d = modal(
       stageId
-        ? (labels[stageId] || "階段紀錄") + " · " + p.project_name
-        : "完整時間軸 · " + p.project_name,
+        ? (labels[stageId] || "階段紀錄") + " · " + projectName(p)
+        : "完整時間軸 · " + projectName(p),
     );
     const list = node("ol", undefined, "co-full-timeline");
     d.append(list);
@@ -551,7 +747,7 @@
         li.append(
           node("time", date(r.updated_at)),
           node("p", rowText(r)),
-          node("small", r.source || "Content OS"),
+          node("small", "製作紀錄"),
         );
         list.append(li);
       }
@@ -572,16 +768,18 @@
         d.append(
           node(
             "p",
-            (entry.done ? "✓ 你已標記完成" : "取消手動完成") +
+            (entry.text || (entry.done ? "✓ 你已標記完成" : "取消手動完成")) +
               " · " +
               date(entry.timestamp),
             "co-muted",
           ),
         );
     d.append(button("查看詳情", () => showDetails(p), "co-button quiet"));
+    if (!sourceId(p)) return;
     try {
       const data = await json(
-        "/api/creator/history?project_id=" + encodeURIComponent(p.project_id),
+        "/api/creator/history?project_id=" +
+          encodeURIComponent(sourceId(p) || ""),
       );
       extra = data.events
         .filter(
@@ -606,7 +804,6 @@
           source: "Content OS",
         }));
       draw();
-      d.append(technical(data));
     } catch {
       d.append(
         node("p", "完整歷史暫時無法連接；以上保留已驗證的紀錄。", "co-muted"),
@@ -617,7 +814,7 @@
     const previous = manual(p)?.done === true;
     const d = modal(previous ? "取消完成" : "將此企劃標記為你已完成？");
     d.append(
-      node("p", p.project_name),
+      node("p", projectName(p)),
       node(
         "p",
         previous
@@ -664,6 +861,160 @@
     );
     input.click();
   }
+  async function toggleStep(p, id) {
+    if (mutationPending || !storeReady) return;
+    const ids = enabledSteps(p),
+      index = ids.indexOf(id);
+    const completed = completedSteps(p);
+    const turningOn = !completed.includes(id);
+    const downstream = completed.filter((s) => ids.indexOf(s) > index);
+    const execute = async (confirmed = false) => {
+      const ok = await save("workflow", {
+        project_id: p.project_id,
+        step_id: id,
+        completed: turningOn,
+        cascade_confirmed: confirmed,
+        revision: presentation.revision,
+      });
+      if (ok) {
+        const feedback = [...root.querySelectorAll(".co-project")]
+          .find((e) => e.dataset.projectId === p.project_id)
+          ?.querySelector(".co-save-status");
+        if (feedback) feedback.textContent = "✓ 進度已儲存";
+      } else await poll();
+      return ok;
+    };
+    if (!turningOn && downstream.length) {
+      const d = modal("取消「" + routeLabels[id] + "」？");
+      d.append(
+        node(
+          "p",
+          "將同時取消後續已完成的階段：" +
+            downstream.map((s) => routeLabels[s]).join("、") +
+            "。",
+        ),
+        node("p", "工作紀錄會保留，你隨時可以重新標記完成。", "co-muted"),
+      );
+      const actions = node("div", undefined, "co-actions");
+      actions.append(
+        button("保留進度", () => d.close()),
+        button(
+          "確認取消階段",
+          async () => {
+            if (await execute(true)) d.close();
+          },
+          "co-button danger",
+        ),
+      );
+      d.append(actions);
+    } else await execute();
+  }
+  function confirmRemove(p) {
+    const d = modal("移除「" + projectName(p) + "」？");
+    d.append(
+      node(
+        "p",
+        "只會從 RENGUIN OFFICE 移除。不會刪除影片素材、Premiere 專案、Content OS 資料或硬碟檔案。",
+      ),
+      node("p", "需要時可從「已移除的專案」恢復。", "co-muted"),
+    );
+    const actions = node("div", undefined, "co-actions");
+    actions.append(
+      button("取消", () => d.close()),
+      button(
+        "移除專案",
+        async () => {
+          if (
+            await save("project", {
+              project_id: p.project_id,
+              hidden: true,
+              confirmed: true,
+            })
+          ) {
+            d.close();
+            toast("專案已移除，可從頁面下方恢復。");
+          }
+        },
+        "co-button danger",
+      ),
+    );
+    d.append(actions);
+  }
+  function renameProject(p, heading) {
+    editingName = true;
+    const form = node("form", undefined, "co-rename");
+    const input = node("input");
+    input.value = projectName(p);
+    input.maxLength = 120;
+    input.required = true;
+    input.setAttribute("aria-label", "專案名稱");
+    const feedback = node("span", "Enter 儲存 · Esc 取消", "co-save-status");
+    feedback.role = "status";
+    const cancel = () => {
+      editingName = false;
+      signature = "";
+      render();
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
+    });
+    const submit = node("button", "儲存", "co-button primary");
+    submit.type = "submit";
+    form.append(
+      input,
+      submit,
+      button("取消", cancel, "co-button quiet"),
+      feedback,
+    );
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (submit.disabled || !input.value.trim()) return;
+      submit.disabled = true;
+      input.disabled = true;
+      feedback.textContent = "正在儲存…";
+      if (
+        await save("project", {
+          project_id: p.project_id,
+          display_name: input.value.trim(),
+        })
+      ) {
+        cancel();
+        const card = [...root.querySelectorAll(".co-project")].find(
+          (e) => e.dataset.projectId === p.project_id,
+        );
+        if (card)
+          card.querySelector(".co-save-status").textContent = "✓ 名稱已儲存";
+      } else {
+        submit.disabled = false;
+        input.disabled = false;
+        feedback.textContent = "未儲存，請再試一次。";
+      }
+    });
+    heading.replaceChildren(form);
+    input.focus();
+    input.select();
+  }
+  function recentRecords(p) {
+    const saved = (presentation.projects[p.project_id]?.history || []).map(
+      (e) => ({
+        timestamp: e.timestamp,
+        text: e.text || (e.done ? "你將專案標記完成" : "你取消專案完成標記"),
+        source: e.source === "INFERENCE" ? "系統自動補齊" : "你手動更新",
+      }),
+    );
+    const source = timeline(p).map((r) => ({
+      timestamp: r.updated_at,
+      text: rowText(r),
+      source: "製作紀錄",
+    }));
+    return [...saved, ...source]
+      .filter((e) => validTime(e.timestamp) && !e.text.includes("素材 → 素材"))
+      .sort((a, b) => epoch(b.timestamp) - epoch(a.timestamp))
+      .slice(0, 4);
+  }
   function projectCard(p) {
     const card = node("article", undefined, "co-project");
     card.dataset.projectId = p.project_id;
@@ -672,7 +1023,7 @@
     if (coverState?.url) {
       const img = node("img");
       img.src = coverState.url;
-      img.alt = p.project_name + " 封面";
+      img.alt = projectName(p) + " 封面";
       img.loading = "lazy";
       cover.append(img);
     } else {
@@ -701,84 +1052,116 @@
           "co-button quiet",
         ),
       );
-    cover.append(coverActions);
-    card.append(cover);
+    card.append(projectHouse(p, cover));
     const body = node("div", undefined, "co-project-body");
-    body.append(node("h3", p.project_name));
-    const route = node("nav", undefined, "co-route");
-    route.setAttribute("aria-label", p.project_name + " 製作路線");
-    const rows = timeline(p);
-    Object.entries(routeLabels).forEach(([id, label], i) => {
-      const row =
-        rows.find((r) => r.id === id) ||
-        (id === "INDEX" ? rows.find((r) => r.id === "RAW") : null);
-      const status = row?.status || "UNKNOWN";
-      const kind =
-        status === "DONE"
-          ? "done"
-          : ["ACTIVE", "RUNNING"].includes(status) &&
-              !historical(p) &&
-              !row.historical
-            ? "active"
-            : ["REVIEW", "BLOCKED"].includes(status)
-              ? "human"
-              : status === "FAILED"
-                ? "failed"
-                : "todo";
-      if (i)
-        route.append(
-          node(
-            "span",
-            undefined,
-            "co-link" + (kind === "done" ? " is-done" : ""),
-          ),
-        );
-      const b = button(
-        (kind === "done" ? "✓ " : "") + label,
-        () => showTimeline(p, id),
-        "is-" + kind,
-      );
-      b.dataset.stage = id;
-      b.dataset.status = status;
-      b.title =
-        label +
-        "：" +
-        (states[status] || "已記錄") +
-        (row && historical(p) ? "（上次同步）" : "");
-      b.setAttribute("aria-label", b.title);
-      route.append(b);
-    });
-    body.append(route);
-    const current = lastState(p);
+    const heading = node("div", undefined, "co-project-heading");
+    const rename = button(
+      "✎",
+      () => renameProject(p, heading),
+      "co-button quiet co-rename-trigger",
+    );
+    rename.setAttribute("aria-label", "修改專案名稱");
+    rename.title = "修改專案名稱";
+    rename.disabled = !storeReady;
+    heading.append(node("h3", projectName(p)), rename);
     body.append(
+      heading,
+      coverActions,
       node(
         "p",
-        current ? rowText(current) : "尚無製作階段同步紀錄",
+        "對應企劃 · " + (p.source_name || "尚未指定"),
+        "co-source-name",
+      ),
+    );
+    const completed = completedSteps(p);
+    const next = enabledSteps(p).find((id) => !completed.includes(id));
+    const statusBlock = node("div", undefined, "co-progress");
+    statusBlock.append(
+      node(
+        "p",
+        completed.length
+          ? `已完成 ${completed.length} / ${enabledSteps(p).length} 階段`
+          : "尚未開始",
         "co-state",
       ),
-      node("p", "最後更新 " + date(lastStamp(p)), "co-muted"),
+      node(
+        "p",
+        next ? "下一步 · " + routeLabels[next] : "所有階段已完成",
+        "co-next",
+      ),
     );
-    if (historical(p) && lastStamp(p))
-      body.append(node("p", "資料已超過即時同步期限", "co-muted"));
+    const meter = node("div", undefined, "co-progress-track");
+    const fill = node("span");
+    fill.style.width = (completed.length / enabledSteps(p).length) * 100 + "%";
+    meter.append(fill);
+    statusBlock.append(meter);
+    body.append(statusBlock);
+    const route = node("nav", undefined, "co-route");
+    route.setAttribute("aria-label", projectName(p) + " 製作流程");
+    const rows = timeline(p);
+    enabledSteps(p)
+      .map((id) => [id, routeLabels[id]])
+      .forEach(([id, label], i) => {
+        const row =
+          rows.find((r) => r.id === id) ||
+          (id === "INDEX" ? rows.find((r) => r.id === "RAW") : null);
+        const status = completed.includes(id) ? "DONE" : "TODO";
+        const kind =
+          status === "DONE"
+            ? "done"
+            : ["ACTIVE", "RUNNING"].includes(status) &&
+                !historical(p) &&
+                !row.historical
+              ? "active"
+              : ["REVIEW", "BLOCKED"].includes(status)
+                ? "human"
+                : status === "FAILED"
+                  ? "failed"
+                  : "todo";
+        const b = button(
+          (kind === "done" ? "✓ " : "○ ") + label,
+          () => toggleStep(p, id),
+          "is-" + kind,
+        );
+        b.dataset.stage = id;
+        b.dataset.status = status;
+        b.title =
+          label +
+          "：" +
+          (states[status] || "已記錄") +
+          (row && historical(p) ? "（上次同步）" : "");
+        b.setAttribute("aria-label", b.title);
+        b.setAttribute("aria-pressed", String(kind === "done"));
+        b.disabled = !storeReady;
+        b.title =
+          label + (kind === "done" ? "：點擊取消完成" : "：點擊標記完成");
+        route.append(b);
+      });
+    body.append(route);
+    const feedback = node(
+      "p",
+      "點選階段即可更新；完成後段會自動補齊前面。",
+      "co-save-status",
+    );
+    feedback.role = "status";
+    body.append(feedback);
     if (manual(p)?.done)
       body.append(
         node("p", "✓ 你已標記完成 · " + date(manual(p).timestamp), "co-state"),
       );
     const milestones = node("ul", undefined, "co-milestones");
-    const recent = [...rows]
-      .sort((a, b) => epoch(b.updated_at) - epoch(a.updated_at))
-      .slice(0, 3);
+    const recent = recentRecords(p);
+    if (recent.length) body.append(node("h4", "最近紀錄", "co-recent-heading"));
     for (const row of recent) {
       const li = node("li");
       li.append(
-        node("time", date(row.updated_at, true)),
-        node("span", rowText(row)),
+        node("time", date(row.timestamp)),
+        node("span", row.text),
+        node("small", row.source),
       );
       milestones.append(li);
     }
-    if (!recent.length)
-      milestones.append(node("li", "尚無同步紀錄，故事從這裡開始。"));
-    body.append(milestones);
+    if (recent.length) body.append(milestones);
     const actions = node("div", undefined, "co-actions");
     const done = button(
       manual(p)?.done ? "取消完成" : "✓ 做好了",
@@ -788,12 +1171,234 @@
     done.disabled = !storeReady;
     actions.append(
       done,
+      button("對應企劃", () => projectSource(p), "co-button quiet"),
+      button("設定階段", () => stageSettings(p), "co-button quiet"),
       button("完整時間軸", () => showTimeline(p), "co-button quiet"),
       button("查看詳情", () => showDetails(p), "co-button quiet"),
+      button("移除專案", () => confirmRemove(p), "co-button danger"),
     );
     body.append(actions);
     card.append(body);
     return card;
+  }
+  function projectSource(p) {
+    const d = modal(p ? "對應企劃" : "新增專案");
+    const name = node("input");
+    name.maxLength = 120;
+    name.placeholder = "專案名稱";
+    name.setAttribute("aria-label", "專案名稱");
+    if (!p) d.append(name);
+    const select = node("select");
+    select.setAttribute("aria-label", "對應企劃");
+    const none = node("option", "尚未指定企劃");
+    none.value = "";
+    select.append(none);
+    for (const source of sourceProjects().filter(
+      (s) =>
+        s.classification === "REGISTERED" &&
+        ["YOUTUBE", "VIDEO_PROJECT"].includes(s.project_type),
+    )) {
+      const option = node("option", source.project_name);
+      option.value = source.project_id;
+      select.append(option);
+    }
+    select.value = p ? sourceId(p) || "" : "";
+    d.append(
+      select,
+      node(
+        "p",
+        "選擇後會顯示該企劃的進度與來源紀錄。更換對應時，各企劃的進度分別保留；專案名稱與封面會保留。",
+      ),
+      button(
+        "儲存",
+        async () => {
+          if (!p && !name.value.trim()) {
+            name.focus();
+            return;
+          }
+          if (
+            await save(p ? "project-source" : "projects", {
+              ...(p
+                ? { project_id: p.project_id, revision: presentation.revision }
+                : { display_name: name.value.trim() }),
+              source_project_id: select.value || null,
+            })
+          ) {
+            d.close();
+            toast(p ? "已更新對應企劃" : "已新增專案");
+          }
+        },
+        "co-button primary",
+      ),
+    );
+  }
+  function stageSettings(p) {
+    const d = modal("設定階段");
+    d.append(
+      node(
+        "p",
+        "勾選此專案需要的階段。取消的階段會從流程移除，歷史紀錄仍會保留，也能再加回來。至少保留一個階段。",
+      ),
+    );
+    const fields = [];
+    const list = node("div", undefined, "co-stage-settings");
+    for (const [id, title] of Object.entries(routeLabels)) {
+      const label = node("label");
+      const input = node("input");
+      input.type = "checkbox";
+      input.checked = enabledSteps(p).includes(id);
+      input.value = id;
+      label.append(input, node("span", title));
+      list.append(label);
+      fields.push(input);
+    }
+    d.append(
+      list,
+      button(
+        "儲存階段",
+        async () => {
+          if (!fields.some((e) => e.checked)) {
+            toast("請至少保留一個階段");
+            return;
+          }
+          if (
+            await save("workflow-settings", {
+              project_id: p.project_id,
+              revision: presentation.revision,
+              disabled_steps: fields
+                .filter((e) => !e.checked)
+                .map((e) => e.value),
+            })
+          ) {
+            d.close();
+            toast("製作階段已更新");
+          }
+        },
+        "co-button primary",
+      ),
+    );
+  }
+  function browserConnection(d) {
+    d.append(
+      node("h3", "連接 Chrome 裡的 ChatGPT"),
+      node(
+        "p",
+        "只傳送回覆狀態、頁面標題與時間到這台電腦。頁面標題會顯示在企劃工作框，不讀取對話文字。",
+      ),
+    );
+    const download = node("a", "下載本機連線工具", "co-button");
+    download.href = "/api/creator/browser-bridge/download";
+    download.download = "renguin-chatgpt-bridge.zip";
+    d.append(
+      download,
+      node(
+        "p",
+        "解壓縮後，在 Chrome 的擴充功能頁面開啟開發人員模式，選擇「載入未封裝項目」。安裝後重新整理 Chrome 裡的 Star Office，再按下方連接；ChatGPT 對話不需要重新整理。",
+        "co-muted",
+      ),
+    );
+    d.append(
+      button("連接 ChatGPT 網頁", async () => {
+        const id = crypto.randomUUID();
+        let listener;
+        const pairing = new Promise((resolve) => {
+          const timer = setTimeout(() => {
+            window.removeEventListener("message", listener);
+            resolve(false);
+          }, 8000);
+          listener = (event) => {
+            if (
+              event.source !== window ||
+              event.origin !== location.origin ||
+              event.data?.type !== "RENGUIN_PAIR_RESULT" ||
+              event.data.request_id !== id
+            )
+              return;
+            clearTimeout(timer);
+            window.removeEventListener("message", listener);
+            resolve(event.data.paired === true);
+          };
+          window.addEventListener("message", listener);
+        });
+        try {
+          const value = await json("/api/creator/browser-bridge/pair", {
+            method: "POST",
+          });
+          window.postMessage(
+            { type: "RENGUIN_PAIR", token: value.token, request_id: id },
+            location.origin,
+          );
+          if (await pairing) {
+            toast("ChatGPT 連線工具已配對，等待網頁回報");
+            poll();
+          } else toast("尚未找到連線工具，請在 Chrome 安裝後重新整理本頁。");
+        } catch {
+          toast("連線未完成，請稍後再試。");
+        }
+      }),
+    );
+    if (browserStatus.paired)
+      d.append(
+        button(
+          "中斷 ChatGPT 連線",
+          async () => {
+            try {
+              await json("/api/creator/browser-bridge/disconnect", {
+                method: "POST",
+              });
+              browserStatus = { connected: false, observations: [] };
+              memberSignature = "";
+              renderMembers();
+              d.close();
+              toast("已中斷 ChatGPT 網頁連線");
+            } catch {
+              toast("未能中斷連線，請稍後再試。");
+            }
+          },
+          "co-button quiet",
+        ),
+      );
+  }
+  function projectHouse(p, cover) {
+    const house = node("div", undefined, "co-house");
+    const frame = node("div", undefined, "co-house-framebox");
+    frame.append(cover);
+    house.append(frame);
+    if (!window.CreatorResidents?.length) return house;
+    let hash = 2166136261;
+    for (const char of p.project_id)
+      hash = Math.imul(hash ^ char.codePointAt(0), 16777619) >>> 0;
+    const character = window.CreatorResidents.find(
+      (c) => c.name === presentation.projects[p.project_id]?.resident_character,
+    );
+    if (!character) return house;
+    const track = node("div", undefined, "co-resident-track");
+    track.setAttribute("aria-hidden", "true");
+    const resident = node(
+      "div",
+      undefined,
+      "co-resident" + (character.fixed ? " is-perched" : ""),
+    );
+    resident.dataset.character = character.name;
+    resident.dataset.motion = character.fixed ? "fixed" : "roaming";
+    const [x, y, w, h] = character.bounds;
+    resident.style.aspectRatio = `${w} / ${h}`;
+    resident.style.setProperty("--stroll-duration", `${24 + (hash % 17)}s`);
+    resident.style.setProperty("--stroll-delay", `${-(hash % 19)}s`);
+    const facing = node("div", undefined, "co-resident-facing");
+    const sprite = node("div", undefined, "co-resident-sprite");
+    const img = node("img");
+    img.src = "/static/renguin-characters/residents/" + character.file;
+    img.alt = "";
+    img.loading = "lazy";
+    img.draggable = false;
+    img.style.cssText = `width:${(character.size[0] / w) * 100}%;height:${(character.size[1] / h) * 100}%;left:${(-x / w) * 100}%;top:${(-y / h) * 100}%`;
+    sprite.append(img);
+    facing.append(sprite);
+    resident.append(facing);
+    track.append(resident);
+    house.append(track);
+    return house;
   }
   function suggestions() {
     const items = [];
@@ -817,7 +1422,7 @@
         notes: historical(p)
           ? "上次同步的待處理事項，請確認目前是否仍需要。"
           : "",
-        provenance: stage.id === "GATE" ? "Human Gate" : "Content OS",
+        provenance: "製作流程建議",
         state: "today",
         source_at: stage.updated_at,
       });
@@ -858,8 +1463,12 @@
             ? [
                 ["", "不指定企劃"],
                 ...allProjects()
-                  .filter((p) => p.classification === "REGISTERED")
-                  .map((p) => [p.project_id, p.project_name]),
+                  .filter(
+                    (p) =>
+                      p.classification === "REGISTERED" &&
+                      !presentation.projects[p.project_id]?.hidden,
+                  )
+                  .map((p) => [p.project_id, projectName(p)]),
               ]
             : [
                 ["", "一般"],
@@ -1029,7 +1638,7 @@
           node(
             "p",
             [
-              p?.project_name,
+              p ? projectName(p) : null,
               item.provenance,
               item.date,
               item.priority === "high" ? "優先" : null,
@@ -1115,11 +1724,115 @@
       inboxRoot.append(d);
     }
   }
+  async function moveProject(source, target) {
+    if (!source || !target || source === target) return;
+    const ids = [...activeProjectIds];
+    const from = ids.indexOf(source),
+      to = ids.indexOf(target);
+    if (from < 0 || to < 0) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, source);
+    const retained = (presentation.project_order || []).filter(
+      (id) => !ids.includes(id),
+    );
+    if (await save("project-order", { order: [...ids, ...retained] })) {
+      toast("企劃順序已儲存，前兩個顯示在正在製作");
+      root
+        .querySelector(
+          `[data-project-id="${CSS.escape(source)}"] .co-project-drag`,
+        )
+        ?.focus({ preventScroll: true });
+    }
+  }
+  function projectSorting(card, p, index) {
+    const bar = node("div", undefined, "co-project-sort");
+    const handle = button(
+      "⠿ 拖曳排序",
+      () => {},
+      "co-button quiet co-project-drag",
+    );
+    handle.title = "拖曳排序，或使用上、下方向鍵移動";
+    handle.setAttribute("aria-label", "拖曳排序 " + projectName(p));
+    handle.draggable = false;
+    handle.disabled = !storeReady;
+    const clearDrag = () => {
+      dragging = false;
+      projectDragId = null;
+      root
+        .querySelectorAll(".co-project.is-dragging,.co-project.is-drop-target")
+        .forEach((e) => e.classList.remove("is-dragging", "is-drop-target"));
+    };
+    handle.addEventListener("keydown", async (e) => {
+      if (!["ArrowUp", "ArrowDown"].includes(e.key)) return;
+      e.preventDefault();
+      await moveProject(
+        p.project_id,
+        activeProjectIds[index + (e.key === "ArrowUp" ? -1 : 1)],
+      );
+    });
+    // Pointer dragging works with mouse, touch and pen; other card controls remain independent.
+    let touchTarget = null;
+    handle.addEventListener("pointerdown", (e) => {
+      if (!storeReady || e.button !== 0) return;
+      e.preventDefault();
+      projectDragId = p.project_id;
+      dragging = true;
+      touchTarget = null;
+      handle.setPointerCapture(e.pointerId);
+      card.classList.add("is-dragging");
+    });
+    handle.addEventListener("pointermove", (e) => {
+      if (projectDragId !== p.project_id) return;
+      e.preventDefault();
+      if (e.clientY < 65) window.scrollBy(0, -24);
+      else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
+      const hovered = document.elementFromPoint(e.clientX, e.clientY);
+      if (hovered?.closest(".co-other-projects > summary"))
+        otherProjectsToggle.open = true;
+      const target = hovered?.closest("#active-projects .co-project");
+      touchTarget = target?.dataset.projectId || null;
+      root
+        .querySelectorAll(".is-drop-target")
+        .forEach((el) => el.classList.remove("is-drop-target"));
+      target?.classList.add("is-drop-target");
+    });
+    handle.addEventListener("pointerup", async (e) => {
+      if (projectDragId !== p.project_id) return;
+      const target = touchTarget;
+      clearDrag();
+      await moveProject(p.project_id, target);
+    });
+    handle.addEventListener("pointercancel", clearDrag);
+    bar.append(
+      handle,
+      node(
+        "small",
+        index < 2 ? "目前顯示 · " + (index + 1) : "已收起 · " + (index + 1),
+      ),
+    );
+    if (index >= 2) {
+      const promote = button(
+        "移到前面",
+        () => moveProject(p.project_id, activeProjectIds[0]),
+        "co-button quiet",
+      );
+      promote.disabled = !storeReady;
+      bar.append(promote);
+    }
+    card.querySelector(".co-project-body").prepend(bar);
+  }
   function render() {
-    if (!root || dragging) return;
+    if (!root || dragging || editingName) return;
     const payload = response.projection || lastGood;
     const high = payload?.source?.high_water_timestamp;
     const healthy = window.RenguinFreshness.envelope(response).fresh;
+    const notice = root.querySelector(".co-connection");
+    if (notice) {
+      notice.hidden = !loaded || (response.projection && storeReady);
+      notice.textContent = !response.projection
+        ? "暫時無法讀取專案資料，正在重新連線。"
+        : "暫時無法儲存變更，正在重新連線。";
+    }
     syncButton.textContent =
       (healthy ? "● 部分來源同步 · " : "○ 最後同步 · ") +
       (validTime(high)
@@ -1143,17 +1856,33 @@
     if (hash !== signature) {
       signature = hash;
       const projects = primary();
+      const projectRank = new Map(
+        (presentation.project_order || []).map((id, i) => [id, i]),
+      );
       projects.sort(
         (a, b) =>
-          (hasRunning(b.project_id) ? 1 : 0) -
-            (hasRunning(a.project_id) ? 1 : 0) ||
+          (projectRank.get(a.project_id) ?? Infinity) -
+            (projectRank.get(b.project_id) ?? Infinity) ||
+          (hasRunning(sourceId(b)) ? 1 : 0) -
+            (hasRunning(sourceId(a)) ? 1 : 0) ||
           (isHuman(b) ? 1 : 0) - (isHuman(a) ? 1 : 0) ||
           (epoch(lastStamp(b)) || 0) - (epoch(lastStamp(a)) || 0),
       );
       projectsRoot.replaceChildren();
+      otherProjectsRoot.replaceChildren();
       completedRoot.replaceChildren();
-      for (const p of projects.filter((p) => !projectDone(p)))
-        projectsRoot.append(projectCard(p));
+      const activeProjects = projects.filter((p) => !projectDone(p));
+      activeProjectIds = activeProjects.map((p) => p.project_id);
+      activeProjects.forEach((p, index) => {
+        const card = projectCard(p);
+        projectSorting(card, p, index);
+        (index < 2 ? projectsRoot : otherProjectsRoot).append(card);
+      });
+      otherProjectsToggle.hidden = activeProjects.length <= 2;
+      otherProjectsToggle.querySelector("summary").textContent =
+        "其他企劃 · " +
+        Math.max(0, activeProjects.length - 2) +
+        "　展開後可拖曳排序";
       const done = projects
         .filter((p) => projectDone(p))
         .sort((a, b) => epoch(stampDone(b)) - epoch(stampDone(a)));
@@ -1165,7 +1894,11 @@
         projectsRoot.append(
           node(
             "p",
-            payload ? "目前沒有製作中的企劃。" : "正在連接企劃紀錄…",
+            payload
+              ? "目前還沒有正在追蹤的影片專案。"
+              : loaded
+                ? "暫時無法讀取專案資料，正在重新連線。"
+                : "正在讀取專案資料…",
             "co-empty",
           ),
         );
@@ -1185,14 +1918,26 @@
         d.className = "co-empty";
         d.append(node("summary", "更早完成的企劃 · " + older.length));
         for (const p of older)
-          d.append(button(p.project_name, () => showDetails(p)));
+          d.append(button(projectName(p), () => showDetails(p)));
         completedRoot.append(d);
       }
+      houseObserver.disconnect();
+      root
+        .querySelectorAll(".co-house")
+        .forEach((house) => houseObserver.observe(house));
       renderInbox();
     }
     renderMembers();
   }
   async function poll() {
+    if (polling) return;
+    polling = true;
+    clearTimeout(pollTimer);
+    try {
+      browserStatus = await json("/api/creator/browser-bridge/status");
+    } catch {
+      browserStatus = { connected: false, observations: [] };
+    }
     try {
       const r = await json("/api/renguin/projects");
       if (
@@ -1229,14 +1974,21 @@
     } catch {
       storeReady = false;
     }
+    loaded = true;
     render();
+    retryDelay =
+      response.projection && storeReady
+        ? 5000
+        : Math.min(retryDelay * 2, 30000);
+    polling = false;
+    pollTimer = setTimeout(poll, retryDelay);
   }
   function setup() {
     const game = document.getElementById("game-container");
     const header = node("header", undefined, "co-map-header");
     const title = node("div");
     title.append(
-      node("h1", "STAR OFFICE"),
+      node("h1", "RENGUIN OFFICE"),
       node("p", "CREATOR OFFICE · 讓好故事，在這裡發生"),
     );
     syncButton = button("○ 連接辦公室…", () => {
@@ -1252,11 +2004,29 @@
         }),
       );
     });
-    header.append(title, syncButton);
+    const shortcuts = node("div", undefined, "co-map-actions");
+    shortcuts.append(
+      button("影片專案", () =>
+        document
+          .getElementById("active-projects")
+          .scrollIntoView({ block: "start" }),
+      ),
+      button("我的待辦", () =>
+        document
+          .getElementById("human-inbox")
+          .scrollIntoView({ block: "start" }),
+      ),
+      syncButton,
+    );
+    header.append(title, shortcuts);
     document.getElementById("main-stage").before(header);
     root = node("main");
     root.id = "creator-office";
     game.after(root);
+    const notice = node("p", "", "co-connection");
+    notice.role = "status";
+    notice.hidden = true;
+    root.append(notice);
     const loading = document.getElementById("loading-overlay");
     if (loading) game.append(loading);
     function section(id, title, subtitle, cls) {
@@ -1281,9 +2051,17 @@
     [projectsRoot] = section(
       "active-projects",
       "正在製作",
-      "每一條路線，都是一個正在成形的故事",
-      "co-grid",
+      "先專注兩個企劃 · 拖曳調整順序，前兩位留在這裡",
+      "co-grid co-featured-projects",
     );
+    projectsRoot.previousElementSibling.append(
+      button("＋ 新增專案", () => projectSource()),
+    );
+    otherProjectsToggle = node("details", undefined, "co-other-projects");
+    otherProjectsToggle.append(node("summary", "其他企劃"));
+    otherProjectsRoot = node("div", undefined, "co-grid");
+    otherProjectsToggle.append(otherProjectsRoot);
+    projectsRoot.after(otherProjectsToggle);
     let inboxHeader;
     [inboxRoot, inboxHeader] = section(
       "human-inbox",
@@ -1300,6 +2078,35 @@
     );
     const footer = node("footer", undefined, "co-technical-footer");
     footer.append(
+      button(
+        "已移除的專案",
+        () => {
+          const d = modal("已移除的專案");
+          const removed = allProjects().filter(
+            (p) => presentation.projects[p.project_id]?.hidden,
+          );
+          if (!removed.length) d.append(node("p", "沒有已移除的專案。"));
+          for (const p of removed) {
+            const row = node("div", undefined, "co-actions");
+            row.append(
+              node("p", projectName(p)),
+              button("恢復專案", async () => {
+                if (
+                  await save("project", {
+                    project_id: p.project_id,
+                    hidden: false,
+                  })
+                ) {
+                  d.close();
+                  toast("專案已恢復");
+                }
+              }),
+            );
+            d.append(row);
+          }
+        },
+        "co-button quiet",
+      ),
       button(
         "查看詳情",
         () => {
@@ -1322,9 +2129,13 @@
         "其他企劃",
         () => {
           const d = modal("其他企劃");
-          for (const p of allProjects().filter((p) => !primary().includes(p)))
+          for (const p of allProjects().filter(
+            (p) =>
+              !primary().some((card) => card.project_id === p.project_id) &&
+              !presentation.projects[p.project_id]?.hidden,
+          ))
             d.append(
-              button(p.project_name, () => showDetails(p), "co-button quiet"),
+              button(projectName(p), () => showDetails(p), "co-button quiet"),
             );
         },
         "co-button quiet",
@@ -1338,7 +2149,6 @@
     root.append(footer);
     render();
     poll();
-    setInterval(poll, 5000);
     setInterval(renderMembers, 1000);
   }
   window.CreatorOffice = {
