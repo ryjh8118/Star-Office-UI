@@ -1,5 +1,5 @@
 """Isolated Office Preview: production sources read-only, local UI state separate."""
-import argparse,json,os,secrets,sys,tempfile
+import argparse,json,os,secrets,sys,tempfile,time
 from pathlib import Path
 P=argparse.ArgumentParser()
 P.add_argument('--port',type=int,default=19109)
@@ -29,6 +29,10 @@ if args.native_home:os.environ['RENGUIN_NATIVE_HOME']=args.native_home
 if args.discovery_root:os.environ['RENGUIN_PROJECT_SOURCE_ROOTS']=json.dumps(args.discovery_root)
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(OFFICE/'backend'))
+import preview_identity
+# Captured before the audit hook so the payload names the commit this process started from.
+REVISION,REVISION_SOURCE=preview_identity.revision(OFFICE)
+STARTED_AT=time.time()
 def guard(event,values):
  targets=[]
  if event=='open':
@@ -47,9 +51,10 @@ for key,file in [('STATE_FILE','state.json'),('AGENTS_STATE_FILE','agents-state.
 app.MEMORY_DIR=str(STATE/'memory');app.IDENTITY_FILE=str(STATE/'IDENTITY.md')
 app.HOME_FAVORITES_DIR=str(STATE/'home-favorites');app.HOME_FAVORITES_INDEX_FILE=str(STATE/'home-favorites/index.json');app.BG_HISTORY_DIR=str(STATE/'bg-history')
 @app.app.get('/api/renguin/preview-info')
-def preview_info():return jsonify({'kind':'RENGUIN_ISOLATED_P0_PREVIEW','pid':os.getpid(),'office_worktree':str(OFFICE),
+def preview_info():return jsonify({'kind':preview_identity.KIND,'pid':os.getpid(),'office_worktree':str(OFFICE),
  'producer_worktree':args.producer_root,'canonical_root':args.canonical_root,'canonical_read_only':True,
- 'state_directory':str(STATE),'acceptance':'NOT_YET_ACCEPTED','production_deployed':False})
+ 'state_directory':str(STATE),'acceptance':'NOT_YET_ACCEPTED','production_deployed':False,
+ 'office_revision':REVISION,'office_revision_source':REVISION_SOURCE,'started_at':STARTED_AT})
 @app.app.after_request
 def preview_headers(response):
  if request.path=='/' and response.status_code==200 and response.mimetype=='text/html':

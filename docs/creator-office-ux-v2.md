@@ -31,9 +31,15 @@ Nothing in this pass observes work. The member tier (`data-tier`) restates the s
 
 ## Running and verifying
 
-The existing CMD launcher and Python server are retained. Choose a free preview port with `START_STAR_OFFICE_PREVIEW.cmd --port 19119`. It reads the existing configured Content OS producer and canonical checkout, while all Office-owned writes stay in the preview state directory. No production cutover or workload dispatch is performed by the launcher.
+The existing CMD launcher and Python server are retained. Choose a free preview port with `START_STAR_OFFICE_PREVIEW.cmd --port 19119`. It reads the existing configured Content OS producer and canonical checkout, while all Office-owned writes stay in the preview state directory. No production cutover or workload dispatch is performed by the launcher. The CMD prefers the virtual environment inside its own checkout, so a moved or re-created Office worktree still launches its own Preview.
 
-Run `python -m unittest discover -s tests -v`, `node tests/test_creator_truth.cjs` and `node --test tests/creator-ambience.test.cjs tests/creator-scene.test.cjs tests/creator-contexts.test.cjs tests/browser-bridge.test.cjs`. `backend/requirements.txt` and `pyproject.toml` both use Pillow 10.4.0. The `uv.lock` file includes this dependency.
+## Preview identity and the port
+
+`/api/renguin/preview-info` reports the commit the Preview process started from (`office_revision`), read straight from the checkout's git files — the server's audit hook blocks subprocesses, and a linked worktree resolves through its common directory. The launcher prints it as `loaded_version` beside `checkout_revision`, so which build is being served is observable rather than assumed.
+
+The identity gate itself is unchanged: kind, read-only canonical, and all four pinned paths are still required, and every served Preview passes `verify()`. What changed is that the launcher now separates three situations the gate used to collapse into one opaque failure. A Preview from **another Office checkout** holding the port is reclaimed — it is a disposable read-only viewer by its own verified contract, its own state directory is untouched, and `--keep-foreign` refuses instead. **This checkout's own Preview started before a sync** reports an older commit (or none at all, if it predates this contract) and is restarted, so a pull can never leave a stale build on the port. Anything the operating system cannot confirm is a Preview process is **never stopped**; the launcher refuses and names the port, the holder and the pid. Mismatch errors now carry expected, actual and pid instead of only the key name.
+
+Run `python -m unittest discover -s tests -v` (it covers the preview identity authority in `tests/test_preview_identity.py`), `node tests/test_creator_truth.cjs` and `node --test tests/creator-ambience.test.cjs tests/creator-scene.test.cjs tests/creator-contexts.test.cjs tests/browser-bridge.test.cjs`. `backend/requirements.txt` and `pyproject.toml` both use Pillow 10.4.0. The `uv.lock` file includes this dependency.
 
 The route and living-lodge visual fixtures under `tests/visual` are explicitly labelled as style tests, and carry no canonical project or executor activity. Browser QA uses a separate `.qa-runtime` store, so test covers, completed projects and sample to-dos do not affect the usable preview.
 
