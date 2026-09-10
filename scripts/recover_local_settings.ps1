@@ -41,6 +41,13 @@ function Under([string]$root, [string[]]$parts) {
     return $path
 }
 function Head([string]$text) { Write-Host ''; Write-Host "== $text" -ForegroundColor Cyan }
+function Native([scriptblock]$Command) {
+    # Windows PowerShell turns a native command's stderr into a NativeCommandError, which
+    # $ErrorActionPreference = 'Stop' would make terminating. Verification wants what these
+    # tools printed, not an exception, so run them with the preference relaxed locally.
+    $ErrorActionPreference = 'Continue'
+    return (& $Command 2>&1 | Out-String)
+}
 
 $Repo = (Resolve-Path $Repo).Path
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -138,15 +145,15 @@ try {
     $gate['NEW_UI_PRESERVED'] = if ($missing.Count -eq 0 -and $indexed -ge 2) { 'YES' } else { 'NO' }
 
     Say '  running tests...'
-    $testOut = & $python -m unittest discover -s tests 2>&1 | Out-String
+    $testOut = Native { & $python -m unittest discover -s tests }
     $gate['PYTHON_TESTS'] = if ($testOut -match '\bOK\b') { (($testOut -split "`n" | Where-Object { $_ -match '^Ran ' }) -join ' ').Trim() + ' OK' } else { 'FAIL' }
     if ($gate['PYTHON_TESTS'] -eq 'FAIL') { $testOut | Set-Content (Join-Path $workspace 'tests-failed.txt') -Encoding UTF8 }
 
     if (Get-Command node -ErrorAction SilentlyContinue) {
-        $truth = & node (Under $Repo @('tests', 'test_creator_truth.cjs')) 2>&1 | Out-String
+        $truth = Native { & node (Under $Repo @('tests', 'test_creator_truth.cjs')) }
         $gate['AGENT_TRUTH'] = if ($truth -match '"result"\s*:\s*"PASS"') { 'PASS' } else { 'FAIL' }
-        $suites = & node --test (Under $Repo @('tests', 'creator-ambience.test.cjs')) (Under $Repo @('tests', 'creator-scene.test.cjs')) (Under $Repo @('tests', 'creator-contexts.test.cjs')) (Under $Repo @('tests', 'browser-bridge.test.cjs')) 2>&1 | Out-String
-        $gate['NODE_SUITES'] = if ($suites -match '#\s*fail\s+0') { 'PASS' } else { 'FAIL' }
+        $suites = Native { & node --test (Under $Repo @('tests', 'creator-ambience.test.cjs')) (Under $Repo @('tests', 'creator-scene.test.cjs')) (Under $Repo @('tests', 'creator-contexts.test.cjs')) (Under $Repo @('tests', 'browser-bridge.test.cjs')) }
+        $gate['NODE_SUITES'] = if ($suites -match '[#ℹ]\s*fail\s+0') { 'PASS' } else { 'FAIL' }
     } else {
         $gate['AGENT_TRUTH'] = 'SKIPPED (node not on PATH)'
         $gate['NODE_SUITES'] = 'SKIPPED (node not on PATH)'
@@ -154,7 +161,7 @@ try {
 
     if (-not $SkipPreview) {
         Say "  starting the Preview on $Port..."
-        $previewRaw = & $python (Under $Repo @('scripts', 'launch_preview.py')) --port $Port --server-only 2>&1 | Out-String
+        $previewRaw = Native { & $python (Under $Repo @('scripts', 'launch_preview.py')) --port $Port --server-only }
         $previewRaw | Set-Content (Join-Path $workspace 'preview.json') -Encoding UTF8
         try {
             $preview = $previewRaw | ConvertFrom-Json
@@ -170,9 +177,14 @@ try {
     }
 
     $after = $report.after
-    $store = $after.production
+    # The Preview keeps its own store, so report the one behind the server just verified;
+    # reading production instead would show an empty Office to anyone who works in Preview.
+    $storeName = if ($SkipPreview) { 'production' } else { 'preview' }
+    $store = $after.$storeName
+    if (-not $store) { $storeName = 'production'; $store = $after.production }
     if ($store) {
-        $gate['PROJECTS'] = "$($store.projects) (named $($store.named_projects), covers $($store.covers), workflow $($store.with_workflow))"
+        $gate['STORE'] = $storeName
+        $gate['PROJECTS'] = "$($store.projects) (renamed $($store.named_projects), covers $($store.covers), workflow $($store.with_workflow))"
         $gate['CAST_ASSIGNED'] = $store.cast_assigned
         $gate['INBOX'] = $store.inbox
     } else {
