@@ -1,0 +1,500 @@
+/* Living-lodge ambience. Decorative only: nothing here is a work-state authority. */
+:root {
+  --co-night-deep: #121a20;
+  --co-night-soft: #1b2430;
+  --co-bark: #4a3327;
+  --co-timber: #6d4a34;
+  --co-timber-lit: #8f6644;
+  --co-ember: #e09248;
+  --co-ember-soft: #f6c383;
+  --co-candle: #ffe0ab;
+  --co-moss: #4e6b52;
+  --co-moss-lit: #8aa886;
+  --co-parchment: #f8efdb;
+  --co-parchment-deep: #eddfc0;
+  --co-frost: #b9d3dd;
+  --co-amb-px: 0;
+  --co-amb-py: 0;
+  --co-glass: #f8efdb14;
+  --co-lift: 0 10px 26px #06090c4d, 0 2px 0 #ffffff1f inset;
+}
+
+/* ---------------------------------------------------------------- page ground */
+body {
+  background: var(--co-night-deep) !important;
+}
+/* One viewport-locked dusk backdrop; no scroll seams and nothing above the content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(96deg, #ffffff04 0 1px, #00000000 1px 7px),
+    repeating-linear-gradient(4deg, #0000000f 0 1px, #00000000 1px 11px),
+    radial-gradient(126% 56% at 50% 112%, #7d452a72 0%, #7d452a00 60%),
+    radial-gradient(74% 42% at 8% -6%, #2b4a444d 0%, #2b4a4400 70%),
+    radial-gradient(72% 40% at 94% -8%, #3d3a5c52 0%, #3d3a5c00 70%),
+    linear-gradient(179deg, #101820 0%, #16202a 32%, #1a2029 64%, #231e22 100%);
+}
+
+/* ------------------------------------------------------------- lodge map frame */
+#game-container {
+  position: relative;
+  isolation: isolate;
+  border: 9px solid #6f4c34 !important;
+  border-bottom-width: 0 !important;
+  border-radius: 15px 15px 0 0 !important;
+  background: #563a28 !important;
+  box-shadow:
+    0 0 0 1px #2a1c12,
+    0 0 0 3px #8a613f5c,
+    0 0 46px -8px #e0924857,
+    0 24px 48px #05080b73 !important;
+}
+#game-container canvas {
+  border-radius: 7px 7px 0 0;
+}
+
+/* ------------------------------------------------------------- ambience layers */
+.co-amb {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 7px 7px 0 0;
+  container-type: size;
+  contain: layout paint;
+}
+.co-amb-back {
+  z-index: 2000;
+  translate: calc(var(--co-amb-px) * 7px) calc(var(--co-amb-py) * 5px);
+  transition: translate 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.co-amb-front {
+  z-index: 3400;
+  translate: calc(var(--co-amb-px) * -11px) calc(var(--co-amb-py) * -7px);
+  transition: translate 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Window light: soft daylight wedges falling into the room. */
+.co-amb-window {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  transform: rotate(var(--tilt));
+  border-radius: 46%;
+  opacity: 0.5;
+  background: radial-gradient(
+    closest-side,
+    #eaf8ff5e 0%,
+    #cfe6f833 46%,
+    #cfe6f800 78%
+  );
+}
+.co-amb-warmth {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 46% at 53% 33%, #ff9f4a29 0%, #ff9f4a00 72%),
+    radial-gradient(38% 34% at 14% 54%, #ffbf6e21 0%, #ffbf6e00 74%),
+    radial-gradient(42% 40% at 84% 30%, #7fd0ff1c 0%, #7fd0ff00 76%);
+}
+
+/* Practical lights traced from the map art. */
+.co-amb-glow {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  opacity: 0.62;
+}
+.co-amb-glow[data-tone="ember"] {
+  background: radial-gradient(
+    circle,
+    #ffd08a94 0%,
+    #ff9c4a5e 26%,
+    #e0632400 68%
+  );
+  opacity: 0.8;
+}
+.co-amb-glow[data-id="hearth-floor"] {
+  opacity: 0.42;
+}
+.co-amb-glow[data-tone="lamp"] {
+  background: radial-gradient(
+    circle,
+    #ffe1a87a 0%,
+    #f7bf6c47 30%,
+    #d9992f00 70%
+  );
+}
+.co-amb-glow[data-tone="screen"] {
+  background: radial-gradient(
+    circle,
+    #b9e6ff5e 0%,
+    #7cc6f036 32%,
+    #4aa0d000 72%
+  );
+}
+.co-amb-glow[data-tone="alarm"] {
+  background: radial-gradient(
+    circle,
+    #ff9d8f57 0%,
+    #ef5f4a2e 34%,
+    #d0301c00 72%
+  );
+  opacity: 0.46;
+}
+.is-amb-live .co-amb-glow[data-motion="flicker"] {
+  animation: co-amb-flicker var(--beat) ease-in-out infinite;
+}
+.is-amb-live .co-amb-glow[data-motion="pulse"] {
+  animation: co-amb-pulse calc(var(--beat) * 2.2) ease-in-out infinite;
+}
+@keyframes co-amb-flicker {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  28% {
+    opacity: 0.92;
+    transform: scale(1.045);
+  }
+  54% {
+    opacity: 0.66;
+    transform: scale(0.985);
+  }
+  76% {
+    opacity: 0.86;
+    transform: scale(1.02);
+  }
+}
+@keyframes co-amb-pulse {
+  50% {
+    opacity: 0.82;
+    transform: scale(1.03);
+  }
+}
+
+/* A warm string of bulbs draped under the lodge eaves. */
+.co-amb-garland {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 46px;
+}
+.co-amb-garland::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 30px;
+  border-bottom: 2px solid #6d4c33d1;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  box-shadow:
+    0 1px 0 #ffdca552,
+    0 3px 12px #e0924826;
+}
+.co-amb-bulb {
+  position: absolute;
+  left: var(--x);
+  top: var(--sag);
+  width: 9px;
+  height: 12px;
+  margin-left: -4.5px;
+  border-radius: 46% 46% 54% 54%;
+  background: radial-gradient(circle at 50% 32%, #fffbe8, #ffc76a 56%, #c07d2c);
+  opacity: 0.9;
+}
+/* The halo is its own layer so twinkling stays on opacity and transform. */
+.co-amb-bulb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd68c8f 0%, #e0924833 34%, #e0924800 68%);
+  opacity: 0.5;
+}
+.is-amb-live .co-amb-bulb::after {
+  animation: co-amb-twinkle var(--beat) ease-in-out var(--delay) infinite;
+}
+@keyframes co-amb-twinkle {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.78);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}
+
+/* Light dust drifting through the warm air. */
+.co-amb-dust,
+.co-amb-snow,
+.co-amb-steam {
+  position: absolute;
+  inset: 0;
+}
+.co-amb-mote {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3d2 0%, #ffd79a00 72%);
+  opacity: 0;
+}
+.is-amb-live .co-amb-mote {
+  animation: co-amb-drift var(--duration) linear var(--delay) infinite;
+}
+@keyframes co-amb-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  18%,
+  74% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), var(--rise), 0);
+  }
+}
+
+/* Snow past the windows, kept sparse so the art stays readable. */
+.co-amb-flake {
+  position: absolute;
+  left: var(--x);
+  top: -10px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fdfeff 0%, #dbeefa8c 42%, #dbeefa00 72%);
+  opacity: 0;
+}
+.is-amb-live .co-amb-flake {
+  animation: co-amb-fall var(--duration) linear var(--delay) infinite;
+}
+@keyframes co-amb-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  12%,
+  86% {
+    opacity: var(--peak);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), 108cqh, 0);
+  }
+}
+
+/* One quiet cup of coffee on the counter. */
+.co-amb-steam {
+  inset: auto;
+  left: 46.6%;
+  top: 40%;
+  width: 4.4%;
+  height: 12%;
+}
+.co-amb-wisp {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffaf0c4 0%, #fffaf000 68%);
+  opacity: 0;
+}
+.is-amb-live .co-amb-wisp {
+  animation: co-amb-steam var(--duration) ease-out var(--delay) infinite;
+}
+@keyframes co-amb-steam {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 0, 0) scale(0.6);
+  }
+  30% {
+    opacity: 0.66;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(-50% + var(--drift)), -34px, 0) scale(1.5);
+  }
+}
+
+/* Foreground depth: cold rim outside, warm centre inside. */
+.co-amb-depth {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 40% at 0% 0%, #dff0ff29 0%, #dff0ff00 62%),
+    radial-gradient(58% 40% at 100% 0%, #dff0ff26 0%, #dff0ff00 62%),
+    radial-gradient(124% 98% at 50% 46%, #0000 56%, #0b111996 100%),
+    linear-gradient(180deg, #0d1a2429 0%, #0d1a2400 18%),
+    linear-gradient(0deg, #2a170e63 0%, #2a170e00 24%);
+}
+
+/* ------------------------------------------------------- residents in the room */
+#renguin-office-layer .renguin-scene-character {
+  z-index: 1;
+}
+#renguin-office-layer .renguin-scene-character::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 78%;
+  height: 15%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1d130d6b 0%, #1d130d00 72%);
+  pointer-events: none;
+}
+#renguin-office-layer .renguin-scene-character .co-scene-portrait {
+  position: relative;
+  z-index: 1;
+}
+/* The warm pool only ever follows the verified working class the map already sets. */
+#renguin-office-layer .renguin-scene-character.is-working::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  left: 50%;
+  bottom: -18%;
+  width: 210%;
+  aspect-ratio: 2.3;
+  translate: -50% 0;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffe0a8d1 0%, #ffb45ca3 26%, #ff9c4a45 50%, #ff9c4a00 74%);
+  pointer-events: none;
+  top: auto;
+  right: auto;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  animation: none;
+}
+.is-amb-live #renguin-office-layer .renguin-scene-character.is-working::after {
+  animation: co-amb-workpool 3.4s ease-in-out infinite;
+}
+@keyframes co-amb-workpool {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+#renguin-office-layer .renguin-scene-character .rsc-label {
+  background: linear-gradient(180deg, #fdf3dcf2, #efdcb9f2);
+  border: 1px solid #a07c4fcc;
+  border-radius: 7px;
+  padding: 2px 6px;
+  color: #4b3a26;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px #0b0f1659;
+}
+#renguin-office-layer .renguin-scene-character.is-working .rsc-label {
+  background: linear-gradient(180deg, #e9f3daf5, #d5e6bff5);
+  border-color: #6f9260;
+  color: #33502f;
+}
+.co-scene-prop {
+  background: linear-gradient(180deg, #fff6de, #f3e3bd) !important;
+  border: 1px solid #9d7a4d !important;
+  box-shadow: 0 2px 5px #0b0f1647;
+  color: #4a3d24 !important;
+}
+[data-action="typing"] .co-scene-prop,
+[data-action="thinking"] .co-scene-prop {
+  color: #37543a !important;
+  border-color: #6f9260 !important;
+}
+.is-amb-live [data-action="typing"] .co-scene-prop {
+  animation: co-amb-tick 0.9s steps(2, end) infinite;
+}
+@keyframes co-amb-tick {
+  50% {
+    opacity: 0.55;
+  }
+}
+#renguin-office-layer [data-area] {
+  background: linear-gradient(180deg, #24303ad9, #1a232cd9) !important;
+  border: 1px solid #8a6c4a7a !important;
+  color: #e0cda9 !important;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 6px #05080c66;
+}
+
+/* --------------------------------------------------------------- motion budget */
+/* Small screens and low-refresh displays keep the light and drop the fine particles. */
+@media (max-width: 600px), (update: slow) {
+  .co-amb-dust,
+  .co-amb-steam {
+    display: none;
+  }
+  .co-amb-garland {
+    height: 26px;
+  }
+}
+
+#game-container:not(.is-amb-live) .co-amb *,
+#game-container:not(.is-amb-live) .co-amb {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-amb,
+  .co-amb *,
+  .co-amb *::before,
+  .co-amb *::after,
+  .co-scene-prop,
+  #renguin-office-layer .renguin-scene-character,
+  #renguin-office-layer .renguin-scene-character * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .co-amb-back,
+  .co-amb-front {
+    translate: none !important;
+  }
+  .co-amb-dust,
+  .co-amb-snow,
+  .co-amb-steam {
+    display: none;
+  }
+  .co-amb-mote,
+  .co-amb-flake,
+  .co-amb-wisp {
+    opacity: 0 !important;
+  }
+  .co-amb-bulb {
+    opacity: 0.85;
+  }
+  #renguin-office-layer .renguin-scene-character.is-working::after {
+    animation: none !important;
+  }
+}

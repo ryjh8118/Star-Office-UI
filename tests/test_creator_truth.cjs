@@ -137,11 +137,35 @@ assert.equal(
   }),
   "DONE",
 );
+// Display tiers and the lit project house must never outlive the evidence.
+const lease = (seconds) => ({
+  agent: "ASTRA",
+  effective_status: "ACTIVE",
+  project_id: "fixture",
+  last_heartbeat: new Date(Date.now() - seconds * 1000).toISOString(),
+  lease_expires_at: new Date(Date.now() - (seconds - 120) * 1000).toISOString(),
+});
+window.RenguinOperations = {
+  current: { jobs: [lease(5)] },
+  effective: (job) =>
+    window.RenguinFreshness.lease(job).fresh ? "RUNNING" : "STALE",
+};
+assert.equal(C.memberTier(C.memberView("ASTRA")), "working");
+assert.equal(C.projectLive(p), "running");
+window.RenguinOperations.current = { jobs: [lease(4000)] };
+assert.equal(C.memberTier(C.memberView("ASTRA")), "recent");
+assert.equal(C.projectLive(p), "idle");
+window.RenguinOperations.current = { jobs: [] };
+assert.equal(C.memberTier(C.memberView("ASTRA")), "quiet");
+assert.equal(C.projectLive(p), "idle");
+assert.equal(C.memberTier({ running: false, stamp: past }), "recent");
+assert.equal(C.memberTier({ running: false, stamp: undefined }), "quiet");
+
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 19,
+    checks: 27,
     scope:
-      "Creator historical state, never observed, native activity and lease distinction",
+      "Creator historical state, never observed, native activity, lease distinction and display tiers",
   }),
 );

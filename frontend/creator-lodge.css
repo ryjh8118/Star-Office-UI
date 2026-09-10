@@ -1,0 +1,774 @@
+/* Lodge interior for the panels below the map. Presentation only: no state semantics. */
+
+/* ------------------------------------------------------------- carved headings */
+.co-map-header h1 {
+  color: #f6dfae;
+  text-shadow:
+    0 1px 0 #2a1a10,
+    0 0 18px #e0924840;
+}
+.co-map-header p {
+  color: #b7a48d;
+}
+.co-map-header button {
+  background: linear-gradient(180deg, #3b3630 0%, #2b2823 100%);
+  border: 1px solid #7d6449;
+  border-bottom-width: 3px;
+  border-radius: 9px;
+  color: #ecd9b4;
+  box-shadow: 0 1px 0 #ffffff14 inset;
+}
+.co-map-header button:hover {
+  border-color: #b08a52;
+  color: #ffeec4;
+}
+.co-section-header {
+  position: relative;
+  padding-bottom: 10px;
+}
+.co-section:not(#office-members) > .co-section-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #d5a04a80, #d5a04a1a 42%, #d5a04a00 78%);
+}
+.co-section:not(#office-members) h2 {
+  color: #f3ddb1;
+  text-shadow: 0 1px 0 #191410;
+}
+.co-section:not(#office-members) h2::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 10px;
+  border-radius: 2px;
+  rotate: 45deg;
+  translate: 0 -3px;
+  background: linear-gradient(180deg, #ffdf9e, #d08f3c);
+  box-shadow: 0 0 10px #e0a24f8f;
+}
+.co-section:not(#office-members) .co-kicker {
+  color: #a99884;
+}
+
+/* --------------------------------------------------------------- lodge members */
+.co-section#office-members {
+  border-width: 8px !important;
+  border-top: 0 !important;
+  border-color: #6f4c34 !important;
+  background:
+    radial-gradient(120% 80% at 50% -12%, #ffd79a2e 0%, #ffd79a00 58%),
+    repeating-linear-gradient(93deg, #00000000 0 34px, #8b643c12 34px 36px),
+    linear-gradient(180deg, #e9dbbd 0%, #e2d1ae 62%, #d6c29c 100%) !important;
+  box-shadow:
+    0 0 0 1px #2a1c12,
+    0 22px 44px #05080b5c !important;
+}
+.co-section#office-members h2 {
+  color: #4a3626;
+}
+.co-member {
+  position: relative;
+  overflow: hidden;
+  padding: 15px 15px 15px 21px;
+  background:
+    radial-gradient(90% 60% at 20% 0%, #fffaf0 0%, #fffaf000 62%),
+    linear-gradient(180deg, #fdf6e6 0%, #f6ecd6 100%);
+  border: 1px solid #c9b18e;
+  border-bottom: 4px solid #b1926b;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 0 #fffdf7 inset,
+    0 6px 14px #3a2a1a1f;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.co-member::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: #c9b18e;
+}
+.co-member:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 #fffdf7 inset,
+    0 10px 20px #3a2a1a2e;
+}
+.co-member img {
+  border-radius: 9px;
+  background: radial-gradient(circle at 50% 76%, #ffe5b833 0%, #ffe5b800 68%);
+}
+.co-member h3 {
+  color: #3f2f21;
+  letter-spacing: 0.5px;
+}
+.co-member p {
+  color: #6f5c47;
+}
+/* The tier only restates what the member line already says; it adds no new state. */
+.co-member[data-tier="working"] {
+  border-color: #7d9a6e;
+  border-bottom-color: #5e7c55;
+  background:
+    radial-gradient(88% 62% at 22% 0%, #f7fbee 0%, #f7fbee00 60%),
+    linear-gradient(180deg, #f4f8e6 0%, #e8f0d5 100%);
+}
+.co-member[data-tier="working"]::before {
+  background: linear-gradient(180deg, #86ae74, #4f7a4c);
+}
+.co-member[data-tier="recent"]::before {
+  background: linear-gradient(180deg, #e8b866, #b9822f);
+}
+.co-member[data-tier="quiet"] {
+  background: linear-gradient(180deg, #f4ecdb 0%, #eae0ca 100%);
+}
+.co-member[data-tier="quiet"]::before {
+  background: #cbbba1;
+}
+.co-member[data-tier="quiet"] h3,
+.co-member[data-tier="quiet"] strong {
+  color: #7f7160;
+}
+.co-member .co-tier {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid #0000001a;
+}
+.co-member .co-tier::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.co-member[data-tier="working"] .co-tier {
+  background: #dfeccb;
+  border-color: #7d9a6e;
+  color: #3f6540;
+}
+.co-member[data-tier="working"] .co-tier::before {
+  animation: co-lodge-beat 1.7s ease-in-out infinite;
+}
+.co-member[data-tier="recent"] .co-tier {
+  background: #f7e7c4;
+  border-color: #cda45f;
+  color: #7d5a22;
+}
+.co-member[data-tier="quiet"] .co-tier {
+  background: #e6ddca;
+  border-color: #c3b49b;
+  color: #7c6e5c;
+}
+.co-member.is-running::after {
+  display: none;
+}
+@keyframes co-lodge-beat {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.72);
+  }
+}
+.co-work-context {
+  border-radius: 9px;
+  box-shadow: 0 1px 0 #ffffffb3 inset;
+}
+
+/* ---------------------------------------------------------------- project house */
+.co-house {
+  position: relative;
+}
+/* Warmth follows verified running work only; otherwise the house simply sits lit. */
+.co-house::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 44%;
+  opacity: 0.24;
+  background: radial-gradient(closest-side, #ffb35c85 0%, #ff9c4a00 74%);
+  transition: opacity 0.6s ease;
+}
+.co-project[data-live="running"] .co-house::before {
+  opacity: 1;
+}
+.co-project[data-live="running"] .co-house.is-on-screen::before {
+  animation: co-lodge-hearth 5.5s ease-in-out infinite;
+}
+@keyframes co-lodge-hearth {
+  50% {
+    opacity: 0.62;
+    transform: scale(1.05);
+  }
+}
+/* The lantern hanging on the house frame art. */
+.co-house-lantern {
+  position: absolute;
+  left: 50%;
+  top: 7.2cqw;
+  width: 3.2cqw;
+  height: 3.2cqw;
+  translate: -50% 0;
+  z-index: 3;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffe0a3b3 0%, #ffb35c4d 38%, #ff9c4a00 72%);
+  opacity: 0.55;
+}
+.co-project[data-live="running"] .co-house-lantern {
+  opacity: 1;
+}
+.co-house.is-on-screen .co-house-lantern {
+  animation: co-lodge-lantern 4.2s ease-in-out infinite;
+}
+@keyframes co-lodge-lantern {
+  50% {
+    transform: scale(1.22);
+    filter: brightness(1.18);
+  }
+}
+/* A lit window instead of a blank plate while a cover is missing. */
+.co-project .co-house-framebox .co-cover-placeholder,
+.co-cover-placeholder {
+  position: relative;
+  background:
+    radial-gradient(96% 74% at 50% 118%, #ffd9a0 0%, #e39f4f00 66%),
+    linear-gradient(182deg, #2a3a46 0%, #33454f 100%);
+  color: #fff0d2;
+  gap: 6px;
+  overflow: hidden;
+}
+/* Warm room light seen through the glass. */
+.co-cover-placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 6% 8%;
+  border: 4px solid #6d4a30;
+  border-radius: 5px;
+  background:
+    radial-gradient(72% 58% at 50% 112%, #ffe3ae 0%, #d2892f00 74%),
+    linear-gradient(180deg, #6d4c2e 0%, #a26f38 34%, #d59a4d 74%, #f0c079 100%);
+  box-shadow:
+    0 0 34px #ffbb6b52 inset,
+    0 0 26px #e0924847;
+}
+/* Wooden mullions plus one soft curtain arc. */
+.co-cover-placeholder::after {
+  content: "";
+  position: absolute;
+  inset: 6% 8%;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 46% at 50% -12%, #3c2a1ac4 0%, #3c2a1a00 72%),
+    linear-gradient(
+      90deg,
+      #00000000 calc(50% - 3px),
+      #6d4a30 calc(50% - 3px) calc(50% + 3px),
+      #00000000 calc(50% + 3px)
+    ),
+    linear-gradient(
+      180deg,
+      #00000000 calc(48% - 3px),
+      #6d4a30 calc(48% - 3px) calc(48% + 3px),
+      #00000000 calc(48% + 3px)
+    );
+}
+.co-cover-note {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: 1px solid #ffd79a3d;
+  background: linear-gradient(180deg, #2b1c0fd9, #171009c4);
+  box-shadow: 0 8px 22px #1a0f0552;
+  text-shadow: 0 1px 4px #1a0f05b3;
+}
+.co-cover-placeholder .co-cover-icon {
+  color: #fff3d6;
+  filter: drop-shadow(0 0 14px #ffbb6b9e);
+}
+.co-cover-stage {
+  font: 600 13px/1.5 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  color: #fff0cc;
+  border: 1px solid #ffd79a5c;
+  border-radius: 20px;
+  padding: 3px 12px;
+  background: #3a250f8a;
+}
+/* A cooler dusk window for the projects that are not the focus. */
+.co-project:nth-child(3n + 2) .co-cover-placeholder::before,
+.co-project:nth-child(3n) .co-cover-placeholder::before {
+  background:
+    radial-gradient(72% 58% at 50% 112%, #ffdca4 0%, #d2892f00 74%),
+    linear-gradient(180deg, #55432c 0%, #8a6b3c 36%, #bc9350 76%, #e0bb7c 100%);
+}
+
+/* ---------------------------------------------------------------- project body */
+.co-project-body {
+  border-color: #8a6444 !important;
+  border-top-color: #7c5738 !important;
+  box-shadow:
+    0 1px 0 #fff5e0a3 inset,
+    0 8px 20px #0b0f1659 !important;
+}
+.co-project-heading h3 {
+  letter-spacing: 0.3px;
+}
+.co-state {
+  color: #3f5c62;
+}
+.co-progress-track {
+  height: 9px;
+  border-radius: 9px;
+  background: #d9c8a6;
+  box-shadow: 0 1px 2px #6a4f3340 inset;
+  overflow: hidden;
+}
+.co-progress-track span {
+  background: linear-gradient(90deg, #6f9166 0%, #8cae72 68%, #c8d79a 100%);
+  box-shadow: 0 0 10px #8cae7280;
+  transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.co-project[data-live="running"] .co-progress-track span {
+  background: linear-gradient(90deg, #b57a34 0%, #e0a24f 62%, #ffd79a 100%);
+  box-shadow: 0 0 12px #e0a24f8c;
+}
+.co-live-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font: 700 12px/1.5 system-ui, sans-serif;
+  color: #4d3a17;
+  background: linear-gradient(180deg, #ffe1a8, #f0c073);
+  border: 1px solid #c2913f;
+  box-shadow: 0 2px 6px #7c521f33;
+}
+.co-live-flag::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #b7702a;
+  animation: co-lodge-beat 1.7s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ route tokens */
+.co-project .co-route button {
+  border-radius: 9px;
+  border: 1px solid #c2ab86;
+  border-bottom-width: 3px;
+  background: linear-gradient(180deg, #f6efdf, #ece1c9);
+  box-shadow: 0 1px 0 #fffaf0 inset;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+.co-project .co-route button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.co-route button.is-done {
+  background: linear-gradient(180deg, #e2ecd0, #cfdfba) !important;
+  border-color: #8fa878 !important;
+  color: #3b5f3a !important;
+}
+.co-route button.is-active {
+  background: linear-gradient(180deg, #52768f, #3d5f78) !important;
+  border-color: #2b4c63 !important;
+  color: #fff3d8 !important;
+  box-shadow: 0 0 0 2px #7195b433;
+}
+.co-route button.is-human {
+  background: linear-gradient(180deg, #f8e5b6, #eed295) !important;
+  border-color: #c89751 !important;
+  color: #7a541e !important;
+}
+.co-route button.is-failed {
+  background: linear-gradient(180deg, #f6dbd1, #eec6b9) !important;
+  border-color: #ba776a !important;
+  color: #8a382e !important;
+}
+
+/* ------------------------------------------------------------------- wood buttons */
+.co-button {
+  border: 1px solid #b6996f;
+  border-bottom-width: 3px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #f4e9d0, #e6d7b8);
+  color: #58452f;
+  box-shadow: 0 1px 0 #fffaf0 inset;
+}
+.co-button.primary {
+  background: linear-gradient(180deg, #648061, #4a6a4c);
+  border-color: #3b5740;
+  color: #fdf6e3;
+  box-shadow: 0 1px 0 #ffffff26 inset;
+}
+.co-button.quiet {
+  background: #ffffff1a;
+  border-color: #c9b492;
+  color: #6d5940;
+}
+.co-button.danger {
+  background: linear-gradient(180deg, #f8e4da, #efd2c5);
+}
+.co-technical-footer button {
+  background: #ffffff0f !important;
+  color: #d8c7ac !important;
+  border-color: #6f6053 !important;
+}
+
+/* --------------------------------------------------------------------- the inbox */
+.co-inbox {
+  border: 8px solid #6f4c34;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 70% at 50% -8%, #ffd79a24 0%, #ffd79a00 56%),
+    repeating-linear-gradient(93deg, #00000000 0 30px, #8b643c0f 30px 32px),
+    linear-gradient(180deg, #e8dabe 0%, #dfceab 100%);
+  box-shadow:
+    0 0 0 1px #2a1c12,
+    0 18px 38px #05080b52;
+}
+.co-inbox-group h3 {
+  color: #6d5232;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.co-inbox-item {
+  position: relative;
+  border-radius: 10px;
+  border: 1px solid #cbb38f;
+  border-bottom-width: 3px;
+  background:
+    radial-gradient(80% 50% at 14% 0%, #fffdf6 0%, #fffdf600 60%),
+    linear-gradient(180deg, #fffaea, #f7eed8);
+  box-shadow:
+    0 1px 0 #fffdf7 inset,
+    0 4px 10px #3a2a1a1a;
+  padding-left: 22px;
+}
+.co-inbox-item::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd79a, #b07f36);
+  box-shadow: 0 1px 2px #4a341a66;
+}
+.co-inbox-item.is-done {
+  background: linear-gradient(180deg, #e6ecd6, #dbe4c8);
+  border-color: #a5b691;
+}
+.co-inbox-content h4 {
+  color: #443422;
+}
+
+/* ------------------------------------------------------------------- soft dialogs */
+.co-dialog {
+  border: 8px solid #6f4c34;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 60% at 50% -6%, #ffd79a26 0%, #ffd79a00 58%),
+    linear-gradient(180deg, #fdf6e6, #f4ead2);
+  box-shadow:
+    0 0 0 1px #2a1c12,
+    0 26px 80px #04070a8c;
+}
+.co-dialog::backdrop {
+  background: #0d141bad;
+  backdrop-filter: blur(5px) saturate(0.9);
+}
+.co-dialog h2 {
+  color: #4a3626;
+}
+.co-toast {
+  border: 2px solid #a5824f;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff5db, #f3e4c1);
+  box-shadow: 0 12px 30px #04070a73;
+}
+.co-empty {
+  border-color: #6d5f52;
+  background: #ffffff08;
+}
+.co-other-projects {
+  background: #ffffff08;
+  border-radius: 14px;
+}
+.co-other-projects > summary {
+  color: #e6d4ae;
+}
+/* The notice keeps the lodge frame continuous between the map and the members. */
+.co-connection {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  border: 8px solid #6f4c34;
+  border-top: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #f7e6bd, #efd9ac);
+  color: #6b4d22;
+  box-shadow: 0 0 0 1px #2a1c12;
+}
+@media (max-width: 600px) {
+  .co-connection {
+    border-width: 0 6px;
+    padding: 12px 14px;
+  }
+}
+
+/* ---------------------------------------------------------- completed keepsakes */
+.co-project[data-live="done"] .co-project-body::after {
+  content: "✓ 已完成";
+  position: absolute;
+  top: -14px;
+  right: 14px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font: 700 12px/1.4 system-ui, sans-serif;
+  color: #3f6540;
+  background: linear-gradient(180deg, #e4efd2, #cfe0b6);
+  border: 1px solid #7d9a6e;
+  box-shadow: 0 3px 8px #1c2b1a3d;
+}
+.co-project[data-live="done"] .co-house .co-spark {
+  position: absolute;
+  z-index: 4;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, #00000000 46%, #ffe9bd 46% 54%, #00000000 54%),
+    linear-gradient(0deg, #00000000 46%, #ffe9bd 46% 54%, #00000000 54%);
+}
+.co-project[data-live="done"] .co-house.is-on-screen .co-spark {
+  animation: co-lodge-spark 4.6s ease-in-out var(--delay, 0s) infinite;
+}
+@keyframes co-lodge-spark {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  40% {
+    opacity: 0.95;
+    transform: scale(1) rotate(45deg);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(0.5) rotate(90deg);
+  }
+}
+
+/* ------------------------------------------------------------------ small screens */
+@media (max-width: 600px) {
+  .co-inbox {
+    border-width: 6px;
+  }
+  .co-section#office-members {
+    border-width: 6px !important;
+  }
+  .co-dialog {
+    border-width: 6px;
+  }
+  .co-member {
+    padding-left: 18px;
+  }
+  .co-member .co-tier {
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-member .co-tier::before,
+  .co-live-flag::before,
+  .co-house::before,
+  .co-house-lantern,
+  .co-spark {
+    animation: none !important;
+  }
+  .co-project[data-live="done"] .co-spark {
+    opacity: 0;
+  }
+  .co-member,
+  .co-progress-track span,
+  .co-project .co-route button {
+    transition: none !important;
+  }
+}
+
+/* ------------------------------------------------------- project card interior */
+.co-project-heading {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #94704933;
+}
+.co-project-body .co-project-heading h3 {
+  text-shadow: 0 1px 0 #fff6e2;
+}
+.co-progress {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #a580564d;
+  background:
+    linear-gradient(180deg, #fdf6e4b8, #f2e6cbb8);
+  box-shadow:
+    0 1px 0 #fffaf0 inset,
+    0 2px 6px #6a4f331f;
+}
+.co-progress .co-state {
+  font-size: 18px;
+  color: #3d5b61;
+}
+.co-progress .co-next {
+  color: #6a6349;
+}
+.co-recent-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6d5232;
+}
+.co-recent-heading::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  rotate: 45deg;
+  background: #b98d47;
+}
+.co-milestones {
+  position: relative;
+  padding-left: 16px;
+  border-top: 1px solid #94704933;
+  border-bottom: 1px solid #94704933;
+}
+.co-milestones::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #b98d4780, #b98d4714);
+}
+.co-milestones li {
+  position: relative;
+}
+.co-milestones li::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8a6f45;
+  box-shadow: 0 0 0 2px #f4e9d2;
+}
+.co-featured-projects > .co-project:first-child .co-project-body {
+  box-shadow:
+    0 1px 0 #fff5e0a3 inset,
+    0 12px 30px #0b0f1670 !important;
+}
+
+/* ---------------------------------------------------- dark-ground supporting UI */
+.co-empty {
+  border: 1px dashed #9a7f5c;
+  border-radius: 12px;
+  color: #d3c1a2;
+  background:
+    radial-gradient(120% 80% at 50% 120%, #e0924824 0%, #e0924800 62%),
+    #ffffff08;
+}
+.co-project .co-empty {
+  color: #7d684f;
+  border-color: #bfa781;
+  background: #ffffff40;
+}
+.co-other-projects {
+  border: 1px solid #a88b6459;
+  background:
+    linear-gradient(180deg, #ffffff0d, #ffffff05);
+}
+.co-other-projects > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #ecd9b0;
+}
+.co-other-projects > summary::marker {
+  color: #d5a04a;
+}
+#recently-completed .co-empty {
+  padding: 30px 22px;
+}
+.co-technical-footer {
+  padding-top: 18px;
+  border-top: 1px solid #ffffff12;
+}
+
+/* ------------------------------------------------------------- the other rooms */
+.co-other-projects > summary {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff12, #ffffff05);
+  border: 1px solid #a88b6440;
+}
+.co-other-projects > summary::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #d5a04a4d, #d5a04a00 70%);
+}
+.co-other-projects[open] > summary {
+  background: linear-gradient(180deg, #ffffff1c, #ffffff08);
+  border-color: #d5a04a5c;
+}
+#recently-completed .co-empty,
+#active-projects .co-empty {
+  position: relative;
+  overflow: hidden;
+}
+#recently-completed .co-empty::before,
+#active-projects .co-empty::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #d5a04a00, #d5a04a4d 46%, #d5a04a00);
+}

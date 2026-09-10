@@ -17,13 +17,25 @@ Covers bind to the exact registered canonical project ID. Renaming a display nam
 
 The Human Inbox merges current system suggestions with user-created items and wording overrides. Source labels are retained. Drag ordering and keyboard ordering (Alt + Up/Down on the grip) persist. Completion stays visible through the local day; older completed and ignored items can be restored. Manual project completion stays on the main page for 14 days, with older completions accessible afterward.
 
+## Living lodge visual pass
+
+The Mountain Lodge map remains the art authority; the pass adds light around it rather than replacing it.
+
+`creator-ambience.js` builds two decorative layers inside the map container: a back layer holding the window light, the room warmth wash and the practical lights traced from the map art, and a front layer holding the string lights, light dust, snow, the coffee wisp and the depth vignette. Both are `pointer-events: none`, so the map, the members and every control keep their original hit areas. Pointer parallax is clamped to a few pixels, is skipped on coarse pointers, and never moves layout.
+
+`creator-ambience.css` carries the scene and the residents in the room; `creator-lodge.css` carries the panels below the map. Animation is limited to `transform` and `opacity`. Particle counts are fixed budgets asserted by `tests/creator-ambience.test.cjs`, layouts are seeded so every reload is identical, an `IntersectionObserver` and `visibilitychange` stop the scene when the map is offscreen or the tab is hidden, small screens and low-refresh displays drop the fine particles, and `prefers-reduced-motion` removes the animation, the particles and the parallax entirely.
+
+## Display tiers and the light
+
+Nothing in this pass observes work. The member tier (`data-tier`) restates the status line the card already renders: a verified running lease or a fresh native working observation is `working`, any other timestamped record is `recent`, and no record is `quiet`. The warm pool under a resident follows the existing `is-working` class the map already sets, so an expired lease stops the light with the label. The project house (`data-live`) lights up only for `hasRunning`, marks `done` from the user's own completion, and is otherwise unlit. Workflow stages, freshness, lease semantics and Agent Truth are unchanged.
+
 ## Running and verifying
 
 The existing CMD launcher and Python server are retained. Choose a free preview port with `START_STAR_OFFICE_PREVIEW.cmd --port 19119`. It reads the existing configured Content OS producer and canonical checkout, while all Office-owned writes stay in the preview state directory. No production cutover or workload dispatch is performed by the launcher.
 
-Run `python -m unittest discover -s tests -v` and `node tests/test_creator_truth.cjs`. `backend/requirements.txt` and `pyproject.toml` both use Pillow 10.4.0. The `uv.lock` file includes this dependency.
+Run `python -m unittest discover -s tests -v`, `node tests/test_creator_truth.cjs` and `node --test tests/creator-ambience.test.cjs tests/creator-scene.test.cjs tests/creator-contexts.test.cjs tests/browser-bridge.test.cjs`. `backend/requirements.txt` and `pyproject.toml` both use Pillow 10.4.0. The `uv.lock` file includes this dependency.
 
-The route visual fixture under `tests/visual` is explicitly labelled as a style test, and carries no canonical project or executor activity. Browser QA uses a separate `.qa-runtime` store, so test covers, completed projects and sample to-dos do not affect the usable preview.
+The route and living-lodge visual fixtures under `tests/visual` are explicitly labelled as style tests, and carry no canonical project or executor activity. Browser QA uses a separate `.qa-runtime` store, so test covers, completed projects and sample to-dos do not affect the usable preview.
 
 ## Retained local engineering
 

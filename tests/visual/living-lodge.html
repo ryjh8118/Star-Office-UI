@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <link
+    rel="stylesheet"
+    href="http://127.0.0.1:19129/static/creator-office.css"
+  />
+  <link
+    rel="stylesheet"
+    href="http://127.0.0.1:19129/static/creator-lodge.css"
+  />
+  <link
+    rel="stylesheet"
+    href="http://127.0.0.1:19129/static/creator-ambience.css"
+  />
+  <style>
+    body {
+      min-height: 100vh;
+      padding: 26px 20px 60px !important;
+    }
+    #creator-office {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .fixture-note {
+      color: #f0e6cf;
+      font: 16px/1.6 system-ui;
+      max-width: 1080px;
+      margin: 0 auto 22px;
+    }
+    .fixture-note small {
+      color: #a99884;
+      display: block;
+      margin-top: 4px;
+    }
+  </style>
+  <p class="fixture-note">
+    星辦小屋樣式驗證 · 以下全部為測試情境
+    <small
+      >不代表任何實際企劃、Agent 活動或執行租約。成員分層只是重述同一行文字，動畫不產生任何狀態。</small
+    >
+  </p>
+  <main id="creator-office">
+    <section class="co-section" id="office-members">
+      <div class="co-section-header">
+        <div>
+          <h2>成員分層</h2>
+          <p class="co-kicker">工作中 · 最近活動 · 尚無紀錄</p>
+        </div>
+      </div>
+      <div class="co-members">
+        <button class="co-member is-running" data-tier="working">
+          <span class="co-tier">工作中</span>
+          <h3>已驗證工作</h3>
+          <strong>● 正在處理 測試企劃</strong>
+          <p>只有有效租約或新鮮的原生工作觀測才會亮起暖光。</p>
+          <p class="co-muted">2026/01/01 00:00</p>
+        </button>
+        <button class="co-member" data-tier="recent">
+          <span class="co-tier">最近活動</span>
+          <h3>只有最近活動</h3>
+          <strong>○ 最近活動 00:00</strong>
+          <p>近期紀錄不等於工作中，不使用工作色與暖光池。</p>
+          <p class="co-muted">2026/01/01 00:00</p>
+        </button>
+        <button class="co-member" data-tier="quiet">
+          <span class="co-tier">尚無紀錄</span>
+          <h3>過期或無紀錄</h3>
+          <strong>○ 尚無同步紀錄</strong>
+          <p>過期租約與無紀錄一律靜音，不製造任何工作外觀。</p>
+          <p class="co-muted">尚無同步紀錄</p>
+        </button>
+        <button class="co-member" data-tier="quiet">
+          <span class="co-tier">尚無紀錄</span>
+          <h3>來源未接入</h3>
+          <strong>○ 尚無同步紀錄</strong>
+          <p>沒有可驗證來源時，卡片維持安靜的羊皮紙樣式。</p>
+          <p class="co-muted">尚無同步紀錄</p>
+        </button>
+      </div>
+    </section>
+
+    <section class="co-section">
+      <div class="co-section-header">
+        <div>
+          <h2>企劃小屋</h2>
+          <p class="co-kicker">亮燈窗戶 · 進度階層 · 完成收藏</p>
+        </div>
+      </div>
+      <div class="co-grid co-featured-projects">
+        <article class="co-project" data-live="running">
+          <div class="co-house is-on-screen">
+            <div class="co-house-framebox">
+              <div class="co-cover">
+                <div class="co-cover-placeholder">
+                  <div class="co-cover-note">
+                    <span class="co-cover-icon">▧</span>
+                    <span>把故事放在這裡</span>
+                    <span class="co-cover-stage">現在 · 粗剪</span>
+                    <small>16 : 9 · 企劃封面</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="co-house-lantern" aria-hidden="true"></div>
+          </div>
+          <div class="co-project-body">
+            <div class="co-project-heading"><h3>有人正在工作的企劃</h3></div>
+            <div class="co-progress">
+              <p class="co-live-flag">此刻有人正在這裡工作</p>
+              <p class="co-state">已完成 5 / 13 階段</p>
+              <p class="co-next">下一步 · 粗剪</p>
+              <div class="co-progress-track"><span style="width: 38%"></span></div>
+            </div>
+            <nav class="co-route" aria-label="測試路線">
+              <button class="is-done">✓ 素材</button>
+              <button class="is-done">✓ 校正</button>
+              <button class="is-active">導演</button>
+              <button>工單</button>
+              <button class="is-human">確認</button>
+              <button class="is-failed">粗剪</button>
+              <button>定剪</button>
+            </nav>
+            <p class="co-save-status">
+              完成 · 進行中 · 尚未開始 · 等待人工 · 失敗
+            </p>
+          </div>
+        </article>
+        <article class="co-project" data-live="done">
+          <div class="co-house is-on-screen">
+            <div class="co-house-framebox">
+              <div class="co-cover">
+                <div class="co-cover-placeholder">
+                  <div class="co-cover-note">
+                    <span class="co-cover-icon">▧</span>
+                    <span>把故事放在這裡</span>
+                    <span class="co-cover-stage">所有階段已完成</span>
+                    <small>16 : 9 · 企劃封面</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="co-house-lantern" aria-hidden="true"></div>
+            <span class="co-spark" style="left: 22%; top: 26%; --delay: 0s"></span>
+            <span class="co-spark" style="left: 74%; top: 20%; --delay: 1.5s"></span>
+          </div>
+          <div class="co-project-body">
+            <div class="co-project-heading"><h3>已完成的企劃</h3></div>
+            <div class="co-progress">
+              <p class="co-state">已完成 13 / 13 階段</p>
+              <p class="co-next">所有階段已完成</p>
+              <div class="co-progress-track"><span style="width: 100%"></span></div>
+            </div>
+            <h4 class="co-recent-heading">最近紀錄</h4>
+            <ul class="co-milestones">
+              <li>
+                <time>2026/01/01 00:00</time><span>上映 · 已完成</span
+                ><small>製作紀錄</small>
+              </li>
+              <li>
+                <time>2026/01/01 00:00</time><span>定剪 · 已完成</span
+                ><small>製作紀錄</small>
+              </li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="co-section" id="human-inbox">
+      <div class="co-section-header">
+        <div>
+          <h2>等我處理</h2>
+          <p class="co-kicker">木質書桌 · 紙張待辦</p>
+        </div>
+      </div>
+      <div class="co-inbox">
+        <div class="co-inbox-group">
+          <h3>今天要做</h3>
+          <div class="co-inbox-item">
+            <button class="co-grip" aria-label="排序">⠿</button>
+            <div class="co-inbox-content">
+              <h4>測試待辦項目</h4>
+              <p>樣式驗證用，不代表任何實際待辦。</p>
+            </div>
+            <div class="co-inbox-actions">
+              <button class="co-button primary">完成</button>
+              <button class="co-button quiet">編輯</button>
+            </div>
+          </div>
+          <div class="co-inbox-item is-done">
+            <button class="co-grip" aria-label="排序">⠿</button>
+            <div class="co-inbox-content"><h4>已完成的測試項目</h4></div>
+            <div class="co-inbox-actions">
+              <button class="co-button quiet">還原</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="co-section">
+      <div class="co-section-header">
+        <div>
+          <h2>空狀態</h2>
+          <p class="co-kicker">深色底的支援樣式</p>
+        </div>
+      </div>
+      <div class="co-grid">
+        <p class="co-empty">完成一個故事，就在這裡留下足跡。</p>
+      </div>
+    </section>
+  </main>
+</html>

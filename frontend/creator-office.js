@@ -383,6 +383,18 @@
     );
   }
 
+  // Display tiers restate an existing view; they observe nothing new.
+  function memberTier(view) {
+    return view.running ? "working" : view.stamp ? "recent" : "quiet";
+  }
+  function projectLive(p) {
+    return hasRunning(sourceId(p))
+      ? "running"
+      : projectDone(p)
+        ? "done"
+        : "idle";
+  }
+
   function memberView(key) {
     const board = window.RenguinOperations?.current || {};
     const combinedObservations = [
@@ -554,7 +566,14 @@
           "co-member" + (v.running ? " is-running" : ""),
         );
         card.dataset.agent = v.key;
+        const tier = memberTier(v);
+        card.dataset.tier = tier;
         card.append(
+          node(
+            "span",
+            { working: "工作中", recent: "最近活動", quiet: "尚無紀錄" }[tier],
+            "co-tier",
+          ),
           node("h3", agents[v.key][0]),
           node("strong", v.text),
           node("p", v.summary),
@@ -1112,6 +1131,11 @@
   function projectCard(p) {
     const card = node("article", undefined, "co-project");
     card.dataset.projectId = p.project_id;
+    // Only a verified running lease lights the house; completion is the user's own mark.
+    const live = projectLive(p);
+    card.dataset.live = live;
+    const doneSteps = completedSteps(p);
+    const nextStep = enabledSteps(p).find((id) => !doneSteps.includes(id));
     const cover = node("div", undefined, "co-cover");
     const coverState = presentation.projects[p.project_id]?.cover;
     if (coverState?.url) {
@@ -1122,11 +1146,18 @@
       cover.append(img);
     } else {
       const placeholder = node("div", undefined, "co-cover-placeholder");
-      placeholder.append(
+      const note = node("div", undefined, "co-cover-note");
+      note.append(
         node("span", "▧", "co-cover-icon"),
         node("span", "把故事放在這裡"),
+        node(
+          "span",
+          nextStep ? "現在 · " + routeLabels[nextStep] : "所有階段已完成",
+          "co-cover-stage",
+        ),
         node("small", "16 : 9 · 企劃封面"),
       );
+      placeholder.append(note);
       cover.append(placeholder);
     }
     const coverActions = node("div", undefined, "co-cover-actions");
@@ -1169,9 +1200,11 @@
         "co-source-name",
       ),
     );
-    const completed = completedSteps(p);
-    const next = enabledSteps(p).find((id) => !completed.includes(id));
+    const completed = doneSteps;
+    const next = nextStep;
     const statusBlock = node("div", undefined, "co-progress");
+    if (live === "running")
+      statusBlock.append(node("p", "此刻有人正在這裡工作", "co-live-flag"));
     statusBlock.append(
       node(
         "p",
@@ -1460,6 +1493,22 @@
     const frame = node("div", undefined, "co-house-framebox");
     frame.append(cover);
     house.append(frame);
+    const lantern = node("div", undefined, "co-house-lantern");
+    lantern.setAttribute("aria-hidden", "true");
+    house.append(lantern);
+    if (projectDone(p))
+      for (const [left, top, delay] of [
+        ["22%", "26%", "0s"],
+        ["74%", "20%", "1.5s"],
+        ["58%", "62%", "2.9s"],
+      ]) {
+        const spark = node("span", undefined, "co-spark");
+        spark.setAttribute("aria-hidden", "true");
+        spark.style.left = left;
+        spark.style.top = top;
+        spark.style.setProperty("--delay", delay);
+        house.append(spark);
+      }
     if (!window.CreatorResidents?.length) return house;
     let hash = 2166136261;
     for (const char of p.project_id)
@@ -2286,6 +2335,8 @@
     render,
     syncMap,
     memberView,
+    memberTier,
+    projectLive,
     timeline,
     lastState,
     displayStatus,
