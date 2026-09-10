@@ -165,9 +165,18 @@ def verdict(report):
             lines.append(f"缺的是 adapter：{source['adapter_dir']}")
         lines.append('先修這個，或先用「＋ 新增專案」建本地卡片頂著。')
 
-    if has_data and reachable:
-        lines.append('資料庫有資料，Content OS 也接得上。畫面空的原因不在這兩者，'
-                     '請把瀏覽器 Console 的錯誤訊息給我。')
+    # A reachable source still hides most of itself: the card grid keeps only
+    # REGISTERED projects typed YOUTUBE or VIDEO_PROJECT.
+    total, usable = source.get('projects', 0), source.get('usable', 0)
+    if total and usable < total:
+        lines.append(f'Content OS 有 {total} 筆紀錄，但只有 {usable} 筆會變成卡片。'
+                     '卡片清單只收 classification=REGISTERED 且 project_type 是 '
+                     'YOUTUBE/VIDEO_PROJECT 的，其餘會落到下方的「工作紀錄」區，'
+                     '不會出現在「正在製作」。')
+
+    if has_data and reachable and usable == total:
+        lines.append('資料庫有資料，Content OS 也接得上，也沒有被過濾掉的紀錄。'
+                     '畫面空的原因不在這三者，請把瀏覽器 Console 的錯誤訊息給我。')
     return lines
 
 

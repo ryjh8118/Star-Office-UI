@@ -9,7 +9,7 @@ import office_doctor as doctor
 
 def report(store=None, status='FRESH', usable=3, stashes=(), folders=()):
     return {'stores': {'production': store},
-            'canonical': {'status': status, 'usable': usable, 'detail': None,
+            'canonical': {'status': status, 'usable': usable, 'projects': usable, 'detail': None,
                           'adapter_found': status != 'SYNC_ERROR', 'adapter_dir': 'X'},
             'stashes': list(stashes), 'other_folders': list(folders)}
 
@@ -47,8 +47,17 @@ class VerdictTests(unittest.TestCase):
         self.assertNotIn('不存在', said)
 
     def test_everything_healthy_sends_the_user_to_the_console(self):
-        said = self.text(store=FULL)
+        said = self.text(store=FULL, usable=3)
         self.assertIn('Console', said)
+
+    def test_records_the_card_grid_filters_out_are_called_out(self):
+        report_with_gap = report(store=FULL, usable=11)
+        report_with_gap['canonical']['projects'] = 200
+        said = '\n'.join(doctor.verdict(report_with_gap))
+        self.assertIn('200', said)
+        self.assertIn('11', said)
+        self.assertIn('工作紀錄', said)
+        self.assertNotIn('Console', said)
 
     def test_a_stale_but_reachable_source_is_not_blamed(self):
         self.assertNotIn('接不上', self.text(store=FULL, status='STALE', usable=2))
