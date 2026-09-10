@@ -120,6 +120,7 @@
     otherProjectsToggle,
     inboxRoot,
     completedRoot,
+    historyRoot,
     syncButton,
     dialog,
     signature = "",
@@ -280,6 +281,100 @@
         ["YOUTUBE", "VIDEO_PROJECT"].includes(p.project_type) &&
         !presentation.projects[p.project_id]?.hidden,
     );
+  }
+  // The card grid above deliberately shows only registered video projects. Everything
+  // else the ledger remembers used to be listed in the old office panel, grouped by
+  // where the work happened; without somewhere to put it, most of the user's own work
+  // history has no route into the page at all.
+  const scratchName = /^(tests?|測試|demo|sample|範例|untitled|未命名)$/iu;
+  function isScratch(p) {
+    const name = String(p.project_name || "").trim();
+    return (
+      ["WINDOWS_E2E", "CONTENT_OS_SYSTEM"].includes(p.project_type) ||
+      scratchName.test(name) ||
+      /guardian|snapshot|native copy test|premiere mcp.*test|\bE2E\b/iu.test(
+        name,
+      )
+    );
+  }
+  function isYTish(p) {
+    const raw = [p.project_name, p.workspace, p.project_id]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      Boolean(p.release_date) ||
+      ["VIDEO_PROJECT", "YOUTUBE"].includes(p.project_type) ||
+      /(^|[\s｜|_-])YT(?:[\s｜|_-]|鵝)/iu.test(raw)
+    );
+  }
+  function historyGroup(p) {
+    if (isScratch(p)) return "scratch";
+    if (isYTish(p)) return "yt";
+    return /(CODEX|CHATGPT|OPENAI)/iu.test(
+      `${p.source_event_id || ""} ${p.owner || ""}`,
+    )
+      ? "cloud"
+      : "local";
+  }
+  const openHistoryGroups = new Set();
+  const historyMeta = {
+    yt: ["▶", "YT 企劃"],
+    local: ["▣", "本地執行・系統"],
+    cloud: ["☁", "雲端工作"],
+    scratch: ["⚙", "測試與系統紀錄"],
+  };
+  function archived() {
+    const shown = new Set(primary().map((p) => p.project_id));
+    return allProjects().filter(
+      (p) =>
+        !shown.has(p.project_id) && !presentation.projects[p.project_id]?.hidden,
+    );
+  }
+  function historyRow(p) {
+    const row = node("div", undefined, "co-history-row");
+    row.dataset.projectId = p.project_id;
+    const meta = node("div", undefined, "co-history-meta");
+    if (p.classification === "NEEDS_CLASSIFICATION")
+      meta.append(node("span", "等待分類", "co-history-badge"));
+    meta.append(node("span", clean(p.current_stage, "尚無進度紀錄")));
+    meta.append(node("span", date(p.updated_at), "co-history-time"));
+    row.append(
+      node("div", projectName(p) || "未命名紀錄", "co-history-name"),
+      meta,
+    );
+    return row;
+  }
+  function renderHistory() {
+    const grouped = new Map(Object.keys(historyMeta).map((k) => [k, []]));
+    for (const p of archived()) grouped.get(historyGroup(p)).push(p);
+    for (const list of grouped.values())
+      list.sort(
+        (a, b) => (epoch(b.updated_at) || 0) - (epoch(a.updated_at) || 0),
+      );
+    historyRoot.replaceChildren();
+    for (const [key, [icon, label]] of Object.entries(historyMeta)) {
+      const list = grouped.get(key);
+      if (!list.length) continue;
+      const box = node(
+        "details",
+        undefined,
+        "co-other-projects co-history-group",
+      );
+      box.dataset.historyGroup = key;
+      // Activity polling re-renders this section, so a group the user opened has to
+      // stay open; otherwise it collapses under them mid-read.
+      box.open = openHistoryGroups.has(key);
+      box.addEventListener("toggle", () =>
+        box.open ? openHistoryGroups.add(key) : openHistoryGroups.delete(key),
+      );
+      box.append(node("summary", `${icon} ${label} · ${list.length} 筆`));
+      const rows = node("div", undefined, "co-history-rows");
+      for (const p of list) rows.append(historyRow(p));
+      box.append(rows);
+      historyRoot.append(box);
+    }
+    if (!historyRoot.children.length)
+      historyRoot.append(node("p", "目前還沒有其他工作紀錄。"));
   }
   function rowKnown(row, p) {
     return (
@@ -2067,6 +2162,7 @@
       ))
         cardGroups.get(completedRoot).push(projectCard(p));
       reconcileProjectCards(cardGroups);
+      renderHistory();
       const renderedCards = new Map([...root.querySelectorAll(".co-project")].map(card => [card.dataset.projectId, card]));
       activeProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index));
       if (!projectsRoot.children.length)
@@ -2254,6 +2350,12 @@
       "最近完成",
       "把做好的故事，好好收藏",
       "co-grid",
+    );
+    [historyRoot] = section(
+      "work-history",
+      "工作紀錄",
+      "辦公室記得的每一筆工作 · 依工作發生的地方分組",
+      "co-history",
     );
     const footer = node("footer", undefined, "co-technical-footer");
     footer.append(
