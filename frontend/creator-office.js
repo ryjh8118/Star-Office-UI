@@ -448,6 +448,17 @@
             .sort((a, b) => epoch(b.updated_at) - epoch(a.updated_at))[0]
             ?.updated_at;
   }
+  // A finished project whose completion time is missing or unreadable still has
+  // to land somewhere. Treating it as infinitely old files it under 更早完成
+  // instead of failing both the recent and the older test and disappearing.
+  function completedAge(p) {
+    const age = Date.now() / 1000 - epoch(stampDone(p));
+    return Number.isFinite(age) ? age : Infinity;
+  }
+  function doneSortKey(p) {
+    const stamp = epoch(stampDone(p));
+    return Number.isFinite(stamp) ? stamp : -Infinity;
+  }
   function historical(p) {
     return !window.RenguinFreshness.project(response, p).fresh;
   }
@@ -2156,10 +2167,8 @@
         "　展開後可拖曳排序";
       const done = projects
         .filter((p) => projectDone(p))
-        .sort((a, b) => epoch(stampDone(b)) - epoch(stampDone(a)));
-      for (const p of done.filter(
-        (p) => Date.now() / 1000 - epoch(stampDone(p)) <= 14 * 86400,
-      ))
+        .sort((a, b) => doneSortKey(b) - doneSortKey(a));
+      for (const p of done.filter((p) => completedAge(p) <= 14 * 86400))
         cardGroups.get(completedRoot).push(projectCard(p));
       reconcileProjectCards(cardGroups);
       renderHistory();
@@ -2185,9 +2194,7 @@
             "co-empty",
           ),
         );
-      const older = done.filter(
-        (p) => Date.now() / 1000 - epoch(stampDone(p)) > 14 * 86400,
-      );
+      const older = done.filter((p) => completedAge(p) > 14 * 86400);
       if (older.length) {
         const d = node("details");
         d.className = "co-empty";
@@ -2442,6 +2449,9 @@
     timeline,
     lastState,
     displayStatus,
+    stampDone,
+    completedAge,
+    doneSortKey,
   };
   window.RenguinControlRoom = {
     poll,

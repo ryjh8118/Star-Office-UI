@@ -161,11 +161,46 @@ assert.equal(C.projectLive(p), "idle");
 assert.equal(C.memberTier({ running: false, stamp: past }), "recent");
 assert.equal(C.memberTier({ running: false, stamp: undefined }), "quiet");
 
+// A completed project must always be reachable. A project whose completion time
+// is missing or unreadable used to fail both the "recent" (<= 14 days) and the
+// "older" (> 14 days) test, so it appeared in neither list and vanished.
+const DAY = 86400;
+const published = (stamp) => ({
+  project_id: "published",
+  timeline: stamp
+    ? [
+        {
+          id: "PUBLISH",
+          status: "DONE",
+          ledger_entry_id: "publish-event",
+          updated_at: stamp,
+        },
+      ]
+    : [],
+});
+assert.equal(C.stampDone(published(fresh)), fresh);
+assert.ok(C.completedAge(published(fresh)) <= 14 * DAY);
+assert.ok(Number.isFinite(C.doneSortKey(published(fresh))));
+
+const long_ago = new Date(Date.now() - 30 * DAY * 1000).toISOString();
+assert.ok(C.completedAge(published(long_ago)) > 14 * DAY);
+
+// No usable completion time at all: still bucketed, and always into 更早完成.
+for (const bad of [undefined, "", "not-a-date"]) {
+  const project = published(bad);
+  const age = C.completedAge(project);
+  assert.equal(Number.isNaN(age), false, `age is comparable for ${String(bad)}`);
+  assert.equal(age <= 14 * DAY, false, `not filed as recent for ${String(bad)}`);
+  assert.equal(age > 14 * DAY, true, `filed as older for ${String(bad)}`);
+  assert.equal(C.doneSortKey(project), -Infinity, `sorts last for ${String(bad)}`);
+}
+
+
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 27,
+    checks: 40,
     scope:
-      "Creator historical state, never observed, native activity, lease distinction and display tiers",
+      "Creator historical state, never observed, native activity, lease distinction, display tiers and completed-project bucketing",
   }),
 );
