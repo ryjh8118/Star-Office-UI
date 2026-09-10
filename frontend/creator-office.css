@@ -1141,6 +1141,50 @@ body {
 .co-other-projects[open] > summary {
   margin-bottom: 20px;
 }
+.co-history-group {
+  margin-top: 12px;
+}
+.co-history-rows {
+  display: grid;
+  gap: 6px;
+  max-height: min(52vh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+}
+.co-history-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #ffffff5c;
+}
+.co-history-name {
+  font-weight: 600;
+  color: #4a3728;
+  overflow-wrap: anywhere;
+}
+.co-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  color: #7a6450;
+  font-size: 0.85em;
+}
+.co-history-badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid #c5ad8b;
+  color: #67503c;
+  font-size: 0.9em;
+}
+.co-history-time {
+  font-variant-numeric: tabular-nums;
+}
 .co-project-sort {
   display: flex;
   align-items: center;
@@ -1552,4 +1596,17 @@ body {
 }
 .co-other-projects > summary {
   color: #e8d9b7;
+}
+.co-history-row {
+  background: #ffffff0f;
+}
+.co-history-name {
+  color: #f0e2c4;
+}
+.co-history-meta {
+  color: #bdab88;
+}
+.co-history-badge {
+  border-color: #a88b6466;
+  color: #d8c39a;
 }
