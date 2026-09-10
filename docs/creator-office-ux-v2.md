@@ -43,6 +43,16 @@ Run `python -m unittest discover -s tests -v` (it covers the preview identity au
 
 The route and living-lodge visual fixtures under `tests/visual` are explicitly labelled as style tests, and carry no canonical project or executor activity. Browser QA uses a separate `.qa-runtime` store, so test covers, completed projects and sample to-dos do not affect the usable preview.
 
+## Recovering local settings after a sync
+
+Most of what a user personalises is ignored by Git — the presentation store under `.user-presentation`, `state.json`, `agents-state.json`, `runtime-config.json`, `join-keys.json`, the activity and achievement snapshots under `frontend/`, and the generated assets under `assets/`. A checkout, merge or pull never touches any of it. A plain `git stash` does not carry it either; only `git stash push -a` does, and that is the case where the working tree really does lose it.
+
+`scripts/recover_local_settings.py`, wrapped by `scripts/recover_local_settings.ps1`, moves that data into the current checkout in one pass. The stash is only ever read: no pop, apply, drop or clear, and no `reset --hard` or `clean`. Every entry is written to a quarantine directory under `.recovery-<timestamp>/` (ignored by Git, because it holds keys and covers), classified, and only then acted on.
+
+Implementation files in the stash are reported and skipped, so a sync cannot be reverted by accident; the Living Lodge house frame counts as chrome rather than cast for the same reason. Local runtime state is restored only where the checkout has none, since a live file has been in use since the sync — except for a tracked file, whose presence in the stash means the user edited it, so their version is the data. Shared shapes are merged rather than overwritten: the asset maps union entry by entry with the newer stamp winning, the resident manifest keeps the checkout's cast and re-adds any name the user's store still points at, and the presentation store is merged field by field so old values fill the gaps without losing anything set since the sync. Everything written is backed up first and a rollback script is written beside the report.
+
+`tests/test_recover_local_settings.py` pins the classification table and each merge rule.
+
 ## Retained local engineering
 
 This branch starts from the existing isolated remediation implementation: canonical delivery, freshness predicates, display semantics, operations diagnostics, owner lifecycle integration and CMD launcher. The original production checkout and preceding worktree are left intact. The earlier diagnostic component is superseded on the home page; its operations details and collision form remain accessible under 查看詳情 → 技術資訊.

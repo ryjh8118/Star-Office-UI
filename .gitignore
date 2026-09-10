@@ -55,3 +55,6 @@ frontend/renguin-achievements.json
 frontend/renguin-achievements/
 
 .qa-workflow-state/
+
+# Selective recovery workspaces quarantine stashed runtime state, keys and covers.
+.recovery-*/
