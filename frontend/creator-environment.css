@@ -320,29 +320,27 @@ html[data-env-weather="FOG"] #co-env .co-env-veil {
   --veil: var(--fog);
   opacity: 0.32;
 }
+/* The rooms are opaque, so the sky only shows in the gaps between them, the
+   margins and the windows. The arc is sized to the viewport so it crosses all
+   of those: centre at the bottom middle, radius just over half the width, crest
+   high in the sky, legs leaving the screen sides around mid-height. The distant
+   ridges paint over its feet. */
 .co-env-rainbow {
   display: none;
-  right: 3vw;
-  top: 13vh;
-  width: min(108vmin, 1080px);
-  aspect-ratio: 2;
+  inset: 0;
   opacity: 0;
   background: radial-gradient(
     circle at 50% 100%,
-    #0000 0 56%,
-    #ff8a8a 57%,
-    #ffc16b 59.5%,
-    #fff07a 62%,
-    #9ff0a8 64.5%,
-    #8fd0ff 67%,
-    #b99cff 69.5%,
-    #0000 71.5%
+    #0000 0 calc(50vw + 8vh),
+    #ff8a8a calc(50vw + 8.4vh),
+    #ffc16b calc(50vw + 9.2vh),
+    #fff07a calc(50vw + 10vh),
+    #9ff0a8 calc(50vw + 10.8vh),
+    #8fd0ff calc(50vw + 11.6vh),
+    #b99cff calc(50vw + 12.4vh),
+    #0000 calc(50vw + 13vh)
   );
   filter: blur(1.5px);
-  mask:
-    linear-gradient(90deg, #0000 0%, #000 24% 76%, #0000 100%),
-    linear-gradient(180deg, #000 36%, #0000 94%);
-  mask-composite: intersect;
   transition:
     opacity 0.9s ease,
     display 0.9s allow-discrete;
