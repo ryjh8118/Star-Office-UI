@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RENGUIN Office · ChatGPT 工作連線",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "把 ChatGPT 回覆狀態與頁面標題送到本機 Star Office，不讀取對話文字。",
   "permissions": ["storage", "scripting"],
   "host_permissions": ["https://chatgpt.com/*", "http://127.0.0.1/*"],

@@ -1,6 +1,11 @@
 (() => {
   "use strict";
-  if (location.origin !== "http://127.0.0.1:19119") return;
+  if (
+    !["http://127.0.0.1:19000", "http://127.0.0.1:19119"].includes(
+      location.origin,
+    )
+  )
+    return;
   window.addEventListener("message", async (event) => {
     if (
       event.source !== window ||

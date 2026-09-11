@@ -1,5 +1,8 @@
 "use strict";
-const OFFICE = "http://127.0.0.1:19119";
+// Production (19000) is the desk the user works at; Preview (19119) is kept for
+// QA. The token is stored with the Office that issued it, and observations go
+// back to that Office only.
+const OFFICES = ["http://127.0.0.1:19000", "http://127.0.0.1:19119"];
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
   const origin = (() => {
     try {
@@ -10,11 +13,11 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   })();
   if (
     message?.type === "office-pair" &&
-    origin === OFFICE &&
+    OFFICES.includes(origin) &&
     /^[A-Za-z0-9_-]{43}$/.test(message.token || "")
   ) {
     chrome.storage.local
-      .set({ token: message.token })
+      .set({ token: message.token, office: origin })
       .then(async () => {
         const tabs = await chrome.tabs.query({ url: "https://chatgpt.com/*" });
         for (const tab of tabs)
@@ -43,11 +46,11 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     !Number.isFinite(message.observed_at)
   )
     return;
-  chrome.storage.local.get("token").then(async ({ token }) => {
-    if (!token) return reply({ connected: false });
+  chrome.storage.local.get(["token", "office"]).then(async ({ token, office }) => {
+    if (!token || !OFFICES.includes(office)) return reply({ connected: false });
     try {
       const result = await fetch(
-        OFFICE + "/api/creator/browser-bridge/observe",
+        office + "/api/creator/browser-bridge/observe",
         {
           method: "POST",
           headers: {

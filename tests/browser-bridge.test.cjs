@@ -45,3 +45,56 @@ test("only a visible enabled stop control means working; message contains no con
     assert.equal(sent.length, 1);
   }
 });
+
+test("pairing from Production sends observations back to Production", async () => {
+  const background = fs.readFileSync(
+    require("node:path").join(__dirname, "../browser-bridge/background.js"),
+    "utf8",
+  );
+  let listener;
+  const stored = {},
+    posted = [];
+  const context = {
+    URL,
+    AbortSignal,
+    fetch: async (url) => {
+      posted.push(url);
+      return { ok: true };
+    },
+    chrome: {
+      runtime: { onMessage: { addListener: (fn) => (listener = fn) } },
+      storage: {
+        local: {
+          set: async (value) => Object.assign(stored, value),
+          get: async (keys) => Object.fromEntries(keys.map((k) => [k, stored[k]])),
+        },
+      },
+      tabs: { query: async () => [] },
+      scripting: { executeScript: async () => {} },
+    },
+  };
+  vm.runInNewContext(background, context);
+  // Replies are built inside the vm realm; compare them as plain data.
+  const send = (message, sender) =>
+    new Promise((resolve) => {
+      const plain = (value) => resolve(value && JSON.parse(JSON.stringify(value)));
+      if (!listener(message, sender, plain)) resolve(undefined);
+    });
+  const token = "a".repeat(43);
+  assert.equal(
+    await send({ type: "office-pair", token }, { url: "http://127.0.0.1:4444/" }),
+    undefined,
+    "an unknown local page cannot pair",
+  );
+  assert.deepEqual(
+    await send({ type: "office-pair", token }, { url: "http://127.0.0.1:19000/" }),
+    { paired: true },
+  );
+  assert.equal(stored.office, "http://127.0.0.1:19000");
+  const status = { type: "chatgpt-status", state: "WORKING", title: "企劃", observed_at: 1 };
+  assert.deepEqual(
+    await send(status, { url: "https://chatgpt.com/c/1", tab: { id: 7 } }),
+    { connected: true },
+  );
+  assert.deepEqual(posted, ["http://127.0.0.1:19000/api/creator/browser-bridge/observe"]);
+});

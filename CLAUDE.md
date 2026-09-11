@@ -38,18 +38,24 @@ scratch worktree for anything that outlives a single review.
 
 ## Runtime configuration
 
-Three environment variables decide what the Office can see. The startup launcher
-sets all three; anything that starts the backend another way must too.
+Four environment variables decide what the Office can see. The startup launcher
+sets all four; anything that starts the backend another way must too.
 
 | Variable | Meaning |
 | --- | --- |
 | `RENGUIN_CANONICAL_ROOT` | where the OS progress ledger lives |
 | `RENGUIN_PRODUCER_ROOT` | where the trusted adapter modules live |
 | `RENGUIN_PROJECT_SOURCE_ROOTS` | JSON array of roots to scan for per-project ledgers |
+| `RENGUIN_NATIVE_HOME` | home whose Codex / Claude / BIONIC session stores feed 辦公室成員 |
 
 `RENGUIN_PROJECT_SOURCE_ROOTS` is not optional in practice. Projects keep a
 progress ledger beside their own footage, so without it the Office silently
 drops every project the central ledger does not happen to mention.
+
+`RENGUIN_NATIVE_HOME` is the same trap for the members panel: `board()` reads
+agent sessions only when it is set, so without it every member card says 尚無紀錄
+while the agents are working. Preview passes its own `--native-home` on purpose;
+never default it inside `app.py`, or Preview starts reading the real home.
 
 ## Production and Preview are not interchangeable
 
@@ -121,7 +127,7 @@ for f in tests/*.cjs; do node "$f"; done
 for f in tests/test_*.py; do .venv/Scripts/python.exe -X utf8 "$f"; done
 ```
 
-The Python tests want the three environment variables above. Frontend logic is
+The Python tests want the environment variables above. Frontend logic is
 tested by loading the real files into a `vm` context in
 `tests/test_creator_truth.cjs` — put display-rule regressions there.
 
