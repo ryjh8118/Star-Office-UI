@@ -126,8 +126,16 @@
       canvas.remove();
       running = false;
     }
+    // A show that fails mid-flight ends quietly rather than holding the stage.
     function frame(now) {
-      const step = Math.min(now - last, 48);
+      try {
+        draw(now);
+      } catch {
+        finish();
+      }
+    }
+    function draw(now) {
+      const step = clamp(now - last, 0, 48);
       const dt = step / 16.667;
       last = now;
       const t = now - start;
