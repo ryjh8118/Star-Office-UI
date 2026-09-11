@@ -4,7 +4,7 @@
   "use strict";
   const PALETTE = ["#ffd36b", "#ff9a52", "#ff6f91", "#c9a2ff", "#7cc7ff", "#8ef0b5", "#fff3d6"];
   const SHAPES = ["peony", "ring", "willow", "crackle"];
-  const LIMITS = { shells: 8, sparks: 84, particles: 720, duration: 6500 };
+  const LIMITS = { shells: 8, sparks: 120, particles: 1100, duration: 6500 };
   const RISE = 760;
   const GRAVITY = 0.045;
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
@@ -37,7 +37,7 @@
           : height * (0.1 + rand() * (finale ? 0.16 : 0.26)),
         color: pick(),
         accent: pick(),
-        sparks: Math.round(52 + rand() * (LIMITS.sparks - 52)),
+        sparks: Math.round(80 + rand() * (LIMITS.sparks - 80)),
         shape: finale ? "peony" : SHAPES[i % SHAPES.length],
       };
     });
@@ -77,7 +77,7 @@
     let width = 0,
       height = 0;
     const fit = () => {
-      const ratio = Math.min(scope.devicePixelRatio || 1, 2);
+      const ratio = Math.min(scope.devicePixelRatio || 1, 1.5);
       width = scope.innerWidth;
       height = scope.innerHeight;
       canvas.width = Math.round(width * ratio);
@@ -99,23 +99,34 @@
     const spark = (props) => {
       if (sparks.length < LIMITS.particles) sparks.push({ trail: [], life: 0, ...props });
     };
+    function streak(p, color, alpha, width) {
+      ctx.strokeStyle = `rgba(${color},${alpha})`;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(p.trail[0][0], p.trail[0][1]);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+    // Bursts scale with the viewport, so a large screen still gets a full sky.
     function burst(shell, x, y) {
-      flashes.push({ x, y, age: 0, rgb: rgb(shell.color) });
+      const scale = clamp(Math.min(width, height) / 720, 0.75, 1.4);
+      flashes.push({ x, y, age: 0, rgb: rgb(shell.color), radius: 150 * scale });
       const willow = shell.shape === "willow";
       for (let i = 0; i < shell.sparks; i++) {
         const angle = (i / shell.sparks) * Math.PI * 2 + rand() * 0.2;
         const speed =
-          (shell.shape === "ring" ? 3.2 : willow ? 2.2 : 1.1 + rand() * 2.6) *
+          scale *
+          (shell.shape === "ring" ? 5 : willow ? 3.6 : 2 + rand() * 3.4) *
           (0.92 + rand() * 0.16);
         spark({
           x,
           y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          max: (willow ? 2100 : 1250) + rand() * 500,
+          max: (willow ? 2300 : 1400) + rand() * 600,
           rgb: rgb(willow ? "#ffd36b" : i % 3 ? shell.color : shell.accent),
-          size: willow ? 1.5 : 2 + rand() * 1.2,
-          drag: willow ? 0.976 : 0.962,
+          size: willow ? 1.8 : 2.2 + rand() * 1.4,
+          drag: willow ? 0.972 : 0.958,
           gravity: willow ? GRAVITY * 0.75 : GRAVITY,
           crackle: shell.shape === "crackle" || rand() < 0.16,
         });
@@ -190,12 +201,12 @@
           flashes.splice(i, 1);
           continue;
         }
-        const glow = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 110);
+        const glow = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.radius);
         glow.addColorStop(0, `rgba(${f.rgb},${0.5 * a})`);
         glow.addColorStop(1, `rgba(${f.rgb},0)`);
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(f.x, f.y, 110, 0, Math.PI * 2);
+        ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -208,7 +219,7 @@
           continue;
         }
         p.trail.push([p.x, p.y]);
-        if (p.trail.length > 5) p.trail.shift();
+        if (p.trail.length > 8) p.trail.shift();
         const drag = p.drag ** dt;
         p.vx *= drag;
         p.vy = p.vy * drag + p.gravity * dt;
@@ -216,12 +227,9 @@
         p.y += p.vy * dt;
         let alpha = Math.min(1, left * 1.6);
         if (p.crackle && left < 0.4) alpha *= rand() < 0.5 ? 1 : 0.12;
-        ctx.strokeStyle = `rgba(${p.rgb},${alpha})`;
-        ctx.lineWidth = p.size * (0.45 + left * 0.55);
-        ctx.beginPath();
-        ctx.moveTo(p.trail[0][0], p.trail[0][1]);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
+        // A soft halo under a hot core; young sparks burn near-white.
+        streak(p, p.rgb, alpha * 0.22, p.size * 3.2);
+        streak(p, left > 0.8 ? "255,248,232" : p.rgb, alpha, p.size * (0.45 + left * 0.55));
       }
 
       const busy = launched < shells.length || rockets.length || sparks.length || flashes.length;
