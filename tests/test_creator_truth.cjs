@@ -27,6 +27,7 @@ for (const name of [
   "renguin-freshness.js",
   "renguin-control-semantics.js",
   "creator-contexts.js",
+  "creator-scene.js",
   "creator-office.js",
 ])
   vm.runInContext(fs.readFileSync(path.join(base, name), "utf8"), context);
@@ -196,11 +197,39 @@ for (const bad of [undefined, "", "not-a-date"]) {
 }
 
 
+// Pinned projects lead 正在製作 in the order they were pinned. Everything else
+// keeps its own order, and a tie on pin time falls back to the project id.
+const rows = ["a", "b", "c", "d", "e"].map((project_id) => ({ project_id }));
+const pinTimes = { c: "2026-09-01T00:00:02Z", e: "2026-09-01T00:00:01Z" };
+const byName = (x, y) => (x.project_id < y.project_id ? -1 : 1);
+// Spread into this realm: arrays built inside the vm carry its own prototype.
+const ids = (list) => [...list].map((p) => p.project_id);
+assert.deepEqual(ids(C.arrange(rows, (p) => pinTimes[p.project_id] || "", byName)), ["e", "c", "a", "b", "d"]);
+assert.deepEqual(
+  ids(C.arrange(rows, (p) => (["d", "b"].includes(p.project_id) ? "same" : ""), (x, y) => -byName(x, y))),
+  ["b", "d", "e", "c", "a"],
+);
+assert.deepEqual(ids(C.arrange(rows, () => "", byName)), ["a", "b", "c", "d", "e"]);
+assert.equal(C.PIN_LIMIT, 3);
+assert.equal(C.featuredCount(0), 2);
+assert.equal(C.featuredCount(1), 2);
+assert.equal(C.featuredCount(3), 3, "every pin stays in view");
+assert.equal(C.featuredCount(7), 3);
+
+// Office Members wear canonical character art; unknown members get the placeholder.
+for (const key of ["CHATGPT_WORK", "ASTRA", "CLAUDE", "BIONIC"]) {
+  const who = C.memberIdentity(key);
+  assert.match(who.asset, /^\/static\/renguin-characters\/(director|astra|editor|scanner)\/[a-z]+\.png$/);
+  assert.ok(who.role && who.character, key + " has a role and a character");
+  assert.equal(who.bounds.length, 6, key + " crops to its figure");
+}
+assert.equal(C.memberIdentity("UNKNOWN").asset, null);
+
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 40,
+    checks: 60,
     scope:
-      "Creator historical state, never observed, native activity, lease distinction, display tiers and completed-project bucketing",
+      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order and member identity",
   }),
 );

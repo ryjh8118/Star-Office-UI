@@ -1,0 +1,1593 @@
+/* The world outside the lodge, and the rooms that look onto it.
+   Decorative only. Every layer is anchored in px or viewport units and tiles
+   instead of scaling, so opening or folding a room reveals more of the same
+   world: nothing here is ever resized to a container's height. */
+@property --sky-top {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #070d24;
+}
+@property --sky-mid {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #161d47;
+}
+@property --sky-low {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #1d3552;
+}
+@property --sun-core {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #eef3ff;
+}
+@property --sun-glow {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #9fb6ff33;
+}
+
+/* ------------------------------------------------------ shared lighting */
+:root {
+  --env-shade: #0a123047;
+  --env-lamp: 1;
+  --env-ridge-far: #26325a;
+  --env-ridge-near: #141b33;
+  --env-cap: #b9c9e6;
+  --env-map: #4a5f9c;
+  --env-map-alpha: 0.5;
+  --aur-a: #3ff0a0;
+  --aur-b: #3fd8f0;
+  --aur-c: #9a7cff;
+  --cloud-time: #3a4466;
+  --cloud-grey: #6b7389;
+  --cloud-mix: 0%;
+  --veil: #0d1428;
+  --fog: #5b6784;
+  --drop: #9fb3e0aa;
+  --flake: #eef4ff;
+  --snow-depth: 6px;
+}
+html[data-env-time="MORNING"] {
+  --env-shade: #fff1d600;
+  --env-lamp: 0.45;
+  --env-ridge-far: #8fa6bf;
+  --env-ridge-near: #5d738d;
+  --env-cap: #fdf8ef;
+  --env-map: #ffe6c2;
+  --env-map-alpha: 0.22;
+  --aur-a: #7fe3bd;
+  --aur-b: #82d6ef;
+  --aur-c: #c3b0ff;
+  --cloud-time: #fff6ea;
+  --cloud-grey: #b9c2cf;
+  --veil: #93a2b6;
+  --fog: #eef1f4;
+  --drop: #d8e6ffb0;
+}
+html[data-env-time="DAY"] {
+  --env-shade: #0000;
+  --env-lamp: 0.35;
+  --env-ridge-far: #7fa3c4;
+  --env-ridge-near: #4f7394;
+  --env-cap: #ffffff;
+  --env-map: #ffffff;
+  --env-map-alpha: 0;
+  /* Day aurora: faint mint, cyan, ice blue and pale violet ribbons — never neon. */
+  --aur-a: #6fe0b4;
+  --aur-b: #72cfee;
+  --aur-c: #b8a2ff;
+  --cloud-time: #ffffff;
+  --cloud-grey: #bcc5d2;
+  --veil: #8795ab;
+  --fog: #e9eef3;
+  --drop: #dce9ffb8;
+}
+html[data-env-time="AFTERNOON"] {
+  --env-shade: #ffb34a17;
+  --env-lamp: 0.55;
+  --env-ridge-far: #b39a8a;
+  --env-ridge-near: #7c6a68;
+  --env-cap: #fff3de;
+  --env-map: #ffd08a;
+  --env-map-alpha: 0.28;
+  --aur-a: #7fe2bb;
+  --aur-b: #86d3e6;
+  --aur-c: #c4afff;
+  --cloud-time: #fff1d9;
+  --cloud-grey: #bdb8b4;
+  --veil: #8d8a94;
+  --fog: #f1e9df;
+  --drop: #e3e7f0b8;
+}
+html[data-env-time="SUNSET"] {
+  --env-shade: #7c3a6a2b;
+  --env-lamp: 0.8;
+  --env-ridge-far: #7a4f79;
+  --env-ridge-near: #3e2c4c;
+  --env-cap: #ffd8c8;
+  --env-map: #ff9d7a;
+  --env-map-alpha: 0.34;
+  --aur-a: #7ef0b4;
+  --aur-b: #7fe3f0;
+  --aur-c: #c9b5ff;
+  --cloud-time: #f6b7a8;
+  --cloud-grey: #8d7f96;
+  --veil: #5a4a6a;
+  --fog: #e9c9cf;
+  --drop: #ffd9d0a8;
+}
+html[data-env-weather="CLOUDY"],
+html[data-env-weather="SNOW"] {
+  --cloud-mix: 18%;
+}
+html[data-env-weather="OVERCAST"],
+html[data-env-weather="RAIN"],
+html[data-env-weather="HEAVY_SNOW"] {
+  --cloud-mix: 46%;
+}
+html[data-env-weather="HEAVY_RAIN"],
+html[data-env-weather="THUNDERSTORM"] {
+  --cloud-mix: 72%;
+}
+html[data-env-weather="HEAVY_SNOW"] {
+  --snow-depth: 10px;
+}
+
+/* The old dusk backdrop steps aside once the environment is lit. */
+html[data-env-time] body::before {
+  display: none;
+}
+
+/* ------------------------------------------------------------ the sky */
+#co-env {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+#co-env > * {
+  position: absolute;
+}
+.co-env-sky {
+  inset: 0;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-low) 100%);
+  transition:
+    --sky-top 0.8s ease,
+    --sky-mid 0.8s ease,
+    --sky-low 0.8s ease;
+}
+html[data-env-time="MORNING"] .co-env-sky {
+  --sky-top: #8fb6dd;
+  --sky-mid: #dce8ef;
+  --sky-low: #fbe4bf;
+}
+html[data-env-time="DAY"] .co-env-sky {
+  --sky-top: #3f8fd6;
+  --sky-mid: #86c5ec;
+  --sky-low: #d6f1fb;
+}
+html[data-env-time="AFTERNOON"] .co-env-sky {
+  --sky-top: #7aa2c6;
+  --sky-mid: #eed9ad;
+  --sky-low: #f2bf73;
+}
+html[data-env-time="SUNSET"] .co-env-sky {
+  --sky-top: #3f3570;
+  --sky-mid: #cf5f86;
+  --sky-low: #f39a52;
+}
+/* Sun by day, moon by night, always low-contrast. */
+.co-env-sun {
+  left: 82%;
+  top: 16%;
+  width: 36vmax;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sun-core) 0 3%, var(--sun-glow) 6%, #0000 58%);
+  transition:
+    left 1.2s ease,
+    top 1.2s ease,
+    opacity 0.8s ease,
+    --sun-core 0.8s ease,
+    --sun-glow 0.8s ease;
+}
+html[data-env-time="MORNING"] .co-env-sun {
+  left: 14%;
+  top: 62%;
+  --sun-core: #fff8e6;
+  --sun-glow: #ffd89a70;
+}
+html[data-env-time="DAY"] .co-env-sun {
+  left: 74%;
+  top: 12%;
+  --sun-core: #ffffff;
+  --sun-glow: #fff6d060;
+}
+html[data-env-time="AFTERNOON"] .co-env-sun {
+  left: 82%;
+  top: 34%;
+  --sun-core: #fff3d0;
+  --sun-glow: #ffc27060;
+}
+html[data-env-time="SUNSET"] .co-env-sun {
+  left: 76%;
+  top: 74%;
+  --sun-core: #ffe0a8;
+  --sun-glow: #ff8a5a90;
+}
+#co-env[data-clouds="5"] .co-env-sun {
+  opacity: 0.4;
+}
+#co-env[data-clouds="6"] .co-env-sun {
+  opacity: 0.16;
+}
+
+/* ---------------------------------------------------------- atmosphere */
+.co-env-stars {
+  inset: 0 0 34% 0;
+  opacity: var(--env-stars, 0);
+  transition: opacity 0.9s ease;
+  mask: linear-gradient(180deg, #000 52%, #0000);
+}
+.co-env-starfield {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.3px 1.3px at 23px 41px, #ffffff, #0000),
+    radial-gradient(1px 1px at 97px 13px, #fffc, #0000),
+    radial-gradient(1.6px 1.6px at 151px 88px, #e8f0ff, #0000),
+    radial-gradient(1px 1px at 61px 131px, #fffb, #0000),
+    radial-gradient(1.2px 1.2px at 187px 160px, #fff, #0000),
+    radial-gradient(1px 1px at 131px 57px, #fff9, #0000);
+  background-size: 211px 173px;
+}
+.co-env-starfield.is-far {
+  background-size: 331px 277px;
+  opacity: 0.7;
+}
+.co-env-aurora {
+  inset: -4% -22% 42% -22%;
+  opacity: var(--env-aurora, 0);
+  transition: opacity 1s ease;
+  mask: linear-gradient(180deg, #0000 0, #000 18%, #000 56%, #0000 100%);
+}
+html[data-env-time="SUNSET"] .co-env-aurora,
+html[data-env-time="NIGHT"] .co-env-aurora {
+  mix-blend-mode: screen;
+}
+.co-env-ribbon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8%;
+  height: 44%;
+  border-radius: 50%;
+  filter: blur(14px);
+  background:
+    repeating-linear-gradient(90deg, #ffffff14 0 3px, #0000 3px 17px),
+    linear-gradient(90deg, #0000 0%, var(--aur-a) 18%, var(--aur-b) 42%, var(--aur-c) 66%, var(--aur-a) 84%, #0000 100%);
+  rotate: -7deg;
+}
+.co-env-ribbon:nth-child(2) {
+  top: 24%;
+  height: 32%;
+  rotate: 5deg;
+  opacity: 0.75;
+  background: linear-gradient(90deg, #0000 4%, var(--aur-b) 26%, var(--aur-a) 52%, var(--aur-c) 78%, #0000 96%);
+}
+.co-env-ribbon:nth-child(3) {
+  top: 13%;
+  height: 26%;
+  rotate: -2deg;
+  opacity: 0.55;
+  background: linear-gradient(90deg, #0000 10%, var(--aur-c) 34%, var(--aur-b) 60%, #0000 88%);
+}
+.co-env-meteor {
+  width: 170px;
+  height: 2px;
+  opacity: 0;
+  border-radius: 2px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #fff 0, #d9e6ffcc 10%, #0000);
+  filter: drop-shadow(0 0 4px #cfe0ff);
+}
+/* Weather dims the sky; it never greys out the world. */
+.co-env-veil {
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(180deg, var(--veil) 0%, #0000 130%);
+  transition: opacity 0.9s ease;
+}
+#co-env[data-clouds="3"] .co-env-veil {
+  opacity: 0.08;
+}
+#co-env[data-clouds="5"] .co-env-veil {
+  opacity: 0.34;
+}
+#co-env[data-clouds="6"] .co-env-veil {
+  opacity: 0.52;
+}
+html[data-env-weather="THUNDERSTORM"] #co-env .co-env-veil {
+  --veil: #252c44;
+  opacity: 0.7;
+}
+html[data-env-weather="FOG"] #co-env .co-env-veil {
+  --veil: var(--fog);
+  opacity: 0.32;
+}
+.co-env-rainbow {
+  display: none;
+  right: 3vw;
+  top: 13vh;
+  width: min(108vmin, 1080px);
+  aspect-ratio: 2;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 100%,
+    #0000 0 56%,
+    #ff8a8a 57%,
+    #ffc16b 59.5%,
+    #fff07a 62%,
+    #9ff0a8 64.5%,
+    #8fd0ff 67%,
+    #b99cff 69.5%,
+    #0000 71.5%
+  );
+  filter: blur(1.5px);
+  mask:
+    linear-gradient(90deg, #0000 0%, #000 24% 76%, #0000 100%),
+    linear-gradient(180deg, #000 36%, #0000 94%);
+  mask-composite: intersect;
+  transition:
+    opacity 0.9s ease,
+    display 0.9s allow-discrete;
+}
+html[data-env-rainbow="true"] .co-env-rainbow {
+  display: block;
+  opacity: 0.34;
+}
+html[data-env-rainbow="true"][data-env-weather="RAIN"] .co-env-rainbow {
+  opacity: 0.26;
+}
+
+/* -------------------------------------------------------------- clouds */
+.co-env-clouds {
+  inset: 0 0 42% 0;
+}
+.co-env-cloud {
+  --cloud: color-mix(in oklab, var(--cloud-time), var(--cloud-grey) var(--cloud-mix));
+  top: var(--y);
+  left: -40vw;
+  width: max(34vw, 280px);
+  aspect-ratio: 3.2;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 22% 42% at 30% 60%, var(--cloud) 0 55%, #0000 100%),
+    radial-gradient(ellipse 24% 50% at 52% 44%, var(--cloud) 0 58%, #0000 100%),
+    radial-gradient(ellipse 20% 40% at 72% 62%, var(--cloud) 0 55%, #0000 100%),
+    radial-gradient(ellipse 44% 26% at 50% 76%, color-mix(in oklab, var(--cloud), #0e1426 16%) 0 55%, #0000 100%);
+  transition: opacity 1.2s ease;
+  animation: co-env-drift var(--duration) linear var(--delay) infinite;
+}
+#co-env[data-clouds="2"] .co-env-cloud:nth-child(-n + 2),
+#co-env[data-clouds="3"] .co-env-cloud:nth-child(-n + 3),
+#co-env[data-clouds="5"] .co-env-cloud:nth-child(-n + 5),
+#co-env[data-clouds="6"] .co-env-cloud {
+  opacity: 0.86;
+}
+#co-env[data-clouds="2"] .co-env-cloud {
+  --cloud-alpha: 0.7;
+}
+html[data-env-weather="WINDY"] .co-env-cloud {
+  animation-duration: calc(var(--duration) / 4);
+}
+@keyframes co-env-drift {
+  from {
+    transform: translateX(0) scale(var(--scale));
+  }
+  to {
+    transform: translateX(180vw) scale(var(--scale));
+  }
+}
+.co-env-flash {
+  inset: 0 0 32% 0;
+  opacity: 0;
+  background: radial-gradient(62% 72% at var(--x, 50%) 0%, #e9ecff 0%, #b9c3ff66 32%, #0000 72%);
+  mix-blend-mode: screen;
+}
+
+/* ------------------------------------------------------ distant ridges */
+.co-env-ridge {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background-color: var(--env-ridge-far);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 190'%3E%3Cpath d='M0 190V120l60-24 50 14 60-48 50 26 40-18 70-40 50 34 50-6 50 34 60-42 60 30 50-14 70 34 60-28 60 24 60-12 60 36v70z'/%3E%3C/svg%3E")
+    0 100% / 960px 190px repeat-x;
+  transition:
+    background-color 0.9s ease,
+    opacity 0.9s ease;
+}
+.co-env-ridge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--env-cap);
+  opacity: 0.55;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 190'%3E%3Cpath d='M146 81l24-19 26 13-12 1-14 8-9-6zM308 43l22-13 24 14-12-1-12 8-10-7zM520 60l20-10 22 12-12-1-10 6-9-6zM762 81l18-9 20 11-11 0-9 5-8-5z'/%3E%3C/svg%3E")
+    0 100% / 960px 190px repeat-x;
+  transition: opacity 0.9s ease;
+}
+.co-env-ridge.is-near {
+  height: 130px;
+  background-color: var(--env-ridge-near);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 130'%3E%3Cpath d='M0 130V86l70-26 60 18 70-38 60 30 70-18 80 32 70-38 80 28 70-12 90 24v44z'/%3E%3C/svg%3E")
+    180px 100% / 720px 130px repeat-x;
+}
+.co-env-ridge.is-near::after {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 130'%3E%3Cpath d='M180 49l20-9 22 12-12 0-10 6-10-6zM460 55l20-9 22 12-12 0-10 6-10-6z'/%3E%3C/svg%3E")
+    180px 100% / 720px 130px repeat-x;
+}
+html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-env-ridge::after {
+  opacity: 0.95;
+}
+html[data-env-weather="HEAVY_SNOW"] .co-env-ridge.is-far,
+html[data-env-weather="FOG"] .co-env-ridge.is-far {
+  opacity: 0.38;
+}
+html[data-env-weather="FOG"] .co-env-ridge.is-near {
+  opacity: 0.66;
+}
+
+/* ------------------------------------------------------------------ fog */
+.co-env-fog,
+.co-env-rain,
+.co-env-snow,
+.co-env-wind {
+  inset: 0;
+  display: none;
+  opacity: 0;
+  transition:
+    opacity 0.8s ease,
+    display 0.8s allow-discrete;
+}
+#co-env[data-fog="true"] .co-env-fog,
+#co-env:not([data-rain="0"]) .co-env-rain,
+#co-env:not([data-snow="0"]) .co-env-snow,
+#co-env[data-wind="true"] .co-env-wind {
+  display: block;
+  opacity: 1;
+}
+@starting-style {
+  #co-env[data-fog="true"] .co-env-fog,
+  #co-env:not([data-rain="0"]) .co-env-rain,
+  #co-env:not([data-snow="0"]) .co-env-snow,
+  #co-env[data-wind="true"] .co-env-wind {
+    opacity: 0;
+  }
+}
+/* Three depths: background haze, midground bank, a faint foreground veil. */
+.co-env-bank {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  top: 26vh;
+  height: 36vh;
+  border-radius: 50%;
+  opacity: 0.5;
+  background: radial-gradient(closest-side, var(--fog) 0%, color-mix(in oklab, var(--fog) 45%, #0000) 55%, #0000 100%);
+  animation: co-env-bank 92s ease-in-out infinite alternate;
+}
+.co-env-bank:nth-child(2) {
+  top: 50vh;
+  height: 30vh;
+  opacity: 0.66;
+  animation-duration: 64s;
+  animation-direction: alternate-reverse;
+}
+.co-env-bank:nth-child(3) {
+  top: auto;
+  bottom: -9vh;
+  height: 26vh;
+  opacity: 0.44;
+  animation-duration: 47s;
+}
+@keyframes co-env-bank {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+
+/* --------------------------------------------------------- rain & snow */
+/* Each sheet is a tile that slides by exactly one tile: seamless, composited, no per-drop DOM. */
+.co-env-sheet {
+  position: absolute;
+  inset: -12% -18%;
+}
+.co-env-rain .co-env-sheet {
+  rotate: 11deg;
+}
+html[data-env-weather="THUNDERSTORM"] .co-env-rain .co-env-sheet {
+  rotate: 16deg;
+}
+.co-env-fall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--tile-h) * -1);
+  bottom: 0;
+  background-size: var(--tile-w) var(--tile-h);
+  animation: co-env-fall var(--speed) linear infinite;
+  will-change: transform;
+}
+@keyframes co-env-fall {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--tile-h));
+  }
+}
+.co-env-rain .co-env-fall {
+  background-image:
+    radial-gradient(1px 11px at 14px 20px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1px 9px at 61px 74px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1px 12px at 37px 131px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1px 10px at 88px 47px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1px 8px at 103px 118px, var(--drop) 0 38%, #0000 100%);
+}
+.co-env-rain .co-env-sheet:nth-child(1) .co-env-fall {
+  --tile-w: 121px;
+  --tile-h: 157px;
+  --speed: 0.8s;
+  opacity: 0.45;
+}
+.co-env-rain .co-env-sheet:nth-child(2) .co-env-fall {
+  --tile-w: 167px;
+  --tile-h: 211px;
+  --speed: 0.62s;
+  opacity: 0.6;
+}
+.co-env-rain .co-env-sheet:nth-child(3) {
+  display: none;
+}
+.co-env-rain .co-env-sheet:nth-child(3) .co-env-fall {
+  --tile-w: 233px;
+  --tile-h: 293px;
+  --speed: 0.5s;
+  opacity: 0.72;
+  background-image:
+    radial-gradient(1.4px 16px at 24px 40px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1.4px 14px at 131px 170px, var(--drop) 0 38%, #0000 100%),
+    radial-gradient(1.4px 18px at 199px 88px, var(--drop) 0 38%, #0000 100%);
+}
+#co-env[data-rain="2"] .co-env-rain .co-env-sheet:nth-child(3) {
+  display: block;
+}
+#co-env[data-rain="2"] .co-env-fall {
+  animation-duration: calc(var(--speed) * 0.72);
+}
+.co-env-snow .co-env-sheet {
+  animation: co-env-sway 7s ease-in-out infinite alternate;
+}
+.co-env-snow .co-env-sheet:nth-child(2) {
+  animation-duration: 9s;
+  animation-direction: alternate-reverse;
+}
+@keyframes co-env-sway {
+  from {
+    transform: translateX(-16px);
+  }
+  to {
+    transform: translateX(16px);
+  }
+}
+.co-env-snow .co-env-fall {
+  background-image:
+    radial-gradient(circle 2.2px at 20px 30px, var(--flake) 0 55%, #0000 100%),
+    radial-gradient(circle 1.7px at 96px 118px, var(--flake) 0 55%, #0000 100%),
+    radial-gradient(circle 2px at 151px 61px, var(--flake) 0 55%, #0000 100%),
+    radial-gradient(circle 1.5px at 57px 187px, var(--flake) 0 55%, #0000 100%);
+}
+.co-env-snow .co-env-sheet:nth-child(1) .co-env-fall {
+  --tile-w: 173px;
+  --tile-h: 211px;
+  --speed: 11s;
+  opacity: 0.5;
+}
+.co-env-snow .co-env-sheet:nth-child(2) .co-env-fall {
+  --tile-w: 239px;
+  --tile-h: 263px;
+  --speed: 8s;
+  opacity: 0.72;
+}
+.co-env-snow .co-env-sheet:nth-child(3) .co-env-fall {
+  --tile-w: 311px;
+  --tile-h: 347px;
+  --speed: 6.2s;
+  opacity: 0.9;
+  background-image:
+    radial-gradient(circle 3.2px at 40px 60px, var(--flake) 0 55%, #0000 100%),
+    radial-gradient(circle 2.6px at 221px 233px, var(--flake) 0 55%, #0000 100%),
+    radial-gradient(circle 3px at 151px 131px, var(--flake) 0 55%, #0000 100%);
+}
+.co-env-snow .co-env-sheet:nth-child(4) {
+  display: none;
+}
+.co-env-snow .co-env-sheet:nth-child(4) .co-env-fall {
+  --tile-w: 139px;
+  --tile-h: 167px;
+  --speed: 5s;
+  opacity: 0.85;
+}
+#co-env[data-snow="2"] .co-env-snow .co-env-sheet:nth-child(4) {
+  display: block;
+}
+#co-env[data-snow="2"] .co-env-fall {
+  animation-duration: calc(var(--speed) * 0.7);
+}
+
+/* ------------------------------------------------ wind, fireflies, sparkles */
+.co-env-leaf {
+  position: absolute;
+  left: -40px;
+  top: var(--y);
+  width: 12px;
+  height: 7px;
+  border-radius: 70% 0;
+  background: linear-gradient(135deg, #a8cf84, #5f8f4a);
+  animation: co-env-leaf var(--duration) linear var(--delay) infinite;
+}
+.co-env-leaf:nth-child(even) {
+  background: linear-gradient(135deg, #f1cd6e, #c48c34);
+}
+@keyframes co-env-leaf {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(56vw, 7vh) rotate(260deg);
+  }
+  to {
+    transform: translate(112vw, -3vh) rotate(540deg);
+  }
+}
+.co-env-fireflies,
+.co-env-sparkles {
+  inset: 0;
+}
+.co-env-firefly,
+.co-env-sparkle {
+  position: absolute;
+  display: none;
+  left: var(--x);
+  top: var(--y);
+  opacity: 0;
+}
+.co-env-firefly {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff9c4 0 24%, #d8ff7a99 46%, #0000 72%);
+}
+.co-env-firefly.is-on {
+  display: block;
+  animation: co-env-fly var(--duration) ease-in-out var(--delay) infinite;
+}
+@keyframes co-env-fly {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(26px, -30px);
+    opacity: 0.45;
+  }
+  78% {
+    transform: translate(-18px, -12px);
+    opacity: 0.95;
+  }
+}
+.co-env-sparkle {
+  width: 11px;
+  height: 11px;
+  background:
+    linear-gradient(90deg, #0000 44%, #fff6d0 44% 56%, #0000 56%),
+    linear-gradient(0deg, #0000 44%, #fff6d0 44% 56%, #0000 56%);
+}
+.co-env-sparkle.is-on {
+  display: block;
+  animation: co-env-glint 5s ease-in-out var(--delay) infinite;
+}
+@keyframes co-env-glint {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  45% {
+    opacity: 0.85;
+    transform: scale(1) rotate(45deg);
+  }
+}
+.co-env-starfield {
+  animation: co-env-twinkle 5.5s ease-in-out infinite alternate;
+}
+.co-env-starfield.is-far {
+  animation-delay: -2.7s;
+}
+@keyframes co-env-twinkle {
+  to {
+    opacity: 0.55;
+  }
+}
+/* Aurora drifts over 30–55 s, low amplitude, never an obvious loop. */
+.co-env-ribbon {
+  animation: co-env-aurora-a 38s ease-in-out infinite alternate;
+}
+.co-env-ribbon:nth-child(2) {
+  animation: co-env-aurora-b 53s ease-in-out -11s infinite alternate;
+}
+.co-env-ribbon:nth-child(3) {
+  animation: co-env-aurora-a 31s ease-in-out -19s infinite alternate-reverse;
+}
+@keyframes co-env-aurora-a {
+  from {
+    transform: translateX(-4%) skewX(-9deg);
+  }
+  to {
+    transform: translateX(5%) skewX(7deg);
+  }
+}
+@keyframes co-env-aurora-b {
+  from {
+    transform: translateX(3%) translateY(-3%) skewX(6deg);
+  }
+  to {
+    transform: translateX(-5%) translateY(2%) skewX(-8deg);
+  }
+}
+
+/* ------------------------------------------------------- the lodge map */
+/* Above the canvas (z 10), below the lodge's own lights (2000) and its
+   residents (3000): the room darkens at night while lamps and labels stay lit. */
+.co-env-maptint,
+.co-env-maphaze {
+  position: absolute;
+  inset: 0;
+  z-index: 1990;
+  pointer-events: none;
+}
+.co-env-maptint {
+  mix-blend-mode: multiply;
+}
+.co-env-maptint::before,
+.co-env-maptint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transition:
+    background-color 0.9s ease,
+    opacity 0.9s ease;
+}
+.co-env-maptint::before {
+  background-color: var(--env-map);
+  opacity: var(--env-map-alpha);
+}
+.co-env-maptint::after {
+  background-color: #6d7a92;
+  opacity: 0;
+}
+html:is([data-env-weather="OVERCAST"], [data-env-weather="RAIN"], [data-env-weather="HEAVY_SNOW"]) .co-env-maptint::after {
+  opacity: 0.22;
+}
+html:is([data-env-weather="HEAVY_RAIN"], [data-env-weather="THUNDERSTORM"]) .co-env-maptint::after {
+  opacity: 0.34;
+}
+.co-env-maphaze {
+  z-index: 1991;
+  opacity: 0;
+  background:
+    radial-gradient(70% 50% at 30% 60%, #eef2f6 0%, #eef2f600 70%),
+    radial-gradient(60% 45% at 75% 40%, #eef2f6 0%, #eef2f600 70%);
+  transition: opacity 0.9s ease;
+}
+html[data-env-weather="FOG"] .co-env-maphaze {
+  opacity: 0.2;
+}
+/* Snow falls past the lodge windows only when it is actually snowing. */
+html[data-env-time]:not([data-env-weather="SNOW"]):not([data-env-weather="HEAVY_SNOW"]) .co-amb-snow {
+  display: none;
+}
+
+/* ============================================================ the rooms */
+/* Five rooms of one lodge. Each keeps its own light; all share the same sky,
+   timber, depth and type. HOME → WORK → DECISION → RESULT → HISTORY reads as
+   MORNING → DAY → AFTERNOON → SUNSET → NIGHT. */
+[data-zone] {
+  --band-h: 150px;
+  --tile: 196px;
+  --win-x: 40px;
+  --win-y: 16px;
+  --win-w: 112px;
+  --win-h: 76px;
+  --zone-seam: #0000000f;
+  --zone-wall-mid: var(--zone-wall-2);
+}
+[data-zone="home"] {
+  --zone-wall-1: #fbf3e2;
+  --zone-wall-2: #efe2c8;
+  --zone-seam: #b8966a26;
+  --zone-trim: #8a6444;
+  --zone-sill: #a57b50;
+  --zone-frame: #6f4c34;
+  --zone-glass: #dff0ff;
+  --zone-plaque: #fffaf0f2;
+  --zone-plaque-edge: #c9b18e;
+  --zone-ink: #3f2f21;
+  --zone-kicker: #6f5a47;
+  --zone-accent: #d9a45a;
+  --zone-glow: #ffd79a;
+}
+[data-zone="work"] {
+  --zone-wall-1: #e6f6f8;
+  --zone-wall-2: #c3e5eb;
+  --zone-seam: #2f7c8a24;
+  --zone-trim: #3c6f7a;
+  --zone-sill: #4f8793;
+  --zone-frame: #2d5964;
+  --zone-glass: #bdf2ff;
+  --zone-plaque: #f4fcfdf5;
+  --zone-plaque-edge: #7fbfcb;
+  --zone-ink: #143c45;
+  --zone-kicker: #365f68;
+  --zone-accent: #26aec2;
+  --zone-glow: #6fe3f2;
+  --zone-floor: #173741;
+  --zone-floor-seam: #0b1e2470;
+}
+[data-zone="decision"] {
+  --zone-wall-1: #fdf0cf;
+  --zone-wall-2: #f1d596;
+  --zone-seam: #a8741f24;
+  --zone-trim: #8c5f22;
+  --zone-sill: #a8752f;
+  --zone-frame: #6e4a1c;
+  --zone-glass: #fff1c7;
+  --zone-plaque: #fffaeaf5;
+  --zone-plaque-edge: #d9ad5a;
+  --zone-ink: #472f0c;
+  --zone-kicker: #6f5220;
+  --zone-accent: #e3a232;
+  --zone-glow: #ffc861;
+  --zone-floor: #392916;
+  --zone-floor-seam: #1d140a70;
+}
+[data-zone="result"] {
+  --zone-wall-1: #ffdcc4;
+  --zone-wall-mid: #f2aeb6;
+  --zone-wall-2: #cda2d4;
+  --zone-seam: #7b466024;
+  --zone-trim: #7b4660;
+  --zone-sill: #8f5570;
+  --zone-frame: #5a3048;
+  --zone-glass: #ffd6c9;
+  --zone-plaque: #fff6f2f5;
+  --zone-plaque-edge: #e2a0a8;
+  --zone-ink: #47202f;
+  --zone-kicker: #74435a;
+  --zone-accent: #ff8a6b;
+  --zone-glow: #ffb08a;
+  --zone-floor: #33203a;
+  --zone-floor-seam: #170c1a70;
+}
+[data-zone="history"] {
+  --zone-wall-1: #27315c;
+  --zone-wall-2: #1a2146;
+  --zone-seam: #8fb5ff17;
+  --zone-trim: #3d4a7c;
+  --zone-sill: #4a5890;
+  --zone-frame: #1e2547;
+  --zone-glass: #9fd8ff;
+  --zone-plaque: #121936f2;
+  --zone-plaque-edge: #5667a8;
+  --zone-ink: #eef1ff;
+  --zone-kicker: #b4c0ec;
+  --zone-accent: #8fd3e8;
+  --zone-glow: #7fe0d0;
+  --zone-floor: #111733;
+  --zone-floor-seam: #05081870;
+}
+
+/* The room frame: shared timber, shared depth. */
+.co-zone {
+  position: relative;
+  margin: 34px 0;
+  border: 6px solid var(--zone-frame);
+  border-radius: 16px;
+  overflow: clip;
+  /* No ground of its own: the window panes must look through to the sky. */
+  background: transparent;
+  box-shadow:
+    0 0 0 1px #0d0a0880,
+    0 0 0 3px color-mix(in oklab, var(--zone-accent) 30%, #0000),
+    0 18px 40px #05080b59;
+}
+.co-zone > .co-section-header,
+.co-map-header[data-zone] {
+  position: relative;
+  isolation: isolate;
+  min-height: var(--band-h);
+  align-items: flex-start;
+}
+.co-zone > .co-section-header {
+  margin: 0;
+  padding: 18px 22px 30px;
+}
+.co-zone > .co-section-header::after {
+  display: none;
+}
+.co-zone-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.co-zone-scene > * {
+  position: absolute;
+  inset: 0;
+}
+/* A timber beam closes every band, collapsed or open. */
+.co-zone-scene::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
+  background:
+    linear-gradient(180deg, #ffffff2e 0 2px, #0000 2px),
+    repeating-linear-gradient(90deg, #0000 0 88px, #00000024 88px 90px),
+    var(--zone-frame);
+}
+/* Wall, frames and sills in one layer; the window panes are cut out so the
+   shared sky behind the page shows through, with whatever weather it has. */
+.co-zone-wall {
+  background:
+    linear-gradient(90deg, var(--zone-sill) 0 calc(var(--win-w) + 16px), #0000 0)
+      calc(var(--win-x) - 8px) calc(var(--win-y) + var(--win-h) + 3px) / var(--tile) 7px repeat-x,
+    linear-gradient(90deg, var(--zone-trim) 0 calc(var(--win-w) + 12px), #0000 0)
+      calc(var(--win-x) - 6px) calc(var(--win-y) - 6px) / var(--tile) calc(var(--win-h) + 12px) repeat-x,
+    repeating-linear-gradient(90deg, #0000 0 47px, var(--zone-seam) 47px 49px),
+    linear-gradient(180deg, var(--zone-wall-1), var(--zone-wall-mid) 90px, var(--zone-wall-2) 150px) 0 0 / 100% 150px no-repeat,
+    var(--zone-wall-2);
+  mask:
+    linear-gradient(#000 0 0),
+    linear-gradient(90deg, #000 0 var(--win-w), #0000 0) var(--win-x) var(--win-y) / var(--tile) var(--win-h) repeat-x;
+  mask-composite: exclude;
+}
+.co-zone-glass {
+  background:
+    linear-gradient(118deg, #ffffff30 0 12%, #0000 12% 24%, #ffffff17 24% 29%, #0000 29%) var(--win-x) var(--win-y) /
+      var(--tile) var(--win-h) repeat-x,
+    linear-gradient(180deg, color-mix(in oklab, var(--zone-glass) 26%, #0000), #0000 55%);
+  mask: linear-gradient(90deg, #000 0 var(--win-w), #0000 0) var(--win-x) var(--win-y) / var(--tile) var(--win-h) repeat-x;
+}
+.co-zone-drops {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -120px;
+  bottom: 0;
+  display: none;
+  background-image:
+    radial-gradient(2px 3px at 12px 20px, #eef6ffd9 0 45%, #0000 100%),
+    radial-gradient(1.5px 2.5px at 38px 61px, #eef6ffc4 0 45%, #0000 100%),
+    radial-gradient(1px 9px at 64px 34px, #dbe9ff99 0 40%, #0000 100%),
+    radial-gradient(2px 2.6px at 71px 97px, #eef6ffcc 0 45%, #0000 100%),
+    radial-gradient(1px 7px at 23px 88px, #dbe9ff88 0 40%, #0000 100%);
+  background-size: 83px 120px;
+}
+html:is([data-env-weather="RAIN"], [data-env-weather="HEAVY_RAIN"], [data-env-weather="THUNDERSTORM"]) .co-zone-drops {
+  display: block;
+}
+.is-zone-live .co-zone-drops,
+.co-map-header .co-zone-drops {
+  animation: co-zone-drip 9s linear infinite;
+}
+html:is([data-env-weather="HEAVY_RAIN"], [data-env-weather="THUNDERSTORM"]) .co-zone-drops {
+  animation-duration: 4.5s;
+}
+@keyframes co-zone-drip {
+  to {
+    transform: translateY(120px);
+  }
+}
+.co-zone-mullions {
+  background:
+    linear-gradient(
+        90deg,
+        #0000 0 calc(var(--win-w) / 2 - 3px),
+        var(--zone-trim) 0 calc(var(--win-w) / 2 + 3px),
+        #0000 0
+      )
+      var(--win-x) var(--win-y) / var(--tile) var(--win-h) repeat-x,
+    linear-gradient(90deg, var(--zone-trim) 0 var(--win-w), #0000 0) var(--win-x)
+      calc(var(--win-y) + var(--win-h) * 0.46) / var(--tile) 5px repeat-x;
+}
+/* Snow settles on sills, frames and the eaves. */
+.co-zone-snowcap {
+  display: none;
+  background:
+    linear-gradient(90deg, #f4f8ff 0 calc(var(--win-w) + 16px), #0000 0) calc(var(--win-x) - 8px)
+      calc(var(--win-y) + var(--win-h) + 3px - var(--snow-depth)) / var(--tile) var(--snow-depth) repeat-x,
+    linear-gradient(90deg, #f7faff 0 calc(var(--win-w) + 12px), #0000 0) calc(var(--win-x) - 6px)
+      calc(var(--win-y) - 6px - var(--snow-depth) + 3px) / var(--tile) var(--snow-depth) repeat-x,
+    radial-gradient(circle at 9px 0, #f7faff 0 8px, #0000 8.5px) 0 0 / 18px 9px repeat-x,
+    linear-gradient(180deg, #f7faff 0 3px, #0000 3px) 0 0 / 100% 4px no-repeat;
+}
+html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-zone-snowcap {
+  display: block;
+}
+/* Outside light tints the walls only; panes already show the real sky. */
+.co-zone-shade {
+  background-color: var(--env-shade);
+  transition: background-color 0.9s ease;
+  mask:
+    linear-gradient(#000 0 0),
+    linear-gradient(90deg, #000 0 var(--win-w), #0000 0) var(--win-x) var(--win-y) / var(--tile) var(--win-h) repeat-x;
+  mask-composite: exclude;
+}
+.co-zone-light {
+  opacity: calc(0.45 + var(--env-lamp) * 0.55);
+  transition: opacity 0.9s ease;
+}
+
+/* HOME · morning: warm white, timber, pale sky, pendant lamps. */
+[data-zone="home"] .co-zone-props {
+  background:
+    linear-gradient(
+        90deg,
+        #0000 0 calc(var(--win-x) + var(--win-w) + 41px),
+        #6d4a30 0 calc(var(--win-x) + var(--win-w) + 43px),
+        #0000 0
+      )
+      0 0 / var(--tile) 24px repeat-x,
+    linear-gradient(
+        90deg,
+        #0000 0 calc(var(--win-x) + var(--win-w) + 30px),
+        #8a6444 0 calc(var(--win-x) + var(--win-w) + 54px),
+        #0000 0
+      )
+      0 24px / var(--tile) 10px repeat-x;
+}
+[data-zone="home"] .co-zone-light {
+  background: radial-gradient(56px 40px at calc(var(--win-x) + var(--win-w) + 42px) 40px, #ffe0a8b3, #ffd79a33 55%, #0000)
+    0 0 / var(--tile) 110px repeat-x;
+}
+
+/* WORK · day: sky blue, cyan, teal; desks, glowing screens, a slow scan of light. */
+[data-zone="work"] .co-zone-props {
+  background:
+    linear-gradient(90deg, #0000 0 10px, #2c5560 10px 138px, #0000 0) 0 calc(100% - 16px) / 150px 6px repeat-x,
+    linear-gradient(90deg, #0000 0 44px, #8fecf7 44px 88px, #0000 0) 0 calc(100% - 34px) / 150px 26px repeat-x,
+    linear-gradient(90deg, #0000 0 63px, #22404a 63px 69px, #0000 0) 0 calc(100% - 22px) / 150px 8px repeat-x,
+    linear-gradient(90deg, #0000 0 40px, #22404a 40px 92px, #0000 0) 0 calc(100% - 30px) / 150px 34px repeat-x;
+}
+[data-zone="work"] .co-zone-light {
+  background: radial-gradient(64px 34px at 66px 60px, #6fe3f28c, #6fe3f214 60%, #0000) 0 100% / 150px 96px repeat-x;
+}
+[data-zone="work"] .co-zone-light::after {
+  content: "";
+  position: absolute;
+  bottom: 16px;
+  left: -220px;
+  width: 200px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #a8f6ff4d, #0000);
+}
+.is-zone-live[data-zone="work"] .co-zone-light::after {
+  animation: co-zone-scan 12s linear infinite;
+}
+@keyframes co-zone-scan {
+  to {
+    transform: translateX(calc(100vw + 440px));
+  }
+}
+[data-zone="work"] .co-zone-bit {
+  position: absolute;
+  right: calc(18px + var(--i) * 10px);
+  bottom: 24px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #5ff0b0;
+  box-shadow: 0 0 6px #5ff0b0;
+}
+.is-zone-live[data-zone="work"] .co-zone-bit {
+  animation: co-zone-led 2.6s steps(2, end) calc(var(--i) * -0.65s) infinite;
+}
+@keyframes co-zone-led {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* DECISION · afternoon: amber and gold; a lamp over the papers, notes on the wall. */
+[data-zone="decision"] .co-zone-props {
+  background:
+    linear-gradient(90deg, #0000 0 164px, #ffd76a 164px 180px, #0000 180px 184px, #ffb86a 184px 196px, #0000 0)
+      0 calc(var(--win-y) + 18px) / var(--tile) 16px repeat-x,
+    linear-gradient(90deg, #0000 0 10px, #6b4a1c 10px 214px, #0000 0) 0 calc(100% - 16px) / 230px 6px repeat-x,
+    linear-gradient(90deg, #0000 0 31px, #5a3d14 31px 34px, #0000 0) 0 calc(100% - 22px) / 230px 34px repeat-x,
+    linear-gradient(90deg, #0000 0 20px, #d99a2e 20px 46px, #0000 0) 0 calc(100% - 56px) / 230px 12px repeat-x,
+    linear-gradient(90deg, #0000 0 120px, #fffaf0 120px 168px, #0000 0) 0 calc(100% - 22px) / 230px 12px repeat-x,
+    linear-gradient(90deg, #0000 0 126px, #f4e6c6 126px 174px, #0000 0) 0 calc(100% - 30px) / 230px 8px repeat-x;
+}
+[data-zone="decision"] .co-zone-light {
+  background: radial-gradient(90px 58px at 33px 58px, #ffc861a6, #ffc86122 60%, #0000) 0 100% / 230px 110px repeat-x;
+}
+.is-zone-live[data-zone="decision"] .co-zone-light {
+  animation: co-zone-breathe 7s ease-in-out infinite alternate;
+}
+@keyframes co-zone-breathe {
+  to {
+    filter: brightness(1.12);
+  }
+}
+
+/* RESULT · sunset: coral, pink and violet; keepsakes on a shelf, a little sparkle. */
+[data-zone="result"] .co-zone-props {
+  background:
+    linear-gradient(var(--zone-sill), var(--zone-sill)) 0 calc(100% - 24px) / 100% 5px no-repeat,
+    linear-gradient(90deg, #0000 0 30px, #f6c75a 30px 46px, #0000 0) 0 calc(100% - 38px) / 170px 14px repeat-x,
+    linear-gradient(90deg, #0000 0 34px, #b07a2a 34px 42px, #0000 0) 0 calc(100% - 29px) / 170px 9px repeat-x,
+    linear-gradient(90deg, #0000 0 84px, #ffb08a 84px 122px, #0000 0) 0 calc(100% - 33px) / 170px 20px repeat-x,
+    linear-gradient(90deg, #0000 0 80px, #7b4660 80px 126px, #0000 0) 0 calc(100% - 29px) / 170px 28px repeat-x;
+}
+[data-zone="result"] .co-zone-light {
+  background:
+    repeating-linear-gradient(115deg, #0000 0 70px, #ffc2a01f 70px 120px, #0000 120px 210px),
+    radial-gradient(120px 50px at 103px 70px, #ffb08a73, #0000) 0 100% / 170px 110px repeat-x;
+}
+[data-zone="result"] .co-zone-bit {
+  position: absolute;
+  left: calc(9% + var(--i) * 20%);
+  top: calc(22px + var(--i) * 11px);
+  width: 9px;
+  height: 9px;
+  opacity: 0.55;
+  background:
+    linear-gradient(90deg, #0000 42%, #fff3c9 42% 58%, #0000 58%),
+    linear-gradient(0deg, #0000 42%, #fff3c9 42% 58%, #0000 58%);
+}
+.is-zone-live[data-zone="result"] .co-zone-bit {
+  animation: co-env-glint 5.4s ease-in-out calc(var(--i) * -1.1s) infinite;
+}
+
+/* HISTORY · night: navy and blue-violet; archive shelves under a faint aurora. */
+[data-zone="history"] .co-zone-props {
+  background:
+    linear-gradient(var(--zone-sill), var(--zone-sill)) 0 calc(100% - 16px) / 100% 4px no-repeat,
+    repeating-linear-gradient(
+        90deg,
+        #5d78b8 0 7px,
+        #2d3a66 7px 9px,
+        #7fb8c9 9px 15px,
+        #2d3a66 15px 17px,
+        #9a86d6 17px 24px,
+        #2d3a66 24px 26px,
+        #4d6aa8 26px 31px,
+        #2d3a66 31px 34px
+      )
+      0 calc(100% - 20px) / 100% 24px no-repeat;
+}
+[data-zone="history"] .co-zone-light {
+  background: radial-gradient(160px 40px at 50% 100%, #7fe0d024, #0000) 0 100% / 320px 60px repeat-x;
+}
+[data-zone="history"] .co-zone-light::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 0;
+  height: 80px;
+  background: linear-gradient(100deg, #0000 8%, #5ff0c233 30%, #6fd8ff2e 50%, #a88cff29 70%, #0000 92%);
+  filter: blur(8px);
+}
+.is-zone-live[data-zone="history"] .co-zone-light::before {
+  animation: co-env-aurora-a 44s ease-in-out infinite alternate;
+}
+
+/* ----------------------------------------------------- room signboards */
+.co-zone-plaque {
+  position: relative;
+  min-width: 0;
+  max-width: min(620px, 100%);
+  padding: 12px 16px 12px 14px;
+  border-radius: 12px;
+  background: var(--zone-plaque);
+  border: 1px solid var(--zone-plaque-edge);
+  border-left: 5px solid var(--zone-accent);
+  box-shadow:
+    0 6px 16px #0a0d1440,
+    0 1px 0 #ffffff40 inset;
+}
+.co-zone .co-zone-plaque h2,
+.co-map-header .co-zone-plaque h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--zone-ink) !important;
+  text-shadow: none !important;
+}
+.co-zone .co-zone-plaque h2::before {
+  display: none !important;
+}
+.co-zone .co-zone-plaque .co-kicker,
+.co-map-header .co-zone-plaque p {
+  color: var(--zone-kicker) !important;
+}
+.co-zone-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font: 700 16px/1 system-ui, sans-serif;
+  color: #fff;
+  background: var(--zone-accent);
+  box-shadow: 0 2px 0 #0000002e, 0 0 12px color-mix(in oklab, var(--zone-glow) 60%, #0000);
+}
+.co-zone-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font: 600 12px/1.5 system-ui, sans-serif;
+}
+.co-zone-summary:empty {
+  display: none;
+}
+.co-zone-summary span {
+  padding: 2px 9px;
+  border-radius: 20px;
+  color: var(--zone-ink);
+  background: color-mix(in oklab, var(--zone-accent) 16%, #0000);
+  border: 1px solid color-mix(in oklab, var(--zone-accent) 48%, #0000);
+}
+.co-zone-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.co-zone-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.co-zone-toggle::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: -135deg;
+  translate: 0 2px;
+  transition: rotate 0.3s ease;
+}
+.co-zone-toggle[aria-expanded="false"]::after {
+  rotate: 45deg;
+  translate: 0 -2px;
+}
+
+/* -------------------------------------------------- open and folded rooms */
+/* Folding only reveals or hides the floor below the band. The band and every
+   tile keep their pixel geometry, so both states are the same picture. */
+.co-zone-fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.co-zone.is-collapsed > .co-zone-fold {
+  grid-template-rows: 0fr;
+}
+.co-zone-body {
+  min-height: 0;
+  overflow: clip;
+  padding: 22px 22px 26px;
+  transition:
+    padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s;
+  background:
+    radial-gradient(680px 210px at 50% 0, color-mix(in oklab, var(--zone-glow) 22%, #0000), #0000 70%) no-repeat,
+    repeating-linear-gradient(180deg, #0000 0 58px, var(--zone-floor-seam) 58px 60px),
+    repeating-linear-gradient(90deg, #0000 0 239px, color-mix(in oklab, var(--zone-floor-seam) 60%, #0000) 239px 241px),
+    var(--zone-floor);
+}
+.co-zone.is-settled .co-zone-body {
+  overflow: visible;
+}
+.co-zone.is-collapsed .co-zone-body {
+  padding-top: 0;
+  padding-bottom: 0;
+  visibility: hidden;
+  transition:
+    padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s 0.45s;
+}
+[data-zone="history"] .co-zone-body {
+  background:
+    radial-gradient(1px 1px at 37px 23px, #cfe0ff66, #0000) 0 0 / 173px 131px,
+    radial-gradient(680px 210px at 50% 0, #6fd8ff1f, #0000 70%) no-repeat,
+    repeating-linear-gradient(180deg, #0000 0 58px, var(--zone-floor-seam) 58px 60px),
+    var(--zone-floor);
+}
+
+/* HOME is the header band, the lodge map and the members below it. */
+.co-map-header[data-zone="home"] {
+  /* A flex child of <body>: without this, a wrapped narrow band shrinks under the map. */
+  flex-shrink: 0;
+  margin: 0 auto;
+  padding: 18px 22px 30px;
+  border: 9px solid var(--zone-frame);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow:
+    0 0 0 1px #2a1c12,
+    0 0 0 3px color-mix(in oklab, var(--zone-accent) 30%, #0000);
+}
+.co-map-header[data-zone="home"] .co-zone-plaque {
+  max-width: min(520px, 100%);
+}
+.co-map-header[data-zone="home"] .co-zone-plaque h1 {
+  font-size: 25px;
+  letter-spacing: 2px;
+}
+#game-container,
+#game-container canvas {
+  border-radius: 0 !important;
+}
+body.co-home-collapsed #game-container,
+body.co-home-collapsed #office-members {
+  display: none !important;
+}
+body.co-home-collapsed .co-map-header[data-zone="home"] {
+  border-bottom: 9px solid var(--zone-frame);
+  border-radius: 16px;
+  margin-bottom: 30px;
+}
+/* The members' parlour continues the home room's warm light. */
+.co-section#office-members {
+  border-top: 0 !important;
+}
+
+/* Anything that sits straight on the sky gets its own board. */
+.co-technical-footer {
+  width: min(1280px, 100%);
+  margin: 32px auto !important;
+  padding: 14px !important;
+  border: 1px solid #6f4c34 !important;
+  border-radius: 14px;
+  background: #1c1510d9;
+}
+
+/* ---------------------------------------------------------- the selector */
+.co-env-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 280px;
+}
+.co-env-button-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.co-env-panel {
+  position: fixed;
+  inset: 16px 16px auto auto;
+  z-index: 100001;
+  width: min(440px, calc(100vw - 24px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  margin: 0;
+  padding: 22px 20px 18px !important;
+}
+.co-env-panel h2 {
+  margin-bottom: 8px !important;
+}
+.co-env-group {
+  border: 0;
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid #94704933;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.co-env-group legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 4px;
+  font: 700 14px/1.4 system-ui, sans-serif;
+  color: #4a3626;
+}
+.co-env-hint {
+  width: 100%;
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #7a6450;
+}
+.co-env-hint:empty {
+  display: none;
+}
+.co-dialog .co-env-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 11px;
+  border-radius: 20px;
+  border: 1px solid #c9b492;
+  background: #fffaf0;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.co-dialog .co-env-choice input {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  padding: 0;
+  accent-color: #4f7a64;
+}
+.co-dialog .co-env-choice:has(input:checked) {
+  border-color: #4f7a64;
+  background: #e4efdc;
+  box-shadow: 0 0 0 2px #4f7a6433;
+  font-weight: 650;
+}
+.co-dialog .co-env-choice:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.co-dialog .co-env-choice:has(input:focus-visible) {
+  outline: 3px solid #c58b40;
+  outline-offset: 2px;
+}
+.co-env-modifier {
+  border-style: dashed !important;
+}
+.co-env-presets .co-button {
+  min-height: 36px;
+  padding: 7px 12px;
+}
+.co-env-presets .co-button[aria-pressed="true"] {
+  background: linear-gradient(180deg, #648061, #4a6a4c);
+  border-color: #3b5740;
+  color: #fdf6e3;
+}
+.co-env-status {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: #6f5a47;
+}
+.co-env-status[data-kind="refused"] {
+  color: #8a4b12;
+  font-weight: 650;
+}
+
+/* ------------------------------------------------------------ narrow */
+@media (max-width: 700px) {
+  [data-zone] {
+    --band-h: 124px;
+    --tile: 150px;
+    --win-x: 26px;
+    --win-y: 14px;
+    --win-w: 92px;
+    --win-h: 64px;
+  }
+  .co-zone > .co-section-header {
+    flex-wrap: wrap;
+    padding: 14px 12px 26px;
+  }
+  .co-zone-body {
+    padding: 16px 12px 20px;
+  }
+  .co-zone-tools {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+  .co-map-header[data-zone="home"] {
+    flex-wrap: wrap;
+    padding: 12px 12px 24px;
+    border-width: 6px;
+  }
+  .co-env-rain .co-env-sheet:nth-child(1),
+  .co-env-snow .co-env-sheet:nth-child(4),
+  .co-env-cloud:nth-child(n + 5),
+  .co-env-leaf:nth-child(n + 4),
+  .co-env-ribbon:nth-child(3),
+  .co-env-starfield.is-far {
+    display: none !important;
+  }
+  .co-env-ridge.is-far {
+    height: 130px;
+    mask-size: 660px 130px;
+  }
+  .co-env-ridge.is-far::after {
+    mask-size: 660px 130px;
+  }
+  .co-env-panel {
+    inset: auto 12px 12px 12px;
+    width: auto;
+    max-height: 72vh;
+  }
+}
+
+/* ---------------------------------------------------------- reduced motion */
+/* Keep the look, drop the movement: no moving aurora, meteors, lightning,
+   fireflies, drifting leaves, parallax or heavy particles. */
+@media (prefers-reduced-motion: reduce) {
+  #co-env *,
+  #co-env *::before,
+  #co-env *::after,
+  .co-zone-scene *,
+  .co-zone-scene *::before,
+  .co-zone-scene *::after,
+  .co-zone-toggle::after {
+    animation: none !important;
+  }
+  .co-env-meteor,
+  .co-env-flash,
+  .co-env-fireflies,
+  .co-env-wind,
+  .co-env-rain .co-env-sheet:nth-child(3),
+  .co-env-snow .co-env-sheet:nth-child(n + 3) {
+    display: none !important;
+  }
+  .co-zone-fold,
+  .co-zone-body {
+    transition: none !important;
+  }
+  .co-env-cloud:nth-child(1) {
+    transform: translateX(46vw) scale(var(--scale));
+  }
+  .co-env-cloud:nth-child(2) {
+    transform: translateX(98vw) scale(var(--scale));
+  }
+  .co-env-cloud:nth-child(3) {
+    transform: translateX(70vw) scale(var(--scale));
+  }
+  .co-env-cloud:nth-child(4) {
+    transform: translateX(22vw) scale(var(--scale));
+  }
+  .co-env-cloud:nth-child(5) {
+    transform: translateX(118vw) scale(var(--scale));
+  }
+  .co-env-cloud:nth-child(6) {
+    transform: translateX(84vw) scale(var(--scale));
+  }
+}

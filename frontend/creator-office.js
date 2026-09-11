@@ -44,11 +44,12 @@
     UNKNOWN: "尚無同步紀錄",
     NOT_REQUIRED: "不需要",
   };
+  // [member name, canonical character art, character, role]
   const agents = {
-    CHATGPT_WORK: ["ChatGPT", "director/renguin.png"],
-    ASTRA: ["ASTRA", "astra/eric.png"],
-    CLAUDE: ["Claude", "editor/dola.png"],
-    BIONIC: ["BIONIC", "scanner/xuebao.png"],
+    CHATGPT_WORK: ["ChatGPT", "director/renguin.png", "企鵝 Renguin", "主控／導演"],
+    ASTRA: ["ASTRA", "astra/eric.png", "Eric", "工程／程式"],
+    CLAUDE: ["Claude", "editor/dola.png", "哆啦 Dola", "剪輯／同步"],
+    BIONIC: ["BIONIC", "scanner/xuebao.png", "雪寶 Xuebao", "檢查／挑錯"],
   };
   const node = (tag, text, cls) => {
     const e = document.createElement(tag);
@@ -138,7 +139,10 @@
     pollTimer = null,
     retryDelay = 5000;
   let activeProjectIds = [],
-    projectDragId = null;
+    projectDragId = null,
+    pinnedCount = 0,
+    homeToggle = null;
+  const zones = new Map();
   let browserStatus = { connected: false, observations: [] };
   const playingLinks = new Map();
   const houseObserver = new IntersectionObserver(
@@ -180,6 +184,8 @@
       const error = await r.json().catch(() => null);
       throw Error(error?.error || "輸入內容無效，請確認後再試。");
     }
+    const refusal = r.status === 409 ? await r.json().catch(() => null) : null;
+    if (refusal?.error) throw Error(refusal.error);
     if (!r.ok)
       throw Error(
         r.status === 409
@@ -346,7 +352,12 @@
   }
   function renderHistory() {
     const grouped = new Map(Object.keys(historyMeta).map((k) => [k, []]));
-    for (const p of archived()) grouped.get(historyGroup(p)).push(p);
+    const records = archived();
+    for (const p of records) grouped.get(historyGroup(p)).push(p);
+    zoneSummary("history", [
+      records.length + " 筆紀錄",
+      [...grouped.values()].filter((list) => list.length).length + " 個分類",
+    ]);
     for (const list of grouped.values())
       list.sort(
         (a, b) => (epoch(b.updated_at) || 0) - (epoch(a.updated_at) || 0),
@@ -487,6 +498,165 @@
         j.project_id === pid &&
         window.RenguinOperations.effective(j) === "RUNNING",
     );
+  }
+
+  // Pinned projects lead 正在製作 in the order they were pinned; the rest keep
+  // their own order. Pure, so the display rule can be tested on its own.
+  const PIN_LIMIT = 3;
+  const PIN_LIMIT_TEXT = "最多可置頂 " + PIN_LIMIT + " 個專案";
+  const pinnedAt = (p) => presentation.projects[p.project_id]?.pinned_at || "";
+  function arrange(list, pinOf, rest) {
+    const byId = (a, b) =>
+      a.project_id < b.project_id ? -1 : a.project_id > b.project_id ? 1 : 0;
+    return [...list].sort((a, b) => {
+      const pa = pinOf(a),
+        pb = pinOf(b);
+      if (!pa !== !pb) return pa ? -1 : 1;
+      if (pa) return pa < pb ? -1 : pa > pb ? 1 : byId(a, b);
+      return rest(a, b);
+    });
+  }
+  // Every pin stays in view; without pins the two most important projects do.
+  const featuredCount = (pins) => Math.max(2, Math.min(PIN_LIMIT, pins));
+  async function togglePin(p) {
+    if (mutationPending || !storeReady) return;
+    const pinned = !!pinnedAt(p);
+    const cardOf = () =>
+      root.querySelector(`.co-project[data-project-id="${CSS.escape(p.project_id)}"]`);
+    if (!pinned && pinnedCount >= PIN_LIMIT) {
+      toast(PIN_LIMIT_TEXT);
+      const feedback = cardOf()?.querySelector(".co-save-status");
+      if (feedback) feedback.textContent = PIN_LIMIT_TEXT + "，請先取消其中一個置頂。";
+      return;
+    }
+    if (await save("pin", { project_id: p.project_id, pinned: !pinned })) {
+      toast((pinned ? "已取消置頂「" : "已置頂「") + projectName(p) + "」");
+      cardOf()?.querySelector(".co-pin-toggle")?.focus();
+    }
+  }
+  function saveEnvironment(value) {
+    mutationQueue = mutationQueue.then(async () => {
+      try {
+        presentation = await json("/api/creator/environment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(value),
+        });
+        storeReady = true;
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    return mutationQueue;
+  }
+  // Office Members wear their canonical character art, cropped to the figure
+  // and framed identically; missing art gets the same frame with an initial.
+  function memberIdentity(key) {
+    const [name, asset, character, role] = agents[key] || [key];
+    return {
+      name,
+      character: character || "",
+      role: role || "",
+      asset: asset ? "/static/renguin-characters/" + asset : null,
+      bounds: window.CreatorScene?.bounds?.(key) || null,
+    };
+  }
+  function memberAvatar(key) {
+    const who = memberIdentity(key);
+    const frame = node("span", undefined, "co-avatar");
+    frame.dataset.initial = (who.character || who.name || "?").trim().slice(0, 1).toUpperCase();
+    const missing = () => {
+      frame.dataset.state = "missing";
+      frame.replaceChildren();
+    };
+    if (!who.asset) {
+      missing();
+      return frame;
+    }
+    frame.dataset.state = "ready";
+    const portrait = node("span", undefined, "co-avatar-portrait");
+    const img = node("img");
+    img.alt = "";
+    img.decoding = "async";
+    img.draggable = false;
+    img.addEventListener("error", missing, { once: true });
+    if (who.bounds) {
+      const [w, h, x, y, right, bottom] = who.bounds,
+        bw = right - x,
+        bh = bottom - y;
+      portrait.style.aspectRatio = `${bw} / ${bh}`;
+      portrait.classList.add("is-cropped", bw >= bh ? "is-wide" : "is-tall");
+      Object.assign(img.style, {
+        width: (w / bw) * 100 + "%",
+        height: (h / bh) * 100 + "%",
+        left: (-x / bw) * 100 + "%",
+        top: (-y / bh) * 100 + "%",
+      });
+    }
+    img.src = who.asset;
+    portrait.append(img);
+    frame.append(portrait);
+    return frame;
+  }
+  // Rooms fold down to their signboard. The floor below is revealed or hidden;
+  // nothing is ever resized, so both states are the same picture.
+  const ZONE_KEY = "co-zones-collapsed";
+  function collapsedZones() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(ZONE_KEY) || "[]"));
+    } catch {
+      return new Set();
+    }
+  }
+  function rememberZone(id, collapsed) {
+    try {
+      const stored = collapsedZones();
+      if (collapsed) stored.add(id);
+      else stored.delete(id);
+      localStorage.setItem(ZONE_KEY, JSON.stringify([...stored]));
+    } catch {}
+  }
+  const zoneTokens = new WeakMap();
+  function setZone(section, collapsed, remember = true) {
+    const fold = section.querySelector(":scope > .co-zone-fold");
+    const toggle = section.querySelector(":scope > .co-section-header > .co-zone-toggle");
+    const token = (zoneTokens.get(section) || 0) + 1;
+    zoneTokens.set(section, token);
+    section.classList.remove("is-settled");
+    section.classList.toggle("is-collapsed", collapsed);
+    fold.inert = collapsed;
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-label", (collapsed ? "展開「" : "收合「") + toggle.dataset.title + "」");
+    toggle.querySelector("span").textContent = collapsed ? "展開" : "收合";
+    if (!collapsed) {
+      const settle = () => {
+        if (zoneTokens.get(section) === token) section.classList.add("is-settled");
+      };
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) settle();
+      else setTimeout(settle, 480);
+    }
+    if (remember) rememberZone(section.id, collapsed);
+  }
+  function setHome(collapsed, remember = true) {
+    document.body.classList.toggle("co-home-collapsed", collapsed);
+    if (homeToggle) {
+      homeToggle.setAttribute("aria-expanded", String(!collapsed));
+      homeToggle.setAttribute("aria-label", (collapsed ? "展開" : "收合") + " RENGUIN OFFICE");
+      homeToggle.querySelector("span").textContent = collapsed ? "展開" : "收合";
+    }
+    if (remember) rememberZone("renguin-home", collapsed);
+  }
+  function revealZone(section) {
+    if (!section) return;
+    if (section.classList.contains("is-collapsed")) setZone(section, false);
+    section.scrollIntoView({ block: "start" });
+  }
+  function zoneSummary(zone, parts) {
+    const line = zones.get(zone)?.summary;
+    if (!line || line.dataset.key === parts.join("|")) return;
+    line.dataset.key = parts.join("|");
+    line.replaceChildren(...parts.map((text) => node("span", text)));
   }
 
   // Display tiers restate an existing view; they observe nothing new.
@@ -674,13 +844,21 @@
         card.dataset.agent = v.key;
         const tier = memberTier(v);
         card.dataset.tier = tier;
+        const identity = memberIdentity(v.key);
+        const names = node("span", undefined, "co-member-names");
+        const role = node("small", undefined, "co-member-role");
+        for (const part of [identity.character, identity.role].filter(Boolean))
+          role.append(node("span", part));
+        names.append(node("h3", identity.name), role);
+        const head = node("span", undefined, "co-member-id");
+        head.append(memberAvatar(v.key), names);
         card.append(
           node(
             "span",
             { working: "工作中", recent: "最近活動", quiet: "尚無紀錄" }[tier],
             "co-tier",
           ),
-          node("h3", agents[v.key][0]),
+          head,
           node("strong", v.text),
           node("p", v.summary),
           node("p", date(v.stamp), "co-muted"),
@@ -786,6 +964,7 @@
         const select = () => {
           selectedAgent = key;
           renderMemberSelection();
+          if (document.body.classList.contains("co-home-collapsed")) setHome(false);
           membersRoot.querySelector(`[data-agent="${key}"]`)?.focus();
           membersRoot.scrollIntoView({ behavior: "smooth", block: "center" });
         };
@@ -804,6 +983,10 @@
       (e) => e.dataset.projectId === p.project_id,
     );
     if (card) {
+      const zone = card.closest(".co-zone");
+      if (zone?.classList.contains("is-collapsed")) setZone(zone, false);
+      const fold = card.closest("details");
+      if (fold) fold.open = true;
       card.scrollIntoView({ behavior: "smooth", block: "start" });
       card.tabIndex = -1;
       card.focus({ preventScroll: true });
@@ -1799,6 +1982,7 @@
       ["later", "⏳ 之後處理"],
       ["done", "✓ 今天完成"],
     ];
+    const counts = {};
     for (const [state, label] of groups) {
       const group = node("section", undefined, "co-inbox-group");
       group.dataset.inboxGroup = state;
@@ -1810,6 +1994,7 @@
             ? i.state === "later" || (i.state === "today" && i.date > today)
             : i.state === "today" && (!i.date || i.date <= today),
       );
+      counts[state] = items.length;
       for (const item of items) {
         const row = node(
           "article",
@@ -1948,6 +2133,11 @@
         );
       inboxRoot.append(group);
     }
+    zoneSummary("decision", [
+      counts.today + " 件今天要做",
+      counts.later + " 件之後處理",
+      ...(counts.done ? [counts.done + " 件今天完成"] : []),
+    ]);
     const archived = inboxItems.filter(
       (i) =>
         i.state === "ignored" ||
@@ -1977,6 +2167,11 @@
   }
   async function moveProject(source, target) {
     if (!source || !target || source === target) return;
+    const pinnedIds = new Set(activeProjectIds.slice(0, pinnedCount));
+    if (pinnedIds.has(source) || pinnedIds.has(target)) {
+      toast("置頂企劃固定排在最前面；取消置頂後才能拖曳排序。");
+      return;
+    }
     const ids = [...activeProjectIds];
     const from = ids.indexOf(source),
       to = ids.indexOf(target);
@@ -1987,7 +2182,7 @@
       (id) => !ids.includes(id),
     );
     if (await save("project-order", { order: [...ids, ...retained] })) {
-      toast("企劃順序已儲存，前兩個顯示在正在製作");
+      toast("企劃順序已儲存");
       root
         .querySelector(
           `[data-project-id="${CSS.escape(source)}"] .co-project-drag`,
@@ -1997,6 +2192,27 @@
   }
   function projectSorting(card, p, index) {
     const bar = node("div", undefined, "co-project-sort");
+    const pinned = !!pinnedAt(p);
+    const featured = featuredCount(pinnedCount);
+    card.dataset.pinned = String(pinned);
+    const pin = button(
+      pinned ? "取消置頂" : "📌 置頂",
+      () => togglePin(p),
+      "co-button quiet co-pin-toggle",
+    );
+    pin.setAttribute("aria-pressed", String(pinned));
+    pin.setAttribute("aria-label", (pinned ? "取消置頂 " : "置頂 ") + projectName(p));
+    pin.title = pinned
+      ? "取消置頂，回到一般排序"
+      : "置頂到正在製作最前面（" + PIN_LIMIT_TEXT + "）";
+    pin.disabled = !storeReady;
+    if (pinned) {
+      const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
+      badge.title = "置頂企劃依置頂的先後固定排在最前面";
+      bar.append(badge, node("small", "固定在最前面"), pin);
+      card.querySelector(".co-project-body").prepend(bar);
+      return;
+    }
     const handle = button(
       "⠿ 拖曳排序",
       () => {},
@@ -2058,13 +2274,14 @@
       handle,
       node(
         "small",
-        index < 2 ? "目前顯示 · " + (index + 1) : "已收起 · " + (index + 1),
+        index < featured ? "目前顯示 · " + (index + 1) : "已收起 · " + (index + 1),
       ),
+      pin,
     );
-    if (index >= 2) {
+    if (index >= featured) {
       const promote = button(
         "移到前面",
-        () => moveProject(p.project_id, activeProjectIds[0]),
+        () => moveProject(p.project_id, activeProjectIds[pinnedCount]),
         "co-button quiet",
       );
       promote.disabled = !storeReady;
@@ -2080,6 +2297,8 @@
         const id = fresh.dataset.projectId;
         const previous = existing.get(id);
         if (previous) {
+          // The retained card must carry the fresh card's live and pinned state.
+          Object.assign(previous.dataset, fresh.dataset);
           if (!previous.querySelector(".co-video-player") || playingLinks.get(id) !== presentation.projects[id]?.link?.url) {
             previous.querySelector(".co-house").replaceWith(fresh.querySelector(".co-house"));
             playingLinks.delete(id);
@@ -2130,7 +2349,8 @@
     const hash = JSON.stringify([
       payload?.projects,
       eventStatuses,
-      presentation,
+      // The environment is scenery and the revision a counter; neither changes a card.
+      { ...presentation, revision: undefined, environment: undefined },
       response.status,
       storeReady,
       (window.RenguinOperations?.current.jobs || []).map((j) => [
@@ -2140,11 +2360,12 @@
     ]);
     if (hash !== signature) {
       signature = hash;
-      const projects = primary();
       const projectRank = new Map(
         (presentation.project_order || []).map((id, i) => [id, i]),
       );
-      projects.sort(
+      const projects = arrange(
+        primary(),
+        pinnedAt,
         (a, b) =>
           (projectRank.get(a.project_id) ?? Infinity) -
             (projectRank.get(b.project_id) ?? Infinity) ||
@@ -2156,19 +2377,26 @@
       const cardGroups = new Map([[projectsRoot, []], [otherProjectsRoot, []], [completedRoot, []]]);
       const activeProjects = projects.filter((p) => !projectDone(p));
       activeProjectIds = activeProjects.map((p) => p.project_id);
+      pinnedCount = activeProjects.filter(pinnedAt).length;
+      const featured = featuredCount(pinnedCount);
       activeProjects.forEach((p, index) => {
         const card = projectCard(p);
-        cardGroups.get(index < 2 ? projectsRoot : otherProjectsRoot).push(card);
+        cardGroups.get(index < featured ? projectsRoot : otherProjectsRoot).push(card);
       });
-      otherProjectsToggle.hidden = activeProjects.length <= 2;
+      otherProjectsToggle.hidden = activeProjects.length <= featured;
       otherProjectsToggle.querySelector("summary").textContent =
         "其他企劃 · " +
-        Math.max(0, activeProjects.length - 2) +
+        Math.max(0, activeProjects.length - featured) +
         "　展開後可拖曳排序";
+      zoneSummary("work", [
+        activeProjects.length + " 個進行中",
+        "置頂 " + pinnedCount + " / " + PIN_LIMIT,
+      ]);
       const done = projects
         .filter((p) => projectDone(p))
         .sort((a, b) => doneSortKey(b) - doneSortKey(a));
-      for (const p of done.filter((p) => completedAge(p) <= 14 * 86400))
+      const recentDone = done.filter((p) => completedAge(p) <= 14 * 86400);
+      for (const p of recentDone)
         cardGroups.get(completedRoot).push(projectCard(p));
       reconcileProjectCards(cardGroups);
       renderHistory();
@@ -2195,6 +2423,10 @@
           ),
         );
       const older = done.filter((p) => completedAge(p) > 14 * 86400);
+      zoneSummary("result", [
+        recentDone.length + " 個最近完成",
+        ...(older.length ? [older.length + " 個更早完成"] : []),
+      ]);
       if (older.length) {
         const d = node("details");
         d.className = "co-empty";
@@ -2252,6 +2484,7 @@
         if ((next.revision || 0) >= (presentation.revision || 0))
           presentation = next;
         storeReady = true;
+        window.CreatorEnvironment?.adopt(presentation.environment);
       }
     } catch {
       storeReady = false;
@@ -2268,11 +2501,15 @@
   function setup() {
     const game = document.getElementById("game-container");
     const header = node("header", undefined, "co-map-header");
-    const title = node("div");
-    title.append(
-      node("h1", "RENGUIN OFFICE"),
-      node("p", "CREATOR OFFICE · 讓好故事，在這裡發生"),
-    );
+    header.dataset.zone = "home";
+    const homeScene = window.CreatorEnvironment?.scene("home");
+    if (homeScene) header.append(homeScene);
+    const title = node("div", undefined, "co-zone-plaque");
+    const brand = node("h1");
+    const brandIcon = node("span", "⌂", "co-zone-icon");
+    brandIcon.setAttribute("aria-hidden", "true");
+    brand.append(brandIcon, "RENGUIN OFFICE");
+    title.append(brand, node("p", "CREATOR OFFICE · 讓好故事，在這裡發生"));
     syncButton = button("○ 連接辦公室…", () => {
       const d = modal("辦公室同步");
       for (const key of Object.keys(agents)) {
@@ -2288,18 +2525,24 @@
     });
     const shortcuts = node("div", undefined, "co-map-actions");
     shortcuts.append(
-      button("影片專案", () =>
-        document
-          .getElementById("active-projects")
-          .scrollIntoView({ block: "start" }),
-      ),
-      button("我的待辦", () =>
-        document
-          .getElementById("human-inbox")
-          .scrollIntoView({ block: "start" }),
-      ),
-      syncButton,
+      button("影片專案", () => revealZone(document.getElementById("active-projects"))),
+      button("我的待辦", () => revealZone(document.getElementById("human-inbox"))),
     );
+    if (window.CreatorEnvironment) {
+      const envButton = node("button");
+      envButton.type = "button";
+      shortcuts.append(window.CreatorEnvironment.bindButton(envButton));
+    }
+    homeToggle = button(
+      "",
+      () => setHome(!document.body.classList.contains("co-home-collapsed")),
+      "co-zone-toggle",
+    );
+    homeToggle.append(node("span", "收合"));
+    homeToggle.setAttribute("aria-controls", "game-container office-members");
+    homeToggle.setAttribute("aria-expanded", "true");
+    homeToggle.setAttribute("aria-label", "收合 RENGUIN OFFICE");
+    shortcuts.append(syncButton, homeToggle);
     header.append(title, shortcuts);
     document.getElementById("main-stage").before(header);
     root = node("main");
@@ -2311,18 +2554,56 @@
     root.append(notice);
     const loading = document.getElementById("loading-overlay");
     if (loading) game.append(loading);
-    function section(id, title, subtitle, cls) {
-      const s = node("section", undefined, "co-section");
+    // A zone is one room of the lodge: a signboard band over windows onto the
+    // shared sky, and a floor that folds away beneath it.
+    function section(id, title, subtitle, cls, zone, icon) {
+      const s = node("section", undefined, "co-section" + (zone ? " co-zone is-settled" : ""));
       s.id = id;
       const h = node("div", undefined, "co-section-header");
-      const text = node("div");
-      text.append(node("h2", title), node("p", subtitle, "co-kicker"));
+      const text = node("div", undefined, zone ? "co-zone-plaque" : undefined);
+      const heading = node("h2");
+      if (icon) {
+        const glyph = node("span", icon, "co-zone-icon");
+        glyph.setAttribute("aria-hidden", "true");
+        heading.append(glyph);
+      }
+      heading.append(title);
+      text.append(heading, node("p", subtitle, "co-kicker"));
       h.append(text);
       s.append(h);
       const body = node("div", undefined, cls);
-      s.append(body);
+      if (!zone) {
+        s.append(body);
+        root.append(s);
+        return [body, h];
+      }
+      s.dataset.zone = zone;
+      const scene = window.CreatorEnvironment?.scene(zone);
+      if (scene) h.prepend(scene);
+      const summaryLine = node("p", undefined, "co-zone-summary");
+      text.append(summaryLine);
+      const tools = node("div", undefined, "co-zone-tools");
+      const fold = node("div", undefined, "co-zone-fold");
+      fold.id = id + "-content";
+      const floor = node("div", undefined, "co-zone-body");
+      floor.append(body);
+      fold.append(floor);
+      const toggle = button(
+        "",
+        () => setZone(s, !s.classList.contains("is-collapsed")),
+        "co-button co-zone-toggle",
+      );
+      toggle.append(node("span", "收合"));
+      toggle.dataset.title = title;
+      toggle.setAttribute("aria-controls", fold.id);
+      toggle.setAttribute("aria-expanded", "true");
+      toggle.setAttribute("aria-label", "收合「" + title + "」");
+      h.append(tools, toggle);
+      s.append(fold);
       root.append(s);
-      return [body, h];
+      window.CreatorEnvironment?.watch(s);
+      zones.set(zone, { section: s, summary: summaryLine });
+      return [body, tools];
     }
     [membersRoot] = section(
       "office-members",
@@ -2330,39 +2611,46 @@
       "一起讓故事成形的夥伴",
       "co-members",
     );
-    [projectsRoot] = section(
+    let projectTools;
+    [projectsRoot, projectTools] = section(
       "active-projects",
       "正在製作",
-      "先專注兩個企劃 · 拖曳調整順序，前兩位留在這裡",
+      "置頂最多 3 個，固定在最前面 · 其餘拖曳調整順序",
       "co-grid co-featured-projects",
+      "work",
+      "▶",
     );
-    projectsRoot.previousElementSibling.append(
-      button("＋ 新增專案", () => projectSource()),
-    );
+    projectTools.append(button("＋ 新增專案", () => projectSource()));
     otherProjectsToggle = node("details", undefined, "co-other-projects");
     otherProjectsToggle.append(node("summary", "其他企劃"));
     otherProjectsRoot = node("div", undefined, "co-grid");
     otherProjectsToggle.append(otherProjectsRoot);
     projectsRoot.after(otherProjectsToggle);
-    let inboxHeader;
-    [inboxRoot, inboxHeader] = section(
+    let inboxTools;
+    [inboxRoot, inboxTools] = section(
       "human-inbox",
       "等我處理",
-      "留給企鵝的工作桌 · 依照你的步調安排",
+      "輪到你做決定 · 依照你的步調安排",
       "co-inbox",
+      "decision",
+      "◆",
     );
-    inboxHeader.append(button("＋ 新增待辦", () => editInbox()));
+    inboxTools.append(button("＋ 新增待辦", () => editInbox()));
     [completedRoot] = section(
       "recently-completed",
       "最近完成",
       "把做好的故事，好好收藏",
       "co-grid",
+      "result",
+      "★",
     );
     [historyRoot] = section(
       "work-history",
       "工作紀錄",
       "辦公室記得的每一筆工作 · 依工作發生的地方分組",
       "co-history",
+      "history",
+      "☾",
     );
     const footer = node("footer", undefined, "co-technical-footer");
     footer.append(
@@ -2435,6 +2723,11 @@
       ),
     );
     root.append(footer);
+    const folded = collapsedZones();
+    for (const { section: zone } of zones.values())
+      if (folded.has(zone.id)) setZone(zone, true, false);
+    if (folded.has("renguin-home")) setHome(true, false);
+    window.CreatorEnvironment?.onSave(saveEnvironment);
     render();
     poll();
     setInterval(renderMembers, 1000);
@@ -2452,6 +2745,10 @@
     stampDone,
     completedAge,
     doneSortKey,
+    arrange,
+    featuredCount,
+    memberIdentity,
+    PIN_LIMIT,
   };
   window.RenguinControlRoom = {
     poll,

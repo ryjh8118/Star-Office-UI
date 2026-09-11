@@ -9,11 +9,21 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 from urllib.parse import urlsplit
-from flask import Blueprint, current_app, jsonify, request, send_file, abort
+from flask import Blueprint, current_app, jsonify, make_response, request, send_file, abort
 from PIL import Image, UnidentifiedImageError
 
 bp = Blueprint('creator', __name__)
 LIMIT = 5 * 1024 * 1024
+# A pin places a project at the head of 正在製作. Leaving that section (removed,
+# finished, or gone from the source) releases the slot, so the limit always
+# counts exactly the pins the user can see.
+PIN_LIMIT = 3
+PIN_LIMIT_TEXT = f'最多可置頂 {PIN_LIMIT} 個專案'
+ENV_TIMES = {'AUTO', 'MORNING', 'DAY', 'AFTERNOON', 'SUNSET', 'NIGHT'}
+ENV_WEATHER = {'CLEAR', 'CLOUDY', 'OVERCAST', 'RAIN', 'HEAVY_RAIN', 'THUNDERSTORM', 'SNOW', 'HEAVY_SNOW', 'FOG', 'WINDY'}
+ENV_RAINBOW_WEATHER = {'CLEAR', 'CLOUDY', 'RAIN'}
+ENV_ATMOSPHERE = {'AURORA', 'STARS', 'METEOR', 'FIREFLIES', 'SPARKLES'}
+ENV_ATMOSPHERE_LIMIT = 2
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -61,6 +71,21 @@ def same_origin():
         if request.content_length and request.content_length > LIMIT + 65536:
             abort(413)
 
+def finished(meta):
+    """Mirrors the card grid: the user's own mark, or every enabled step completed."""
+    from creator_workflow import completed_count, enabled_ids
+    return (meta.get('manual_done') or {}).get('done') is True or completed_count(meta) == len(enabled_ids(meta))
+
+def pinned(data):
+    return sorted((pid for pid, meta in data['projects'].items()
+                   if meta.get('pinned_at') and not meta.get('hidden') and not finished(meta)),
+                  key=lambda pid: (data['projects'][pid]['pinned_at'], pid))
+
+def release_pins(data, present=None):
+    for pid, meta in data['projects'].items():
+        if meta.get('pinned_at') and (meta.get('hidden') or finished(meta) or (present is not None and pid not in present)):
+            meta.pop('pinned_at')
+
 def body():
     value = request.get_json()
     if not isinstance(value, dict):
@@ -104,6 +129,8 @@ def presentation():
                 normalize(p, data['projects'].setdefault(p['project_id'], {}), by_project.get(p.get('source_project_id'), []))
         from creator_residents import assign
         assign(cards, data['projects'])
+        # Only a successful read can prove a project is gone; SYNC_ERROR returns above.
+        release_pins(data, {p['project_id'] for p in cards})
     return change(update)
 
 @bp.post('/api/creator/workflow')
@@ -141,6 +168,7 @@ def workflow():
         if not value['completed'] and previous > index+1:
             text += f'及後續階段（至{LABELS[enabled[previous-1]]}）'
         meta.setdefault('history', []).append({'type':'WORKFLOW_USER','timestamp':stamp,'source':'USER','text':text,'step_id':step})
+        release_pins(data)
     return change(update)
 
 @bp.post('/api/creator/project')
@@ -164,6 +192,7 @@ def edit_project():
         if 'hidden' in value and meta.get('hidden',False) != value['hidden']:
             meta.update(hidden=value['hidden'], deleted_at=stamp if value['hidden'] else None)
             meta.setdefault('history', []).append({'type':'VISIBILITY','timestamp':stamp,'source':'USER','text':'你移除了專案' if value['hidden'] else '你恢復了專案'})
+        release_pins(data)
     return change(update)
 
 @bp.post('/api/creator/done')
@@ -177,6 +206,7 @@ def done():
         state = {'type':'USER_MANUAL_DONE','done':value['done'],'timestamp':now()}
         p['manual_done'] = state
         p.setdefault('history', []).append(state)
+        release_pins(data)
     return change(update)
 
 @bp.post('/api/creator/cover')
@@ -386,4 +416,44 @@ def workflow_settings():
         if removed: text += '；移除：' + '、'.join(removed)
         if restored: text += '；加回：' + '、'.join(restored) + '（已完成階段之前的步驟依順序補齊）'
         meta.setdefault('history',[]).append({'type':'WORKFLOW_SETTINGS','timestamp':stamp,'source':'USER','text':text})
+        release_pins(data)
+    return change(update)
+
+@bp.post('/api/creator/pin')
+def pin():
+    value = body()
+    pid = project_id(value.get('project_id'))
+    if type(value.get('pinned')) is not bool:
+        abort(400)
+    def update(data):
+        meta = data['projects'].setdefault(pid, {})
+        if not value['pinned']:
+            meta.pop('pinned_at', None)
+            return
+        if meta.get('pinned_at'):
+            return
+        # Pins live in 正在製作 only; removed and finished projects cannot hold one.
+        if meta.get('hidden') or finished(meta):
+            abort(409)
+        if len(pinned(data)) >= PIN_LIMIT:
+            abort(make_response(jsonify(error=PIN_LIMIT_TEXT, code='PIN_LIMIT', limit=PIN_LIMIT), 409))
+        meta['pinned_at'] = now()
+    return change(update)
+
+@bp.post('/api/creator/environment')
+def environment():
+    """The creator's chosen time, weather and atmosphere. Decorative; never work state."""
+    value = body()
+    atmosphere = value.get('atmosphere', [])
+    rainbow = value.get('rainbow', False)
+    if (value.get('time') not in ENV_TIMES or value.get('weather') not in ENV_WEATHER
+            or type(rainbow) is not bool or (rainbow and value['weather'] not in ENV_RAINBOW_WEATHER)
+            or not isinstance(atmosphere, list) or len(atmosphere) > ENV_ATMOSPHERE_LIMIT
+            or len(set(map(str, atmosphere))) != len(atmosphere) or any(a not in ENV_ATMOSPHERE for a in atmosphere)):
+        return jsonify({'error': '環境設定無效，請重新選擇。'}), 400
+    chosen = {'time': value['time'], 'weather': value['weather'], 'rainbow': rainbow, 'atmosphere': atmosphere}
+    def update(data):
+        current = {k: v for k, v in (data.get('environment') or {}).items() if k != 'updated_at'}
+        if current != chosen:
+            data['environment'] = {**chosen, 'updated_at': now()}
     return change(update)

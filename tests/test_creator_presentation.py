@@ -109,5 +109,115 @@ class PresentationTests(unittest.TestCase):
         result=enrich(board,home);self.assertEqual(observation['last_work_event']['timestamp'],stamp)
         self.assertEqual(observation['status'],'UNKNOWN');self.assertIsNone(observation['last_heartbeat']);self.assertNotIn('private content',json.dumps(result))
 
+class PinAndEnvironmentTests(unittest.TestCase):
+    """Pins and the environment are presentation only; the projection is never written."""
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory()
+        self.app=Flask(__name__,static_folder='frontend')
+        self.app.config['USER_PRESENTATION_ROOT']=self.temp.name
+        self.app.register_blueprint(cp.bp)
+        self.client=self.app.test_client()
+        self.projects=[{'project_id':f'P{i}','project_name':f'Project {i}','classification':'REGISTERED','project_type':'VIDEO_PROJECT'} for i in range(1,6)]
+        self.projection={'projection':{'projects':self.projects}}
+        self.mock=patch.object(renguin_boundary,'projects',side_effect=lambda *_:self.projection)
+        self.mock.start()
+        self.baseline=json.dumps(self.projection)
+    def tearDown(self):
+        self.assertEqual(json.dumps(self.projection),self.baseline)
+        self.mock.stop()
+        self.temp.cleanup()
+    def post(self,path,body):
+        return self.client.post('/api/creator/'+path,json=body)
+    def pins(self,data=None):
+        data=data or self.client.get('/api/creator/presentation').json
+        return [pid for pid,_ in sorted(((pid,m['pinned_at']) for pid,m in data['projects'].items() if m.get('pinned_at')),key=lambda x:(x[1],x[0]))]
+    def pin(self,pid,value=True):
+        return self.post('pin',{'project_id':pid,'pinned':value})
+    def test_limit_of_three_refuses_the_fourth_without_side_effects(self):
+        self.assertEqual(self.pins(),[])
+        for count,pid in enumerate(['P1','P2','P3'],1):
+            self.assertEqual(self.pin(pid).status_code,200)
+            self.assertEqual(self.pins(),['P1','P2','P3'][:count])
+        before=self.client.get('/api/creator/presentation').json
+        refused=self.pin('P4')
+        self.assertEqual(refused.status_code,409)
+        self.assertEqual(refused.json['error'],'最多可置頂 3 個專案')
+        self.assertEqual(refused.json['code'],'PIN_LIMIT')
+        after=self.client.get('/api/creator/presentation').json
+        self.assertEqual(after['revision'],before['revision'])
+        self.assertEqual(self.pins(after),['P1','P2','P3'])
+        # Pinning again is idempotent: no duplicate, no new slot, no revision churn.
+        self.assertEqual(self.pin('P1').json['revision'],before['revision'])
+    def test_unpin_repin_order_is_deterministic(self):
+        for pid in ['P1','P2','P3']:
+            self.pin(pid)
+        self.assertEqual(self.pin('P2',False).status_code,200)
+        self.assertEqual(self.pins(),['P1','P3'])
+        self.assertEqual(self.pin('P4').status_code,200)
+        self.assertEqual(self.pin('P2').status_code,409)
+        self.assertEqual(self.pins(),['P1','P3','P4'])
+        self.pin('P1',False);self.pin('P1')
+        self.assertEqual(self.pins(),['P3','P4','P1'])
+        self.assertEqual(self.pin('P5',False).status_code,200) # unpinning an unpinned project is harmless
+    def test_pins_survive_reload_restart_rename_and_workflow_updates(self):
+        for pid in ['P1','P2']:
+            self.pin(pid)
+        restart=Flask('restart');restart.config['USER_PRESENTATION_ROOT']=self.temp.name;restart.register_blueprint(cp.bp)
+        with restart.test_client() as client:
+            self.assertEqual(self.pins(client.get('/api/creator/presentation').json),['P1','P2'])
+        self.post('project',{'project_id':'P1','display_name':'改名後'})
+        revision=self.client.get('/api/creator/presentation').json['revision']
+        step=self.post('workflow',{'project_id':'P1','step_id':'CALIBRATION','completed':True,'revision':revision})
+        self.assertEqual(step.status_code,200)
+        self.assertEqual(self.pins(),['P1','P2'])
+        self.assertEqual(self.client.get('/api/creator/presentation').json['projects']['P1']['display_name'],'改名後')
+    def test_delete_finish_and_disappearance_release_the_slot(self):
+        for pid in ['P1','P2','P3']:
+            self.pin(pid)
+        self.post('project',{'project_id':'P1','hidden':True,'confirmed':True})
+        self.assertNotIn('pinned_at',self.client.get('/api/creator/presentation').json['projects']['P1'])
+        self.post('project',{'project_id':'P1','hidden':False})
+        self.assertEqual(self.pins(),['P2','P3'])
+        self.assertEqual(self.pin('P1',True).status_code,200)
+        self.post('done',{'project_id':'P2','done':True})
+        self.assertEqual(self.pins(),['P3','P1'])
+        self.assertEqual(self.pin('P2').status_code,409) # a finished project is not in 正在製作
+        self.post('done',{'project_id':'P2','done':False})
+        self.assertEqual(self.pins(),['P3','P1'])
+        revision=self.client.get('/api/creator/presentation').json['revision']
+        self.post('workflow',{'project_id':'P3','step_id':'SHORT_PUBLISH','completed':True,'revision':revision})
+        self.assertEqual(self.pins(),['P1'])
+        # A failed read cannot prove anything is gone; a successful one can.
+        self.pin('P4')
+        stored=self.projects[:]
+        self.projection={'projection':None}
+        self.assertEqual(self.pins(),['P1','P4'])
+        self.projection={'projection':{'projects':[p for p in stored if p['project_id']!='P4']}}
+        self.assertEqual(self.pins(),['P1'])
+        self.projection={'projection':{'projects':stored}}
+    def test_pin_validation(self):
+        self.assertEqual(self.post('pin',{'project_id':'P1','pinned':'yes'}).status_code,400)
+        self.assertEqual(self.post('pin',{'project_id':'Project 1','pinned':True}).status_code,400)
+        self.post('project',{'project_id':'P5','hidden':True,'confirmed':True})
+        self.assertEqual(self.pin('P5').status_code,409)
+        self.assertEqual(self.client.post('/api/creator/pin',json={'project_id':'P1','pinned':True},headers={'Origin':'https://outside.example'}).status_code,403)
+    def test_environment_persists_and_rejects_invalid_combinations(self):
+        chosen={'time':'NIGHT','weather':'SNOW','rainbow':False,'atmosphere':['AURORA','STARS']}
+        saved=self.post('environment',chosen)
+        self.assertEqual(saved.status_code,200)
+        revision=saved.json['revision']
+        self.assertEqual({k:v for k,v in saved.json['environment'].items() if k!='updated_at'},chosen)
+        self.assertEqual(self.post('environment',chosen).json['revision'],revision)
+        restart=Flask('restart');restart.config['USER_PRESENTATION_ROOT']=self.temp.name;restart.register_blueprint(cp.bp)
+        with restart.test_client() as client:
+            self.assertEqual(client.get('/api/creator/presentation').json['environment']['atmosphere'],['AURORA','STARS'])
+        for bad in [{**chosen,'time':'NOON'},{**chosen,'weather':'HAIL'},{**chosen,'rainbow':True},
+                    {**chosen,'atmosphere':['AURORA','STARS','METEOR']},{**chosen,'atmosphere':['AURORA','AURORA']},
+                    {**chosen,'atmosphere':'AURORA'},{**chosen,'atmosphere':['NEON']},{**chosen,'rainbow':'yes'}]:
+            self.assertEqual(self.post('environment',bad).status_code,400,bad)
+        for weather in ['CLEAR','CLOUDY','RAIN']:
+            self.assertEqual(self.post('environment',{'time':'DAY','weather':weather,'rainbow':True,'atmosphere':[]}).status_code,200)
+        self.assertEqual(self.post('environment',{'time':'DAY','weather':'THUNDERSTORM','rainbow':True,'atmosphere':[]}).status_code,400)
+
 if __name__=='__main__':
     unittest.main(verbosity=2)

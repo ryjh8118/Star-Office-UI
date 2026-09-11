@@ -151,6 +151,6 @@
     );
     state.animation.finished.then(arrive).catch(() => {});
   }
-  scope.CreatorScene = { sync, destination };
+  scope.CreatorScene = { sync, destination, bounds: (key) => roles[key]?.bounds };
   if (typeof module !== "undefined") module.exports = { destination };
 })(typeof window === "undefined" ? globalThis : window);
