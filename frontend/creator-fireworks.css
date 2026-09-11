@@ -1,0 +1,81 @@
+/* Post-production celebration. Presentation only: no state semantics. */
+.co-fireworks {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9000;
+}
+.co-fireworks-banner {
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  z-index: 9001;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  max-width: min(78vw, 560px);
+  padding: 18px 36px 16px;
+  border: 1px solid #d5a04a;
+  border-radius: 18px;
+  background: radial-gradient(120% 140% at 50% 0%, #3d2b1ee8, #1d1510ea);
+  box-shadow:
+    0 0 0 4px #d5a04a26,
+    0 18px 50px #000000a6,
+    0 0 64px #ffcf7a55;
+  color: #fff0cc;
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: co-fireworks-banner 4.2s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+.co-fireworks-banner strong {
+  font-size: clamp(26px, 4.4vw, 44px);
+  letter-spacing: 0.08em;
+  text-shadow:
+    0 0 18px #ffcf7a,
+    0 2px 0 #5a3a18;
+}
+.co-fireworks-banner span {
+  max-width: 100%;
+  overflow: hidden;
+  color: #e6cfa2;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes co-fireworks-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  20%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -58%) scale(0.98);
+  }
+}
+@keyframes co-fireworks-fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-fireworks-banner {
+    animation: co-fireworks-fade 3.2s ease both;
+  }
+}

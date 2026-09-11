@@ -90,6 +90,44 @@ window.RenguinOperations = {
 assert.match(C.memberView("CHATGPT_WORK").text, /最近活動/);
 assert.equal(C.memberView("CHATGPT_WORK").running, false);
 assert.equal(C.memberView("CLAUDE").text, "○ 尚無同步紀錄");
+assert.equal(C.celebrates("AI_POST", true), true);
+assert.equal(
+  C.celebrates("AI_POST", false),
+  false,
+  "unchecking post-production is not a celebration",
+);
+assert.equal(C.celebrates("HUMAN_FINAL_CUT", true), false);
+window.RenguinOperations.current = {
+  jobs: [],
+  native_coverage: {
+    observations: [
+      {
+        agent: "CLAUDE",
+        source: "CLAUDE_NATIVE_SESSION",
+        native_id: "claude-session",
+        last_native_event: { type: "tool_use", timestamp: fresh },
+        last_work_event: { timestamp: fresh, action: "正在使用工具" },
+        visual_activity: {
+          state: "WORKING",
+          timestamp: fresh,
+          expires_after_seconds: 90,
+          action: "正在使用工具",
+        },
+      },
+    ],
+  },
+};
+assert.equal(
+  C.memberView("CLAUDE").running,
+  true,
+  "a live Claude session lights its member card",
+);
+assert.match(C.memberView("CLAUDE").summary, /Claude/);
+assert.doesNotMatch(
+  C.memberView("CLAUDE").summary,
+  /Codex/,
+  "Claude work is never credited to Codex",
+);
 window.RenguinOperations.current = {
   jobs: [
     {

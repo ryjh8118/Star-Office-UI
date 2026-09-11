@@ -767,6 +767,8 @@
         task_complete: "工作已完成",
         task_failed: "工作未完成",
         task_started: "開始工作",
+        end_turn: "工作已完成",
+        tool_use: "使用工具",
         forkPoint: "建立工作分支",
         error: "工作遇到問題",
       }[lastObservation?.last_native_event?.type] ||
@@ -776,7 +778,7 @@
         ? nativeWorking.source === "CHATGPT_BROWSER_UI"
           ? "Chrome · " + nativeWorking.browser_context.name
           : "工作更新來自 " +
-            (key === "ASTRA" ? "ASTRA" : "Codex") +
+            (key === "CHATGPT_WORK" ? "Codex" : agents[key][0]) +
             " · 剛收到操作紀錄"
         : current
           ? clean(current.task, project ? "處理 " + project : "工作進行中")
@@ -1174,6 +1176,22 @@
     );
     input.click();
   }
+  // Finishing post-production is the one step the desk celebrates. The show
+  // starts only after the mark is saved, so it never outruns the record.
+  const celebrates = (id, turningOn) => turningOn && id === "AI_POST";
+  function celebrate(p, card) {
+    const rect = card
+      ?.querySelector('[data-stage="AI_POST"]')
+      ?.getBoundingClientRect();
+    window.CreatorFireworks?.launch({
+      origin: rect
+        ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+        : null,
+      title: "後製完成！",
+      detail: projectName(p),
+    });
+    toast("🎆 「" + projectName(p) + "」後製完成，辛苦了！");
+  }
   async function toggleStep(p, id) {
     if (mutationPending || !storeReady) return;
     const ids = enabledSteps(p),
@@ -1190,10 +1208,12 @@
         revision: presentation.revision,
       });
       if (ok) {
-        const feedback = [...root.querySelectorAll(".co-project")]
-          .find((e) => e.dataset.projectId === p.project_id)
-          ?.querySelector(".co-save-status");
+        const card = [...root.querySelectorAll(".co-project")].find(
+          (e) => e.dataset.projectId === p.project_id,
+        );
+        const feedback = card?.querySelector(".co-save-status");
         if (feedback) feedback.textContent = "✓ 進度已儲存";
+        if (celebrates(id, turningOn)) celebrate(p, card);
       } else await poll();
       return ok;
     };
@@ -2748,6 +2768,7 @@
     arrange,
     featuredCount,
     memberIdentity,
+    celebrates,
     PIN_LIMIT,
   };
   window.RenguinControlRoom = {
