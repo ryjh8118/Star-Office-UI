@@ -1,0 +1,81 @@
+/* Rooms take the stage as they scroll in and leave it as they scroll out.
+   Only opacity and translate move, so the compositor carries the whole scene;
+   `none` at rest keeps a settled room free of any transform. */
+.co-stage {
+  --stage-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    opacity 0.7s var(--stage-ease),
+    translate 0.85s var(--stage-ease);
+}
+.co-stage[data-stage-side="below"] {
+  --stage-shift: 72px;
+}
+.co-stage[data-stage-side="above"] {
+  --stage-shift: -72px;
+}
+.co-stage:not(.is-on-stage) {
+  opacity: 0;
+  translate: 0 var(--stage-shift, 72px);
+  pointer-events: none;
+  transition:
+    opacity 0.42s ease-in,
+    translate 0.5s ease-in;
+}
+
+/* Arriving is staged: the room, then its signboard, then what is on its floor. */
+.co-stage > .co-section-header .co-zone-plaque,
+.co-stage > .co-section-header > .co-zone-tools,
+.co-stage > .co-section-header > .co-zone-toggle,
+.co-stage > .co-zone-fold > .co-zone-body > * {
+  transition:
+    opacity 0.6s var(--stage-ease) var(--stage-delay, 0.12s),
+    translate 0.75s var(--stage-ease) var(--stage-delay, 0.12s);
+}
+.co-stage > .co-section-header > .co-zone-tools,
+.co-stage > .co-section-header > .co-zone-toggle {
+  --stage-delay: 0.2s;
+}
+.co-stage > .co-zone-fold > .co-zone-body > * {
+  --stage-delay: 0.26s;
+}
+.co-stage:not(.is-on-stage) > .co-section-header .co-zone-plaque {
+  opacity: 0;
+  translate: -32px 0;
+}
+.co-stage:not(.is-on-stage) > .co-section-header > .co-zone-tools,
+.co-stage:not(.is-on-stage) > .co-section-header > .co-zone-toggle {
+  opacity: 0;
+  translate: 32px 0;
+}
+.co-stage:not(.is-on-stage) > .co-zone-fold > .co-zone-body > * {
+  opacity: 0;
+  translate: 0 calc(var(--stage-shift, 72px) / 2);
+}
+/* Leaving is one quick motion, with no stagger to wait for. */
+.co-stage:not(.is-on-stage) > .co-section-header .co-zone-plaque,
+.co-stage:not(.is-on-stage) > .co-section-header > .co-zone-tools,
+.co-stage:not(.is-on-stage) > .co-section-header > .co-zone-toggle,
+.co-stage:not(.is-on-stage) > .co-zone-fold > .co-zone-body > * {
+  transition:
+    opacity 0.35s ease-in,
+    translate 0.4s ease-in;
+}
+
+.co-stage.is-stage-instant,
+.co-stage.is-stage-instant * {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .co-stage,
+  .co-stage:not(.is-on-stage),
+  .co-stage:not(.is-on-stage) > .co-section-header .co-zone-plaque,
+  .co-stage:not(.is-on-stage) > .co-section-header > .co-zone-tools,
+  .co-stage:not(.is-on-stage) > .co-section-header > .co-zone-toggle,
+  .co-stage:not(.is-on-stage) > .co-zone-fold > .co-zone-body > * {
+    opacity: 1;
+    translate: none;
+    pointer-events: auto;
+    transition: none;
+  }
+}

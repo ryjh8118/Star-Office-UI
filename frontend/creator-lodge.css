@@ -453,44 +453,6 @@
     0 0 0 1px #2a1c12,
     0 18px 38px #05080b52;
 }
-.co-inbox-group h3 {
-  color: #6d5232;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.co-inbox-item {
-  position: relative;
-  border-radius: 10px;
-  border: 1px solid #cbb38f;
-  border-bottom-width: 3px;
-  background:
-    radial-gradient(80% 50% at 14% 0%, #fffdf6 0%, #fffdf600 60%),
-    linear-gradient(180deg, #fffaea, #f7eed8);
-  box-shadow:
-    0 1px 0 #fffdf7 inset,
-    0 4px 10px #3a2a1a1a;
-  padding-left: 22px;
-}
-.co-inbox-item::before {
-  content: "";
-  position: absolute;
-  left: 9px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  translate: 0 -50%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffd79a, #b07f36);
-  box-shadow: 0 1px 2px #4a341a66;
-}
-.co-inbox-item.is-done {
-  background: linear-gradient(180deg, #e6ecd6, #dbe4c8);
-  border-color: #a5b691;
-}
-.co-inbox-content h4 {
-  color: #443422;
-}
 
 /* ------------------------------------------------------------------- soft dialogs */
 .co-dialog {
@@ -757,11 +719,13 @@
   border-color: #d5a04a5c;
 }
 #recently-completed .co-empty,
+#short-videos .co-empty,
 #active-projects .co-empty {
   position: relative;
   overflow: hidden;
 }
 #recently-completed .co-empty::before,
+#short-videos .co-empty::before,
 #active-projects .co-empty::before {
   content: "";
   position: absolute;

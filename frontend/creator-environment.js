@@ -221,7 +221,20 @@
       delay: round(-random() * 20),
     }));
   }
+  /* The lodge is the mother island; every other section is an island of its own
+     region, floating in the shared sky. */
+  const ISLANDS = {
+    decision: { region: "japan", name: "和風櫻花島" },
+    work: { region: "nordic", name: "北歐雪松島" },
+    short: { region: "tropic", name: "熱帶椰林島" },
+    result: { region: "desert", name: "沙漠綠洲島" },
+    "short-result": { region: "aegean", name: "地中海白屋島" },
+    history: { region: "castle", name: "月夜古城島" },
+  };
+  const island = (zone) => ISLANDS[zone] || null;
   const api = {
+    ISLANDS,
+    island,
     TIMES,
     TIME_MODES,
     WEATHERS,
@@ -613,22 +626,31 @@
     if (returnFocus) trigger?.focus();
   }
 
-  /* ------------------------------------------------------- section rooms */
-  const ZONE_PROPS = { home: 0, work: 4, decision: 0, result: 5, history: 0 };
-  /* Each section is a room of the lodge: a wall with windows onto the shared sky. */
+  /* ------------------------------------------------------- sky islands */
+  const PEBBLES = 3;
   function scene(zone) {
     const room = el("co-zone-scene");
     room.setAttribute("aria-hidden", "true");
-    for (const part of ["wall", "glass", "mullions", "snowcap", "props", "shade", "light"]) {
-      const layer = el("co-zone-" + part, room);
+    // HOME keeps its lodge band: a wall with windows onto the shared sky.
+    const parts = ISLANDS[zone]
+      ? ["props", "shade", "light", "crest"]
+      : ["wall", "glass", "mullions", "snowcap", "props", "shade", "light"];
+    for (const part of parts) {
+      const layer = el((ISLANDS[zone] ? "co-isle-" : "co-zone-") + part, room);
       if (part === "glass") el("co-zone-drops", layer);
-      if (part === "props")
-        for (let i = 0; i < (ZONE_PROPS[zone] || 0); i++) {
-          const bit = el("co-zone-bit", layer, "i");
-          vars(bit, { i });
-        }
     }
     return room;
+  }
+  /* The rock an island hangs from, a waterfall where the region has water, and a
+     few loose stones drifting beside it. */
+  function under(zone) {
+    const base = el("co-isle-under");
+    base.setAttribute("aria-hidden", "true");
+    base.dataset.zone = zone;
+    el("co-isle-rock", base);
+    el("co-isle-fall", base);
+    for (let i = 0; i < PEBBLES; i++) vars(el("co-isle-pebble", base), { i });
+    return base;
   }
   const zoneWatch =
     typeof IntersectionObserver === "function"
@@ -669,6 +691,7 @@
     openPanel,
     closePanel,
     scene,
+    under,
     watch,
   });
   scope.CreatorEnvironment = api;

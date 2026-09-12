@@ -254,6 +254,26 @@ assert.equal(C.featuredCount(1), 2);
 assert.equal(C.featuredCount(3), 3, "every pin stays in view");
 assert.equal(C.featuredCount(7), 3);
 
+// 最近完成 opens newest first. Once the user arranges the shelf their order holds,
+// and anything finished since leads it, newest first.
+const finishedAt = { a: 10, b: 30, c: 20, d: 40 };
+const finishStamp = (p) => finishedAt[p.project_id] ?? -Infinity;
+const shelf = ["a", "b", "c", "d"].map((project_id) => ({ project_id }));
+assert.deepEqual(ids(C.shelve(shelf, [], finishStamp)), ["d", "b", "c", "a"]);
+assert.deepEqual(ids(C.shelve(shelf, ["a", "c", "b"], finishStamp)), ["d", "a", "c", "b"]);
+assert.deepEqual(ids(C.shelve(shelf, ["b", "gone", "a"], finishStamp)), ["d", "c", "b", "a"]);
+assert.deepEqual(
+  ids(C.shelve([{ project_id: "u" }, { project_id: "v" }], undefined, () => -Infinity)),
+  ["u", "v"],
+  "unreadable completion times still sort",
+);
+
+// A short video runs 素材 → 後製 → 上映 only; long form honours its disabled steps.
+assert.deepEqual([...C.stepsFor({ format: "SHORT", disabled_steps: ["AI_POST"] })], ["INDEX", "AI_POST", "PUBLISH"]);
+assert.deepEqual([...C.SHORT_STEPS], ["INDEX", "AI_POST", "PUBLISH"]);
+assert.equal(C.stepsFor(undefined).length, 13);
+assert.equal(C.stepsFor({ disabled_steps: ["GATE"] }).includes("GATE"), false);
+
 // Office Members wear canonical character art; unknown members get the placeholder.
 for (const key of ["CHATGPT_WORK", "ASTRA", "CLAUDE", "BIONIC"]) {
   const who = C.memberIdentity(key);
@@ -266,8 +286,8 @@ assert.equal(C.memberIdentity("UNKNOWN").asset, null);
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 60,
+    checks: 68,
     scope:
-      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order and member identity",
+      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order, completed shelf order, short-video steps and member identity",
   }),
 );

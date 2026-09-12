@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "star-office-preview",
+      "runtimeExecutable": "E:/Renguin_AISystem/Star_Office_UI/.venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-B", "-X", "utf8", "scripts/preview_server.py",
+        "--port", "19119",
+        "--state-dir", ".preview-runtime",
+        "--canonical-root", "E:/Renguin_AISystem/Content_OS",
+        "--producer-root", "E:/Renguin_AISystem/Content_OS",
+        "--native-home", "C:/Users/User",
+        "--discovery-root", "E:/"
+      ],
+      "port": 19119
+    }
+  ]
+}
