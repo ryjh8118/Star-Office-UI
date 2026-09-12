@@ -811,6 +811,17 @@ body {
   background: #fff4db;
   color: #614a2f;
 }
+.co-work-context[data-kind="OFFICE"] {
+  border-color: #5a6fa3;
+  background: #e9eefb;
+  color: #33406b;
+}
+.co-work-context[data-kind="FOLDER"],
+.co-work-context[data-kind="WORK"] {
+  border-color: #8a8577;
+  background: #f3f1eb;
+  color: #4d4a42;
+}
 .co-work-context small {
   flex: none;
   font-size: 10px;

@@ -58,6 +58,40 @@ class CreatorActivityTests(unittest.TestCase):
         item={'agent':'CHATGPT_WORK','source':'CODEX_NATIVE_JOURNAL','provenance':{'path':str(path)}}
         enrich({'native_coverage':{'observations':[item]}},self.home)
         self.assertEqual(item['visual_activity']['state'],'WORKING')
+    def codex(self,rows,**extra):
+        path=self.journal('.codex/sessions/2026/r.jsonl',rows)
+        item={'agent':'ASTRA','source':'CODEX_NATIVE_JOURNAL','provenance':{'path':str(path)}}
+        enrich({'native_coverage':{'observations':[item]}},self.home,**extra)
+        return item
+    def test_codex_custom_tools_and_reasoning_are_work(self):
+        # A long 企劃 assembly writes only these for minutes at a time.
+        message={'type':'response_item','payload':{'type':'message','role':'assistant'},'timestamp':stamp(400)}
+        for kind,action in [('custom_tool_call','正在使用工具'),('custom_tool_call_output','正在使用工具'),('reasoning','正在思考')]:
+            item=self.codex([message,{'type':'response_item','payload':{'type':kind},'timestamp':stamp(4)},
+                             {'type':'event_msg','payload':{'type':'item_completed'},'timestamp':stamp(3)}])
+            self.assertEqual(item['visual_activity']['state'],'WORKING',kind)
+            self.assertEqual(item['visual_activity']['action'],action,kind)
+    def test_codex_completed_turn_is_not_revived_by_bookkeeping(self):
+        item=self.codex([{'type':'response_item','payload':{'type':'custom_tool_call'},'timestamp':stamp(9)},
+                         {'type':'event_msg','payload':{'type':'task_complete'},'timestamp':stamp(5)},
+                         {'type':'event_msg','payload':{'type':'token_count'},'timestamp':stamp(4)}])
+        self.assertEqual(item['visual_activity']['state'],'RECENT')
+    def repo(self,name):
+        root=self.home/name
+        (root/'.git').mkdir(parents=True)
+        return root
+    def test_office_repository_is_its_own_layer(self):
+        office,content=self.repo('Star_Office_UI'),self.repo('Content_OS')
+        (office/'.git'/'worktrees'/'fix').mkdir(parents=True)
+        tree=office/'.claude'/'worktrees'/'fix'
+        tree.mkdir(parents=True)
+        (tree/'.git').write_text('gitdir: '+str(office/'.git'/'worktrees'/'fix').replace('\\','/')+'\n',encoding='utf-8')
+        rows=[{'type':'event_msg','payload':{'type':'task_started'},'timestamp':stamp(3)}]
+        for worktree,layer in [(tree,'STAR_OFFICE'),(office,'STAR_OFFICE'),(content,None)]:
+            path=self.journal('.codex/sessions/2026/r.jsonl',rows)
+            item={'agent':'ASTRA','source':'CODEX_NATIVE_JOURNAL','worktree':str(worktree),'provenance':{'path':str(path)}}
+            enrich({'native_coverage':{'observations':[item]}},self.home,office_root=tree)
+            self.assertEqual(item['repo_context'].get('layer'),layer,worktree)
     def test_linked_worktree_belongs_to_its_repository(self):
         repo=self.home/'Star_Office_UI'
         (repo/'.git'/'worktrees'/'feature').mkdir(parents=True)

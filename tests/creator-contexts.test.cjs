@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { collect } = require("../frontend/creator-contexts.js");
+const { collect, layer } = require("../frontend/creator-contexts.js");
 const project = {
   project_id: "film",
   classification: "REGISTERED",
@@ -136,4 +136,36 @@ test("unmapped source remains visibly unmapped, never falsely assigned a repo or
     run({ observations: [observation("a", { repo_context: null })] })[0].kind,
     "WORK",
   );
+  const folder = run({
+    observations: [
+      observation("a", {
+        repo_context: null,
+        worktree: "\\\\?\\E:\\20260908_生日",
+      }),
+    ],
+  })[0];
+  assert.deepEqual([folder.kind, folder.name], ["FOLDER", "20260908_生日"]);
+});
+test("every working layer is named: 企劃, REPO and STAR OFFICE side by side", () => {
+  const result = run({
+    observations: [
+      observation("plan", { repo_context: null, worktree: "\\\\?\\E:\\film" }),
+      observation("os", {
+        repo_context: { id: "e:/content_os", name: "Content_OS" },
+      }),
+      observation("office", {
+        repo_context: { ...repo, layer: "STAR_OFFICE" },
+      }),
+    ],
+  });
+  assert.deepEqual(
+    result.map((x) => [layer(x.kind), x.name]),
+    [
+      ["企劃", "原名"],
+      ["REPO", "Content_OS"],
+      ["STAR OFFICE", "Star_Office_UI"],
+    ],
+  );
+  assert.equal(layer("WORK"), "工作");
+  assert.equal(layer(undefined), "工作");
 });
