@@ -822,6 +822,12 @@ body {
   background: #f3f1eb;
   color: #4d4a42;
 }
+.co-work-context[data-kind="PROCESS"] {
+  border-color: #3c8a7a;
+  background: #e6f5f1;
+  color: #1f5148;
+  border-style: dashed;
+}
 .co-work-context small {
   flex: none;
   font-size: 10px;

@@ -244,7 +244,24 @@
     cloud:{label:'雲端工作', icon:'☁'}
   };
 
+  // A bridge process can restamp its own poll time forever while the session
+  // underneath it never moves. "Still working" must be judged against the
+  // session's own last reported update, not against how recently we last asked.
+  const STALE_AFTER_SECONDS = 1800;
+  function isStale(status) {
+    return Boolean(status && status.working) &&
+      !window.RenguinFreshness.inspect(status.session_updated_at, STALE_AFTER_SECONDS).fresh;
+  }
+  function lastReportedText(status) {
+    const value = status && status.session_updated_at;
+    const epoch = value && window.RenguinFreshness.epoch(value);
+    if (!Number.isFinite(epoch)) return '最後回報時間未知';
+    const date = new Date(epoch * 1000);
+    return `最後回報 ${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
   function workerStatus(unit) {
+    if (isStale(unit)) return `卡住／逾時｜${lastReportedText(unit)}`;
     const action = friendlyAction(String(unit.action || '處理目前任務').replace(/^(思考過久|持續思考中)[：:]\s*/, ''));
     const elapsed = hasNumber(unit.elapsed_seconds) ? durationText(Math.max(0, Math.round(Number(unit.elapsed_seconds)))) : '未回報';
     return `活動回報：${action}｜紀錄 ${elapsed}`;
@@ -285,6 +302,7 @@
 
   function roleState(status) {
     if (!status) return '目前無法確認';
+    if (isStale(status)) return '卡住／逾時';
     const age=secondsSince(status.updated_at);
     if(!window.RenguinFreshness.inspect(status.updated_at,10).fresh)return '活動紀錄可能過期';
     return status.working ? '收到活動回報' : '上次活動已結束';
@@ -292,6 +310,7 @@
 
   function roleDetail(status) {
     if (!status) return '等待活動來源回報';
+    if (isStale(status)) return lastReportedText(status);
     const rawAction = String(status.action || status.current_action || (status.working ? '處理目前任務' : '目前沒有工作')).replace(/^(思考過久|持續思考中)[：:]\s*/, '');
     const action = friendlyAction(rawAction);
     const elapsedNumber = Number(status.thinking_seconds ?? status.elapsed_seconds);
@@ -314,7 +333,7 @@
       const status = statuses.find(item => item.source === wanted);
       const state = roleState(status);
       const card = document.createElement('div');
-      card.className = `rw-role${state.includes('思考') ? ' is-thinking' : ''}${state === '思考過久' ? ' is-overdue' : ''}`;
+      card.className = `rw-role${state.includes('思考') ? ' is-thinking' : ''}${/卡住|逾時/.test(state) ? ' is-overdue' : ''}`;
       const img = document.createElement('img');
       img.src = person.asset;
       img.alt = person.name;
@@ -628,7 +647,11 @@
         thinking_seconds:activity.thinking_seconds,
         progress:hasNumber(activity.progress) ? Number(activity.progress) : null,
         eta:activity.eta || null,
-        updated_at:activity.generated_at
+        updated_at:activity.generated_at,
+        // generated_at is the bridge's own poll time and stays fresh forever;
+        // session_updated_at only moves when the underlying session actually
+        // reports something new, so staleness must be judged against it.
+        session_updated_at:activity.session_updated_at || activity.session_finished_at || null
       });
       (Array.isArray(activity.completed_events)?activity.completed_events:[]).forEach(event => {if(event&&typeof event==='object'&&!Array.isArray(event))completedEvents.push({...event, source:event.source || sourceName});});
       const units = Array.isArray(activity.worker_units) && activity.worker_units.length
@@ -644,7 +667,9 @@
           source:unit.source || sourceName,
           elapsed_seconds:hasNumber(unit.elapsed_seconds) ? Number(unit.elapsed_seconds) : activity.elapsed_active_seconds,
           progress:hasNumber(unit.progress) ? Number(unit.progress) : activity.progress,
-          eta:unit.eta || activity.eta || null
+          eta:unit.eta || activity.eta || null,
+          working:true,
+          session_updated_at:activity.session_updated_at || activity.session_finished_at || null
         });
       });
     });
@@ -786,5 +811,5 @@
       positionTeam(latestProjection);
     }, 1000);
   });
-  window.RenguinOfficeExtension = { update };
+  window.RenguinOfficeExtension = { update, isStale, roleState, roleDetail, workerStatus };
 })();
