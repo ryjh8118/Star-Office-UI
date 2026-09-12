@@ -70,20 +70,26 @@ test("the tree and its swing sit on the grass, on either side", () => {
 
 test("the island rests off screen and stands still for reduced motion", () => {
   const css = read("creator-yard.css");
-  assert.match(css, /\.co-house:not\(\.is-on-screen\) \.co-yard \*[\s\S]*?animation-play-state: paused/);
+  assert.match(css, /\.co-yard:not\(\.is-on-screen\) \*[\s\S]*?animation-play-state: paused/);
   const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
   assert.match(reduced, /animation: none !important/);
   assert.match(reduced, /transition: none !important/);
   const yard = read("creator-yard.js");
   assert.match(yard, /prefers-reduced-motion: reduce\)"\)\.matches\) return;/, "no schedule runs for reduced motion");
   assert.match(yard, /if \(!yard\.isConnected\) return;/, "a replaced island stops its schedule");
-  assert.match(yard, /classList\.contains\("is-on-screen"\)/, "an island off screen waits");
+  assert.match(yard, /!yard\.classList\.contains\("is-on-screen"\)/, "an island off screen waits");
 });
 
-test("every house gets an island, and a live update keeps the resident mid-play", () => {
+test("every house stands whole on an island, and a live update keeps the resident mid-play", () => {
   const office = read("creator-office.js");
-  assert.match(office, /house\.append\(window\.CreatorYard\.build\(\{ character, seed: hash \}\)\)/);
-  assert.match(office, /island\.dataset\.resident === rebuilt\.dataset\.resident\)\s*rebuilt\.replaceWith\(island\)/);
+  const house = office.slice(office.indexOf("function projectHouse"), office.indexOf("function projectYard"));
+  assert.doesNotMatch(house, /CreatorYard|co-yard/, "the island never sits between the cover and the panel");
+  assert.match(office, /card\.append\(body\);\s*const yard = projectYard\(p\);/, "the island comes after the whole house");
+  assert.match(office, /island\.dataset\.resident !== rebuilt\.dataset\.resident/);
+  assert.match(office, /querySelectorAll\("\.co-house, \.co-yard"\)/, "islands are watched on screen themselves");
+  const css = read("creator-yard.css");
+  assert.match(css, /\.co-project\.has-yard > \.co-project-body \{\s*padding-bottom: calc\(22px \+ var\(--yard-rise\)\);/);
+  assert.match(css, /\.co-project > \.co-yard \{[^}]*margin-top: calc\(var\(--yard-rise\) \* -1\);/);
   assert.doesNotMatch(office, /co-resident-track/);
   const html = read("index.html");
   assert.ok(html.indexOf("creator-yard.js") > html.indexOf("creator-residents.js"));

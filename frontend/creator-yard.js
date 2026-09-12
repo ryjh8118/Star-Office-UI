@@ -1,4 +1,4 @@
-/* Under every house floats a small sky island, and the house's resident plays on
+/* Every house stands on a small sky island, and the house's resident plays on
    it: kicks a ball, swings from the tree, flies a kite, chases a butterfly,
    dances, naps in the shade, and jumps for joy when poked.
    Decoration only: it reads no work state, writes nothing, and never clones a
@@ -94,8 +94,7 @@
     const tick = () => {
       // A house rebuilt by a live update takes a new island; this one retires.
       if (!yard.isConnected) return;
-      const house = yard.closest(".co-house");
-      if (document.hidden || (house && !house.classList.contains("is-on-screen"))) {
+      if (document.hidden || !yard.classList.contains("is-on-screen")) {
         setTimeout(tick, 1500);
         return;
       }
@@ -148,10 +147,9 @@
     yard.style.setProperty("--swing-x", swingX(seed) + "%");
     yard.style.setProperty("--bob-delay", -Math.round(random(seed, 21) * 6000) + "ms");
     yard.dataset.tree = treeX(seed) < 50 ? "left" : "right";
-    for (let i = 0; i < 2; i++) el("co-yard-cloud", yard).style.setProperty("--i", i);
     const isle = el("co-yard-isle", yard);
     el("co-yard-rock", isle);
-    [[5, 21.5], [92, 20], [30, 26.5]].forEach((at, i) => place(el("co-yard-pebble", isle), i, at));
+    [[4, 25.5], [95, 24.5], [24, 28.5]].forEach((at, i) => place(el("co-yard-pebble", isle), i, at));
     el("co-yard-grass", isle);
     const tree = el("co-yard-tree", isle);
     el("co-yard-trunk", tree);
