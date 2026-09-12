@@ -76,14 +76,19 @@ def finished(meta):
     from creator_workflow import completed_count, enabled_ids
     return (meta.get('manual_done') or {}).get('done') is True or completed_count(meta) == len(enabled_ids(meta))
 
+def pinnable(meta):
+    """Pins belong to 正在製作: not removed, not finished, and not a short video."""
+    from creator_workflow import is_short
+    return not meta.get('hidden') and not finished(meta) and not is_short(meta)
+
 def pinned(data):
     return sorted((pid for pid, meta in data['projects'].items()
-                   if meta.get('pinned_at') and not meta.get('hidden') and not finished(meta)),
+                   if meta.get('pinned_at') and pinnable(meta)),
                   key=lambda pid: (data['projects'][pid]['pinned_at'], pid))
 
 def release_pins(data, present=None):
     for pid, meta in data['projects'].items():
-        if meta.get('pinned_at') and (meta.get('hidden') or finished(meta) or (present is not None and pid not in present)):
+        if meta.get('pinned_at') and (not pinnable(meta) or (present is not None and pid not in present)):
             meta.pop('pinned_at')
 
 def body():
@@ -323,10 +328,16 @@ def order():
         abort(400)
     return change(lambda data: data.update(order=keys))
 
+# 正在製作 and 短影音 share one working order; 最近完成 keeps its own, so arranging
+# the shelf never reshuffles the desk.
+ORDER_FIELDS = {'active': 'project_order', 'completed': 'completed_order'}
+
 @bp.post('/api/creator/project-order')
 def project_order():
-    keys = body().get('order')
-    if not isinstance(keys, list) or len(keys) > 2000 or any(not isinstance(k,str) for k in keys) or len(keys) != len(set(keys)):
+    value = body()
+    keys = value.get('order')
+    field = ORDER_FIELDS.get(value.get('scope', 'active'))
+    if field is None or not isinstance(keys, list) or len(keys) > 2000 or any(not isinstance(k,str) for k in keys) or len(keys) != len(set(keys)):
         abort(400)
     from renguin_boundary import projects
     payload = projects(current_app.static_folder).get('projection')
@@ -336,7 +347,7 @@ def project_order():
     registered.update(read().get('local_projects',{}))
     if not set(keys) <= registered:
         abort(400)
-    return change(lambda data: data.update(project_order=keys))
+    return change(lambda data: data.update({field: keys}))
 
 
 def source_id(value):
@@ -353,17 +364,23 @@ def source_id(value):
 
 @bp.post('/api/creator/projects')
 def create_project():
-    from creator_workflow import normalize
+    from creator_workflow import FORMATS, normalize
     value = body()
     name = value.get('display_name')
     if not isinstance(name,str) or not 1 <= len(name.strip()) <= 120:
+        abort(400)
+    fmt = value.get('format', 'LONG')
+    if fmt not in FORMATS:
         abort(400)
     sid = source_id(value.get('source_project_id'))
     pid = 'OFFICE-' + uuid4().hex
     def update(data):
         card = {'project_id':pid,'project_name':name.strip(),'classification':'REGISTERED','project_type':'VIDEO_PROJECT'}
         data.setdefault('local_projects',{})[pid] = card
-        meta = {'display_name':name.strip(),'source_project_id':sid,'history':[{'type':'PROJECT_CREATED','timestamp':now(),'source':'USER','text':'你建立了專案'}]}
+        meta = {'display_name':name.strip(),'source_project_id':sid,'history':[{'type':'PROJECT_CREATED','timestamp':now(),'source':'USER',
+                'text':'你建立了短影音' if fmt == 'SHORT' else '你建立了專案'}]}
+        if fmt == 'SHORT':
+            meta['format'] = 'SHORT'
         data['projects'][pid] = meta
         normalize(card,meta)
         from creator_residents import assign
@@ -387,9 +404,11 @@ def project_source():
         bind(meta,pid,sid,now())
     return change(update)
 
+SHORT_CHAIN_TEXT = '短影音的流程固定為素材、後製、上映。'
+
 @bp.post('/api/creator/workflow-settings')
 def workflow_settings():
-    from creator_workflow import IDS, LABELS, enabled_ids, set_chain
+    from creator_workflow import IDS, LABELS, enabled_ids, is_short, set_chain
     value = body()
     pid = project_id(value.get('project_id'))
     disabled = value.get('disabled_steps')
@@ -399,6 +418,8 @@ def workflow_settings():
         if value.get('revision') != data['revision']:
             abort(409)
         meta = data['projects'].setdefault(pid,{})
+        if is_short(meta):
+            abort(make_response(jsonify(error=SHORT_CHAIN_TEXT, code='SHORT_CHAIN'), 409))
         old = set(meta.get('disabled_steps',[]))
         if old == set(disabled):
             return
@@ -419,6 +440,45 @@ def workflow_settings():
         release_pins(data)
     return change(update)
 
+@bp.post('/api/creator/project-format')
+def project_format():
+    """Move a project between the long-form chain and the short-video chain."""
+    from creator_workflow import FORMATS, IDS, completed_count, enabled_ids, set_chain
+    value = body()
+    pid = project_id(value.get('project_id'))
+    fmt = value.get('format')
+    if fmt not in FORMATS:
+        abort(400)
+    def update(data):
+        if value.get('revision') != data['revision']:
+            abort(409)
+        meta = data['projects'].setdefault(pid, {})
+        if meta.get('hidden'):
+            abort(409)
+        old = meta.get('format', 'LONG')
+        if old == fmt:
+            return
+        stamp = now()
+        saved = json.loads(json.dumps(meta.get('workflow', {})))
+        stash = meta.get('format_stash') or {}
+        # Completing a later step fills the ones before it, so the new chain keeps
+        # every step up to the furthest one already done.
+        last = max((IDS.index(s) for s in IDS if saved.get(s, {}).get('status') == 'COMPLETED'), default=-1)
+        meta['format'] = fmt
+        set_chain(meta, sum(IDS.index(s) <= last for s in enabled_ids(meta)), stamp, 'USER', 'USER')
+        # A switch undone before anything else changed gets back the marks the
+        # other chain had no room for.
+        if stash.get('format') == fmt and stash.get('at') == meta.get('workflow_user_at'):
+            previous = stash.get('workflow') or {}
+            if completed_count({**meta, 'workflow': previous}) >= completed_count(meta):
+                meta['workflow'] = previous
+        meta['format_stash'] = {'format': old, 'workflow': saved, 'at': stamp}
+        meta['workflow_user_at'] = stamp
+        text = '你將專案改為短影音（素材 → 後製 → 上映）' if fmt == 'SHORT' else '你將專案改為長影片流程'
+        meta.setdefault('history', []).append({'type':'PROJECT_FORMAT','timestamp':stamp,'source':'USER','text':text,'format':fmt})
+        release_pins(data)
+    return change(update)
+
 @bp.post('/api/creator/pin')
 def pin():
     value = body()
@@ -432,8 +492,8 @@ def pin():
             return
         if meta.get('pinned_at'):
             return
-        # Pins live in 正在製作 only; removed and finished projects cannot hold one.
-        if meta.get('hidden') or finished(meta):
+        # Pins live in 正在製作 only; removed, finished and short-video projects cannot hold one.
+        if not pinnable(meta):
             abort(409)
         if len(pinned(data)) >= PIN_LIMIT:
             abort(make_response(jsonify(error=PIN_LIMIT_TEXT, code='PIN_LIMIT', limit=PIN_LIMIT), 409))

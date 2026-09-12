@@ -195,6 +195,18 @@ class PinAndEnvironmentTests(unittest.TestCase):
         self.projection={'projection':{'projects':[p for p in stored if p['project_id']!='P4']}}
         self.assertEqual(self.pins(),['P1'])
         self.projection={'projection':{'projects':stored}}
+    def test_a_short_video_neither_holds_nor_takes_a_pin(self):
+        for pid in ['P1','P2']:
+            self.pin(pid)
+        revision=self.client.get('/api/creator/presentation').json['revision']
+        self.assertEqual(self.post('project-format',{'project_id':'P1','format':'SHORT','revision':revision}).status_code,200)
+        self.assertEqual(self.pins(),['P2'])
+        self.assertEqual(self.pin('P1').status_code,409) # short videos live outside 正在製作
+        for pid in ['P3','P4']:
+            self.assertEqual(self.pin(pid).status_code,200)
+        revision=self.client.get('/api/creator/presentation').json['revision']
+        self.post('project-format',{'project_id':'P1','format':'LONG','revision':revision})
+        self.assertEqual(self.pins(),['P2','P3','P4'])
     def test_pin_validation(self):
         self.assertEqual(self.post('pin',{'project_id':'P1','pinned':'yes'}).status_code,400)
         self.assertEqual(self.post('pin',{'project_id':'Project 1','pinned':True}).status_code,400)

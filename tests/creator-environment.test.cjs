@@ -141,8 +141,28 @@ test("the environment never reads or publishes work state", () => {
     assert.ok(!source.includes(forbidden), "environment must not touch " + forbidden);
 });
 
+test("every section below the lodge is an island of a different region", () => {
+  const zones = ["decision", "work", "short", "result", "short-result", "history"];
+  assert.deepEqual(Object.keys(E.ISLANDS).sort(), [...zones].sort());
+  const regions = zones.map((z) => E.island(z).region);
+  assert.equal(new Set(regions).size, zones.length, "no two islands share a region");
+  assert.equal(E.island("home"), null, "the lodge keeps its own band");
+  const islands = read("creator-islands.css");
+  for (const zone of zones) {
+    const block = islands.match(new RegExp(`\\[data-zone="${zone}"\\]\\s*\\{([^}]*)\\}`));
+    assert.ok(block, zone + " has a palette");
+    for (const v of ["--isle-rock", "--isle-top", "--isle-props", "--zone-accent"])
+      assert.ok(block[1].includes(v), `${zone} sets ${v}`);
+  }
+  // Scenery tiles repeat along the crest at their own pixel size.
+  for (const [, size] of islands.matchAll(/\)\s*0 100% \/ (\S+ \S+) repeat-x/g))
+    assert.match(size, /^\d+px \d+px$/, "scenery tile is pixel sized: " + size);
+  // The time of day tints the scenery only, through the scenery's own shape.
+  assert.match(islands, /\.co-isle-shade\s*\{[^}]*mask:\s*var\(--isle-props/);
+});
+
 test("folding a room never stretches the world", () => {
-  const sheets = ["creator-office.css", "creator-lodge.css", "creator-ambience.css", "creator-environment.css"]
+  const sheets = ["creator-office.css", "creator-lodge.css", "creator-ambience.css", "creator-environment.css", "creator-islands.css"]
     .map(read)
     .join("\n");
   assert.ok(!/scaleY\s*\(/.test(sheets), "no scaleY anywhere");

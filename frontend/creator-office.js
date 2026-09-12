@@ -117,6 +117,10 @@
   let root,
     membersRoot,
     projectsRoot,
+    shortRoot,
+    shortCompletedRoot,
+    todoList,
+    todoInput,
     otherProjectsRoot,
     otherProjectsToggle,
     inboxRoot,
@@ -139,6 +143,9 @@
     pollTimer = null,
     retryDelay = 5000;
   let activeProjectIds = [],
+    shortProjectIds = [],
+    completedProjectIds = [],
+    shortCompletedIds = [],
     projectDragId = null,
     pinnedCount = 0,
     homeToggle = null;
@@ -157,13 +164,16 @@
   const workflow = (p) => presentation.projects[p.project_id]?.workflow || {};
   const sourceId = (p) =>
     Object.hasOwn(p, "source_project_id") ? p.source_project_id : p.project_id;
-  const enabledSteps = (p) =>
-    Object.keys(routeLabels).filter(
-      (id) =>
-        !(presentation.projects[p.project_id]?.disabled_steps || []).includes(
-          id,
-        ),
-    );
+  // A short video runs 素材 → 後製 → 上映 and nothing else; its disabled steps are moot.
+  const SHORT_STEPS = ["INDEX", "AI_POST", "PUBLISH"];
+  const stepsFor = (meta) =>
+    meta?.format === "SHORT"
+      ? [...SHORT_STEPS]
+      : Object.keys(routeLabels).filter(
+          (id) => !(meta?.disabled_steps || []).includes(id),
+        );
+  const isShort = (p) => presentation.projects[p.project_id]?.format === "SHORT";
+  const enabledSteps = (p) => stepsFor(presentation.projects[p.project_id]);
   const completedSteps = (p) =>
     enabledSteps(p).filter((id) => workflow(p)[id]?.status === "COMPLETED");
 
@@ -516,6 +526,18 @@
       return rest(a, b);
     });
   }
+  // 最近完成 opens newest first. Once the user arranges the shelf their order
+  // holds, and anything finished since leads it, newest first.
+  function shelve(list, order, stamp) {
+    const rank = new Map((order || []).map((id, i) => [id, i]));
+    return [...list].sort((a, b) => {
+      const ra = rank.get(a.project_id),
+        rb = rank.get(b.project_id);
+      if ((ra === undefined) !== (rb === undefined)) return ra === undefined ? -1 : 1;
+      if (ra !== undefined) return ra - rb;
+      return stamp(b) - stamp(a) || 0;
+    });
+  }
   // Every pin stays in view; without pins the two most important projects do.
   const featuredCount = (pins) => Math.max(2, Math.min(PIN_LIMIT, pins));
   async function togglePin(p) {
@@ -650,6 +672,7 @@
   function revealZone(section) {
     if (!section) return;
     if (section.classList.contains("is-collapsed")) setZone(section, false);
+    window.CreatorTransitions?.show(section);
     section.scrollIntoView({ block: "start" });
   }
   function zoneSummary(zone, parts) {
@@ -989,6 +1012,7 @@
       if (zone?.classList.contains("is-collapsed")) setZone(zone, false);
       const fold = card.closest("details");
       if (fold) fold.open = true;
+      window.CreatorTransitions?.show(card);
       card.scrollIntoView({ behavior: "smooth", block: "start" });
       card.tabIndex = -1;
       card.focus({ preventScroll: true });
@@ -1135,7 +1159,7 @@
         previous
           ? canonicalDone(p)
             ? "取消你的標記後，仍保留已發布或歸檔的製作紀錄。"
-            : "企劃會回到正在製作。"
+            : (isShort(p) ? "會回到「短影音正在製作」。" : "會回到「長片正在製作」。")
           : "這是你的完成標記，會保留時間與原有製作紀錄。",
       ),
     );
@@ -1147,7 +1171,7 @@
             await save("done", { project_id: p.project_id, done: !previous })
           ) {
             d.close();
-            toast(previous ? "已取消完成" : "已放入最近完成");
+            toast(previous ? "已取消完成" : (isShort(p) ? "已放入短影音完成" : "已放入長片完成"));
           }
         },
         "co-button primary",
@@ -1464,7 +1488,7 @@
           nextStep ? "現在 · " + routeLabels[nextStep] : "所有階段已完成",
           "co-cover-stage",
         ),
-        node("small", "16 : 9 · 企劃封面"),
+        node("small", isShort(p) ? "短影音 · 封面" : "16 : 9 · 企劃封面"),
       );
       placeholder.append(note);
       cover.append(placeholder);
@@ -1610,7 +1634,7 @@
     actions.append(
       done,
       button("對應企劃", () => projectSource(p), "co-button quiet"),
-      button("設定階段", () => stageSettings(p), "co-button quiet"),
+      button(isShort(p) ? "流程設定" : "設定階段", () => stageSettings(p), "co-button quiet"),
       button("完整時間軸", () => showTimeline(p), "co-button quiet"),
       button("查看詳情", () => showDetails(p), "co-button quiet"),
       button("移除專案", () => confirmRemove(p), "co-button danger"),
@@ -1619,12 +1643,13 @@
     card.append(body);
     return card;
   }
-  function projectSource(p) {
-    const d = modal(p ? "對應企劃" : "新增專案");
+  function projectSource(p, format = "LONG") {
+    const short = !p && format === "SHORT";
+    const d = modal(p ? "對應企劃" : short ? "新增短影音" : "新增專案");
     const name = node("input");
     name.maxLength = 120;
-    name.placeholder = "專案名稱";
-    name.setAttribute("aria-label", "專案名稱");
+    name.placeholder = short ? "短影音名稱" : "專案名稱";
+    name.setAttribute("aria-label", name.placeholder);
     if (!p) d.append(name);
     const select = node("select");
     select.setAttribute("aria-label", "對應企劃");
@@ -1647,6 +1672,10 @@
         "p",
         "選擇後會顯示該企劃的進度與來源紀錄。更換對應時，各企劃的進度分別保留；專案名稱與封面會保留。",
       ),
+    );
+    if (short)
+      d.append(node("p", "短影音的流程只有 素材 → 後製 → 上映。", "co-muted"));
+    d.append(
       button(
         "儲存",
         async () => {
@@ -1658,21 +1687,59 @@
             await save(p ? "project-source" : "projects", {
               ...(p
                 ? { project_id: p.project_id, revision: presentation.revision }
-                : { display_name: name.value.trim() }),
+                : { display_name: name.value.trim(), ...(short ? { format } : {}) }),
               source_project_id: select.value || null,
             })
           ) {
             d.close();
-            toast(p ? "已更新對應企劃" : "已新增專案");
+            toast(p ? "已更新對應企劃" : short ? "已新增短影音" : "已新增專案");
           }
         },
         "co-button primary",
       ),
     );
   }
+  async function changeFormat(p, format, d) {
+    if (
+      await save("project-format", {
+        project_id: p.project_id,
+        format,
+        revision: presentation.revision,
+      })
+    ) {
+      d.close();
+      toast(
+        "「" + projectName(p) + "」" +
+          (format === "SHORT" ? "已改為短影音流程" : "已改為長影片流程"),
+      );
+      openProject(p);
+    }
+  }
   function stageSettings(p) {
-    const d = modal("設定階段");
+    const short = isShort(p);
+    const d = modal(short ? "流程設定" : "設定階段");
+    const kind = node("div", undefined, "co-format-switch");
+    kind.append(
+      node("h3", short ? "目前是短影音" : "目前是長影片"),
+      node(
+        "p",
+        short
+          ? "短影音的流程固定為 素材 → 後製 → 上映。改為長影片後會回到「長片正在製作」，可再自行勾選階段。"
+          : "改為短影音後會移到「短影音正在製作」，流程只保留 素材 → 後製 → 上映。已完成到哪一步會跟著帶過去。",
+        "co-muted",
+      ),
+    );
+    const switchButton = button(
+      short ? "改為長影片" : "改為短影音",
+      () => changeFormat(p, short ? "LONG" : "SHORT", d),
+      "co-button",
+    );
+    switchButton.disabled = !storeReady;
+    kind.append(switchButton);
+    d.append(kind);
+    if (short) return;
     d.append(
+      node("h3", "需要的階段"),
       node(
         "p",
         "勾選此專案需要的階段。取消的階段會從流程移除，歷史紀錄仍會保留，也能再加回來。至少保留一個階段。",
@@ -1989,220 +2056,240 @@
     ids.splice(to, 0, source);
     if (await save("order", { order: ids })) toast("待辦順序已儲存");
   }
+  // 代辦事項 is a checklist. ＋ writes straight into it, every item gets a box of
+  // its own, and ticking it off or back on is a single click. The add row is
+  // built once, so a live refresh never swallows what is being typed.
+  function buildTodo() {
+    const form = node("form", undefined, "co-todo-add");
+    const plus = node("span", "＋", "co-todo-plus");
+    plus.setAttribute("aria-hidden", "true");
+    todoInput = node("input");
+    todoInput.type = "text";
+    todoInput.maxLength = 240;
+    todoInput.placeholder = "寫下要做的事，按 Enter 加入";
+    todoInput.setAttribute("aria-label", "新增待辦");
+    const add = node("button", "加入", "co-button primary");
+    add.type = "submit";
+    form.append(plus, todoInput, add);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = todoInput.value.trim();
+      if (!title || add.disabled) return;
+      if (!storeReady) {
+        toast("暫時無法儲存，請稍後再試。");
+        return;
+      }
+      add.disabled = true;
+      if (await save("inbox", { title })) todoInput.value = "";
+      add.disabled = false;
+      todoInput.focus();
+    });
+    todoList = node("div", undefined, "co-todo-list");
+    inboxRoot.append(form, todoList);
+  }
+  function focusTodo() {
+    const zone = document.getElementById("human-inbox");
+    if (zone?.classList.contains("is-collapsed")) setZone(zone, false);
+    window.CreatorTransitions?.show(zone);
+    todoInput.scrollIntoView({ block: "center", behavior: "smooth" });
+    todoInput.focus({ preventScroll: true });
+  }
+  function todoRow(item, today) {
+    const done = item.state === "done";
+    const row = node("li", undefined, "co-todo" + (done ? " is-done" : ""));
+    row.dataset.inboxId = item.id;
+    row.draggable = true;
+    row.addEventListener("dragstart", (e) => {
+      if (!e.target.closest?.(".co-grip") && e.target !== row) {
+        e.preventDefault();
+        return;
+      }
+      dragId = item.id;
+      dragging = true;
+      e.dataTransfer.setData("text/plain", item.id);
+      row.classList.add("is-dragging");
+    });
+    row.addEventListener("dragend", () => {
+      dragging = false;
+      row.classList.remove("is-dragging");
+    });
+    row.addEventListener("dragover", (e) => e.preventDefault());
+    row.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      dragging = false;
+      await reorder(dragId || e.dataTransfer.getData("text/plain"), item.id);
+      dragId = null;
+    });
+    const grip = button("⠿", () => toast("拖曳可排序；鍵盤可按 Alt + 上下方向鍵。"), "co-grip");
+    grip.setAttribute("aria-label", "調整待辦順序");
+    grip.addEventListener("keydown", async (e) => {
+      if (e.altKey && ["ArrowUp", "ArrowDown"].includes(e.key)) {
+        e.preventDefault();
+        const index = inboxItems.findIndex((i) => i.id === item.id) + (e.key === "ArrowUp" ? -1 : 1);
+        await reorder(item.id, inboxItems[index]?.id);
+      }
+    });
+    grip.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      e.preventDefault();
+      dragId = item.id;
+      dragging = true;
+      grip.setPointerCapture(e.pointerId);
+      row.classList.add("is-dragging");
+    });
+    grip.addEventListener("pointerup", async (e) => {
+      if (e.pointerType !== "touch" || !dragging) return;
+      const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-inbox-id]");
+      dragging = false;
+      row.classList.remove("is-dragging");
+      await reorder(dragId, target?.dataset.inboxId);
+      dragId = null;
+    });
+    grip.addEventListener("pointercancel", () => {
+      dragging = false;
+      dragId = null;
+      row.classList.remove("is-dragging");
+    });
+    const check = node("label", undefined, "co-todo-check");
+    const box = node("input");
+    box.type = "checkbox";
+    box.checked = done;
+    box.disabled = !storeReady;
+    box.addEventListener("change", async () => {
+      box.disabled = true;
+      if (!(await updateInbox(item, { state: box.checked ? "done" : "today", date: "" })))
+        box.checked = !box.checked;
+      box.disabled = !storeReady;
+    });
+    const p = allProjects().find((p) => p.project_id === item.project_id);
+    const text = node("span", undefined, "co-todo-text");
+    text.append(node("span", item.title, "co-todo-title"));
+    const meta = [
+      validTime(item.created_at) ? date(item.created_at, true) : null,
+      p ? projectName(p) : null,
+      item.id.startsWith("ai:") ? item.provenance : null,
+      !done && (item.state === "later" || (item.date && item.date > today))
+        ? "之後" + (item.date ? " · " + item.date : "")
+        : null,
+      item.priority === "high" ? "優先" : null,
+    ].filter(Boolean);
+    if (meta.length) text.append(node("small", meta.join(" · "), "co-todo-meta"));
+    if (item.notes) text.append(node("small", item.notes, "co-todo-notes"));
+    check.append(box, text);
+    const actions = node("div", undefined, "co-todo-actions");
+    actions.append(button("編輯", () => editInbox(item), "co-button quiet"));
+    if (p) actions.append(button("打開企劃", () => openProject(p), "co-button quiet"));
+    actions.append(
+      button(
+        "移除",
+        async () => {
+          if (await updateInbox(item, { state: "ignored" }))
+            toast("已收起，可在「已收起的待辦」恢復。");
+        },
+        "co-button quiet",
+      ),
+    );
+    row.append(grip, check, actions);
+    return row;
+  }
   function renderInbox() {
     const nextItems = mergedInbox();
-    const nextHash = JSON.stringify([nextItems, day(Date.now() / 1000)]);
+    const nextHash = JSON.stringify([nextItems, day(Date.now() / 1000), storeReady]);
     if (nextHash === inboxSignature) return;
     inboxSignature = nextHash;
     inboxItems = nextItems;
-    inboxRoot.replaceChildren();
+    todoList.replaceChildren();
     const today = day(Date.now() / 1000);
-    const groups = [
-      ["today", "🔥 今天要做"],
-      ["later", "⏳ 之後處理"],
-      ["done", "✓ 今天完成"],
-    ];
-    const counts = {};
-    for (const [state, label] of groups) {
-      const group = node("section", undefined, "co-inbox-group");
-      group.dataset.inboxGroup = state;
-      group.append(node("h3", label));
-      const items = inboxItems.filter((i) =>
-        state === "done"
-          ? i.state === "done" && day(i.completed_at) === today
-          : state === "later"
-            ? i.state === "later" || (i.state === "today" && i.date > today)
-            : i.state === "today" && (!i.date || i.date <= today),
-      );
-      counts[state] = items.length;
-      for (const item of items) {
-        const row = node(
-          "article",
-          undefined,
-          "co-inbox-item" + (state === "done" ? " is-done" : ""),
-        );
-        row.dataset.inboxId = item.id;
-        row.draggable = true;
-        row.addEventListener("dragstart", (e) => {
-          if (e.target.closest("button") && !e.target.closest(".co-grip")) {
-            e.preventDefault();
-            return;
-          }
-          dragId = item.id;
-          dragging = true;
-          e.dataTransfer.setData("text/plain", item.id);
-          row.classList.add("is-dragging");
-        });
-        row.addEventListener("dragend", () => {
-          dragging = false;
-          row.classList.remove("is-dragging");
-        });
-        row.addEventListener("dragover", (e) => e.preventDefault());
-        row.addEventListener("drop", async (e) => {
-          e.preventDefault();
-          dragging = false;
-          await reorder(
-            dragId || e.dataTransfer.getData("text/plain"),
-            item.id,
-          );
-          dragId = null;
-        });
-        const grip = button(
-          "⠿",
-          () => toast("拖曳可排序；鍵盤可按 Alt + 上下方向鍵。"),
-          "co-grip",
-        );
-        grip.setAttribute("aria-label", "調整待辦順序");
-        grip.addEventListener("keydown", async (e) => {
-          if (e.altKey && ["ArrowUp", "ArrowDown"].includes(e.key)) {
-            e.preventDefault();
-            const index =
-              inboxItems.findIndex((i) => i.id === item.id) +
-              (e.key === "ArrowUp" ? -1 : 1);
-            await reorder(item.id, inboxItems[index]?.id);
-          }
-        });
-        grip.addEventListener("pointerdown", (e) => {
-          if (e.pointerType === "touch") {
-            e.preventDefault();
-            dragId = item.id;
-            dragging = true;
-            grip.setPointerCapture(e.pointerId);
-            row.classList.add("is-dragging");
-          }
-        });
-        grip.addEventListener("pointerup", async (e) => {
-          if (e.pointerType !== "touch" || !dragging) return;
-          const target = document
-            .elementFromPoint(e.clientX, e.clientY)
-            ?.closest("[data-inbox-id]");
-          dragging = false;
-          row.classList.remove("is-dragging");
-          await reorder(dragId, target?.dataset.inboxId);
-          dragId = null;
-        });
-        grip.addEventListener("pointercancel", () => {
-          dragging = false;
-          dragId = null;
-          row.classList.remove("is-dragging");
-        });
-        row.append(grip);
-        const content = node("div", undefined, "co-inbox-content");
-        const p = allProjects().find((p) => p.project_id === item.project_id);
-        content.append(
-          node("h4", item.title),
-          node(
-            "p",
-            [
-              p ? projectName(p) : null,
-              item.provenance,
-              item.date,
-              item.priority === "high" ? "優先" : null,
-            ]
-              .filter(Boolean)
-              .join(" · "),
-          ),
-        );
-        if (item.notes) content.append(node("p", item.notes));
-        row.append(content);
-        const actions = node("div", undefined, "co-inbox-actions");
-        actions.append(
-          button(
-            state === "done" ? "取消完成" : "完成",
-            () =>
-              updateInbox(item, { state: state === "done" ? "today" : "done" }),
-            "co-button primary",
-          ),
-          button("編輯", () => editInbox(item), "co-button quiet"),
-          button(
-            state === "later" ? "今天處理" : "稍後",
-            () =>
-              updateInbox(item, {
-                state: state === "later" ? "today" : "later",
-                date: "",
-              }),
-            "co-button quiet",
-          ),
-        );
-        if (p)
-          actions.append(
-            button("打開企劃", () => openProject(p), "co-button quiet"),
-          );
-        if (item.id.startsWith("ai:"))
-          actions.append(
-            button(
-              "忽略",
-              () => updateInbox(item, { state: "ignored" }),
-              "co-button quiet",
-            ),
-          );
-        row.append(actions);
-        group.append(row);
-      }
-      if (!items.length)
-        group.append(
-          node(
-            "p",
-            state === "today"
-              ? "桌面留白，留給今天的重要事情。"
-              : state === "later"
-                ? "想晚點處理的事，可以先放在這裡。"
-                : "完成待辦後，會在這裡陪你到今天結束。",
-            "co-empty",
-          ),
-        );
-      inboxRoot.append(group);
-    }
+    // Open items first in the user's order; what was ticked today stays in view,
+    // struck through, until the day ends.
+    const open = inboxItems.filter((i) => ["today", "later"].includes(i.state));
+    const doneToday = inboxItems.filter((i) => i.state === "done" && day(i.completed_at) === today);
+    if (open.length || doneToday.length) {
+      const list = node("ul", undefined, "co-todo-items");
+      for (const item of [...open, ...doneToday]) list.append(todoRow(item, today));
+      todoList.append(list);
+    } else todoList.append(node("p", "還沒有待辦。在上面寫下第一件事，按 Enter 加入。", "co-empty"));
     zoneSummary("decision", [
-      counts.today + " 件今天要做",
-      counts.later + " 件之後處理",
-      ...(counts.done ? [counts.done + " 件今天完成"] : []),
+      open.length + " 件待辦",
+      ...(doneToday.length ? [doneToday.length + " 件今天完成"] : []),
     ]);
     const archived = inboxItems.filter(
-      (i) =>
-        i.state === "ignored" ||
-        (i.state === "done" && day(i.completed_at) !== today),
+      (i) => i.state === "ignored" || (i.state === "done" && day(i.completed_at) !== today),
     );
     if (archived.length) {
-      const d = node("details");
+      const d = node("details", undefined, "co-todo-archive");
       d.append(node("summary", "已收起的待辦 · " + archived.length));
       for (const item of archived) {
         const line = node(
           "p",
-          item.title +
-            " · " +
-            (item.state === "ignored" ? "已忽略" : date(item.completed_at)),
+          item.title + " · " + (item.state === "ignored" ? "已移除" : "完成於 " + date(item.completed_at)),
         );
-        line.append(
-          button(
-            "恢復",
-            () => updateInbox(item, { state: "today" }),
-            "co-button quiet",
-          ),
-        );
+        line.append(button("恢復", () => updateInbox(item, { state: "today" }), "co-button quiet"));
         d.append(line);
       }
-      inboxRoot.append(d);
+      todoList.append(d);
     }
   }
-  async function moveProject(source, target) {
+  // Four shelves are arranged by hand. The two working shelves never share a
+  // card, so they write one working order between them; the two finished shelves
+  // share a completed order of their own.
+  const shelves = {
+    active: {
+      section: "active-projects",
+      scope: "active",
+      field: "project_order",
+      ids: () => activeProjectIds,
+      saved: "企劃順序已儲存",
+    },
+    short: {
+      section: "short-videos",
+      scope: "active",
+      field: "project_order",
+      ids: () => shortProjectIds,
+      saved: "短影音順序已儲存",
+    },
+    completed: {
+      section: "recently-completed",
+      scope: "completed",
+      field: "completed_order",
+      ids: () => completedProjectIds,
+      saved: "完成順序已儲存",
+    },
+    shortCompleted: {
+      section: "short-completed",
+      scope: "completed",
+      field: "completed_order",
+      ids: () => shortCompletedIds,
+      saved: "完成順序已儲存",
+    },
+  };
+  async function moveProject(source, target, shelf = "active") {
     if (!source || !target || source === target) return;
-    const pinnedIds = new Set(activeProjectIds.slice(0, pinnedCount));
-    if (pinnedIds.has(source) || pinnedIds.has(target)) {
-      toast("置頂企劃固定排在最前面；取消置頂後才能拖曳排序。");
-      return;
+    if (shelf === "active") {
+      const pinnedIds = new Set(activeProjectIds.slice(0, pinnedCount));
+      if (pinnedIds.has(source) || pinnedIds.has(target)) {
+        toast("置頂企劃固定排在最前面；取消置頂後才能拖曳排序。");
+        return;
+      }
     }
-    const ids = [...activeProjectIds];
+    const { scope, field, ids: current, saved } = shelves[shelf];
+    const ids = [...current()];
     const from = ids.indexOf(source),
       to = ids.indexOf(target);
     if (from < 0 || to < 0) return;
     ids.splice(from, 1);
     ids.splice(to, 0, source);
-    const retained = (presentation.project_order || []).filter(
-      (id) => !ids.includes(id),
+    // Keep the rest of the stored order, less anything the source no longer lists.
+    const known = new Set(
+      allProjects()
+        .filter((p) => p.classification === "REGISTERED")
+        .map((p) => p.project_id),
     );
-    if (await save("project-order", { order: [...ids, ...retained] })) {
-      toast("企劃順序已儲存");
+    const retained = (presentation[field] || []).filter(
+      (id) => !ids.includes(id) && known.has(id),
+    );
+    if (await save("project-order", { order: [...ids, ...retained], scope })) {
+      toast(saved);
       root
         .querySelector(
           `[data-project-id="${CSS.escape(source)}"] .co-project-drag`,
@@ -2210,29 +2297,32 @@
         ?.focus({ preventScroll: true });
     }
   }
-  function projectSorting(card, p, index) {
+  function projectSorting(card, p, index, shelf = "active") {
     const bar = node("div", undefined, "co-project-sort");
-    const pinned = !!pinnedAt(p);
-    const featured = featuredCount(pinnedCount);
-    card.dataset.pinned = String(pinned);
-    const pin = button(
-      pinned ? "取消置頂" : "📌 置頂",
-      () => togglePin(p),
-      "co-button quiet co-pin-toggle",
-    );
-    pin.setAttribute("aria-pressed", String(pinned));
-    pin.setAttribute("aria-label", (pinned ? "取消置頂 " : "置頂 ") + projectName(p));
-    pin.title = pinned
-      ? "取消置頂，回到一般排序"
-      : "置頂到正在製作最前面（" + PIN_LIMIT_TEXT + "）";
-    pin.disabled = !storeReady;
-    if (pinned) {
-      const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
-      badge.title = "置頂企劃依置頂的先後固定排在最前面";
-      bar.append(badge, node("small", "固定在最前面"), pin);
-      card.querySelector(".co-project-body").prepend(bar);
-      return;
-    }
+    const ids = shelves[shelf].ids;
+    let pin = null;
+    if (shelf === "active") {
+      const pinned = !!pinnedAt(p);
+      card.dataset.pinned = String(pinned);
+      pin = button(
+        pinned ? "取消置頂" : "📌 置頂",
+        () => togglePin(p),
+        "co-button quiet co-pin-toggle",
+      );
+      pin.setAttribute("aria-pressed", String(pinned));
+      pin.setAttribute("aria-label", (pinned ? "取消置頂 " : "置頂 ") + projectName(p));
+      pin.title = pinned
+        ? "取消置頂，回到一般排序"
+        : "置頂到長片正在製作最前面（" + PIN_LIMIT_TEXT + "）";
+      pin.disabled = !storeReady;
+      if (pinned) {
+        const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
+        badge.title = "置頂企劃依置頂的先後固定排在最前面";
+        bar.append(badge, node("small", "固定在最前面"), pin);
+        card.querySelector(".co-project-body").prepend(bar);
+        return;
+      }
+    } else delete card.dataset.pinned;
     const handle = button(
       "⠿ 拖曳排序",
       () => {},
@@ -2254,7 +2344,8 @@
       e.preventDefault();
       await moveProject(
         p.project_id,
-        activeProjectIds[index + (e.key === "ArrowUp" ? -1 : 1)],
+        ids()[index + (e.key === "ArrowUp" ? -1 : 1)],
+        shelf,
       );
     });
     // Pointer dragging works with mouse, touch and pen; other card controls remain independent.
@@ -2274,9 +2365,10 @@
       if (e.clientY < 65) window.scrollBy(0, -24);
       else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
       const hovered = document.elementFromPoint(e.clientX, e.clientY);
-      if (hovered?.closest(".co-other-projects > summary"))
+      if (shelf === "active" && hovered?.closest(".co-other-projects > summary"))
         otherProjectsToggle.open = true;
-      const target = hovered?.closest("#active-projects .co-project");
+      // A card only lands on its own shelf.
+      const target = hovered?.closest(`#${shelves[shelf].section} .co-project`);
       touchTarget = target?.dataset.projectId || null;
       root
         .querySelectorAll(".is-drop-target")
@@ -2287,9 +2379,22 @@
       if (projectDragId !== p.project_id) return;
       const target = touchTarget;
       clearDrag();
-      await moveProject(p.project_id, target);
+      await moveProject(p.project_id, target, shelf);
     });
     handle.addEventListener("pointercancel", clearDrag);
+    if (shelf !== "active") {
+      const finished = shelves[shelf].scope === "completed" && validTime(stampDone(p));
+      bar.append(
+        handle,
+        node(
+          "small",
+          "第 " + (index + 1) + " 個" + (finished ? " · 完成於 " + date(stampDone(p), true) : ""),
+        ),
+      );
+      card.querySelector(".co-project-body").prepend(bar);
+      return;
+    }
+    const featured = featuredCount(pinnedCount);
     bar.append(
       handle,
       node(
@@ -2394,9 +2499,12 @@
           (isHuman(b) ? 1 : 0) - (isHuman(a) ? 1 : 0) ||
           (epoch(lastStamp(b)) || 0) - (epoch(lastStamp(a)) || 0),
       );
-      const cardGroups = new Map([[projectsRoot, []], [otherProjectsRoot, []], [completedRoot, []]]);
-      const activeProjects = projects.filter((p) => !projectDone(p));
+      const cardGroups = new Map([[projectsRoot, []], [otherProjectsRoot, []], [shortRoot, []], [completedRoot, []], [shortCompletedRoot, []]]);
+      const unfinished = projects.filter((p) => !projectDone(p));
+      const activeProjects = unfinished.filter((p) => !isShort(p));
+      const shortProjects = unfinished.filter(isShort);
       activeProjectIds = activeProjects.map((p) => p.project_id);
+      shortProjectIds = shortProjects.map((p) => p.project_id);
       pinnedCount = activeProjects.filter(pinnedAt).length;
       const featured = featuredCount(pinnedCount);
       activeProjects.forEach((p, index) => {
@@ -2412,16 +2520,36 @@
         activeProjects.length + " 個進行中",
         "置頂 " + pinnedCount + " / " + PIN_LIMIT,
       ]);
-      const done = projects
-        .filter((p) => projectDone(p))
-        .sort((a, b) => doneSortKey(b) - doneSortKey(a));
-      const recentDone = done.filter((p) => completedAge(p) <= 14 * 86400);
-      for (const p of recentDone)
-        cardGroups.get(completedRoot).push(projectCard(p));
+      for (const p of shortProjects)
+        cardGroups.get(shortRoot).push(projectCard(p));
+      zoneSummary("short", [
+        shortProjects.length + " 支進行中",
+        "素材 → 後製 → 上映",
+      ]);
+      const done = shelve(
+        projects.filter((p) => projectDone(p)),
+        presentation.completed_order,
+        doneSortKey,
+      );
+      const recent = (p) => completedAge(p) <= 14 * 86400;
+      const finishedShelves = [
+        { root: completedRoot, shelf: "completed", zone: "result", list: done.filter((p) => !isShort(p)), noun: "長片" },
+        { root: shortCompletedRoot, shelf: "shortCompleted", zone: "short-result", list: done.filter(isShort), noun: "短影音" },
+      ];
+      for (const f of finishedShelves) {
+        f.recent = f.list.filter(recent);
+        f.older = f.list.filter((p) => !recent(p));
+        for (const p of f.recent) cardGroups.get(f.root).push(projectCard(p));
+      }
+      completedProjectIds = finishedShelves[0].recent.map((p) => p.project_id);
+      shortCompletedIds = finishedShelves[1].recent.map((p) => p.project_id);
       reconcileProjectCards(cardGroups);
       renderHistory();
       const renderedCards = new Map([...root.querySelectorAll(".co-project")].map(card => [card.dataset.projectId, card]));
       activeProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index));
+      shortProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index, "short"));
+      for (const f of finishedShelves)
+        f.recent.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index, f.shelf));
       if (!projectsRoot.children.length)
         projectsRoot.append(
           node(
@@ -2434,26 +2562,37 @@
             "co-empty",
           ),
         );
-      if (!completedRoot.children.length)
-        completedRoot.append(
+      if (!shortRoot.children.length)
+        shortRoot.append(
           node(
             "p",
-            "完成一個故事，就在這裡留下足跡。保留最近 14 天的完成企劃。",
+            payload || loaded
+              ? "還沒有短影音。按「＋ 新增短影音」開始，或在長片的「設定階段」改為短影音。"
+              : "正在讀取專案資料…",
             "co-empty",
           ),
         );
-      const older = done.filter((p) => completedAge(p) > 14 * 86400);
-      zoneSummary("result", [
-        recentDone.length + " 個最近完成",
-        ...(older.length ? [older.length + " 個更早完成"] : []),
-      ]);
-      if (older.length) {
-        const d = node("details");
-        d.className = "co-empty";
-        d.append(node("summary", "更早完成的企劃 · " + older.length));
-        for (const p of older)
-          d.append(button(projectName(p), () => showDetails(p)));
-        completedRoot.append(d);
+      for (const f of finishedShelves) {
+        if (!f.root.children.length)
+          f.root.append(
+            node(
+              "p",
+              "做好一支" + f.noun + "，就在這裡留下足跡。保留最近 14 天完成的" + f.noun + "。",
+              "co-empty",
+            ),
+          );
+        zoneSummary(f.zone, [
+          f.recent.length + " 個最近完成",
+          ...(f.older.length ? [f.older.length + " 個更早完成"] : []),
+        ]);
+        if (f.older.length) {
+          const d = node("details");
+          d.className = "co-empty";
+          d.append(node("summary", "更早完成的" + f.noun + " · " + f.older.length));
+          for (const p of f.older)
+            d.append(button(projectName(p), () => showDetails(p)));
+          f.root.append(d);
+        }
       }
       houseObserver.disconnect();
       root
@@ -2545,8 +2684,9 @@
     });
     const shortcuts = node("div", undefined, "co-map-actions");
     shortcuts.append(
-      button("影片專案", () => revealZone(document.getElementById("active-projects"))),
-      button("我的待辦", () => revealZone(document.getElementById("human-inbox"))),
+      button("代辦事項", () => revealZone(document.getElementById("human-inbox"))),
+      button("長片", () => revealZone(document.getElementById("active-projects"))),
+      button("短影音", () => revealZone(document.getElementById("short-videos"))),
     );
     if (window.CreatorEnvironment) {
       const envButton = node("button");
@@ -2574,9 +2714,10 @@
     root.append(notice);
     const loading = document.getElementById("loading-overlay");
     if (loading) game.append(loading);
-    // A zone is one room of the lodge: a signboard band over windows onto the
-    // shared sky, and a floor that folds away beneath it.
-    function section(id, title, subtitle, cls, zone, icon) {
+    // A zone is an island of its own region floating in the shared sky: a
+    // signboard over its scenery, the cliff face its work sits on, which folds
+    // away, and the rock it hangs from.
+    function section(id, title, subtitle, cls, zone, icon, half) {
       const s = node("section", undefined, "co-section" + (zone ? " co-zone is-settled" : ""));
       s.id = id;
       const h = node("div", undefined, "co-section-header");
@@ -2598,8 +2739,11 @@
         return [body, h];
       }
       s.dataset.zone = zone;
+      if (half) s.classList.add("co-isle-half", "is-" + half);
       const scene = window.CreatorEnvironment?.scene(zone);
       if (scene) h.prepend(scene);
+      const place = window.CreatorEnvironment?.island?.(zone);
+      if (place) heading.append(node("small", place.name, "co-isle-name"));
       const summaryLine = node("p", undefined, "co-zone-summary");
       text.append(summaryLine);
       const tools = node("div", undefined, "co-zone-tools");
@@ -2620,8 +2764,11 @@
       toggle.setAttribute("aria-label", "收合「" + title + "」");
       h.append(tools, toggle);
       s.append(fold);
+      const base = window.CreatorEnvironment?.under?.(zone);
+      if (base) s.append(base);
       root.append(s);
       window.CreatorEnvironment?.watch(s);
+      window.CreatorTransitions?.watch(s);
       zones.set(zone, { section: s, summary: summaryLine });
       return [body, tools];
     }
@@ -2631,38 +2778,66 @@
       "一起讓故事成形的夥伴",
       "co-members",
     );
+    // The lodge is the mother island: the rock it rests on hangs under its members.
+    const homeBase = window.CreatorEnvironment?.under?.("home");
+    if (homeBase) membersRoot.closest("section").append(homeBase);
+    // 代辦事項 spans the sky; long form and short videos sit side by side below it,
+    // at work and then finished.
+    let inboxTools;
+    [inboxRoot, inboxTools] = section(
+      "human-inbox",
+      "代辦事項",
+      "按 ＋ 直接寫下要做的事 · 做完就打勾",
+      "co-inbox",
+      "decision",
+      "◆",
+    );
+    inboxTools.append(button("＋ 新增待辦", () => focusTodo()));
+    buildTodo();
     let projectTools;
     [projectsRoot, projectTools] = section(
       "active-projects",
-      "正在製作",
-      "置頂最多 3 個，固定在最前面 · 其餘拖曳調整順序",
+      "長片正在製作",
+      "置頂最多 3 個 · 其餘拖曳調整順序",
       "co-grid co-featured-projects",
       "work",
       "▶",
+      "left",
     );
-    projectTools.append(button("＋ 新增專案", () => projectSource()));
+    projectTools.append(button("＋ 新增長片", () => projectSource()));
     otherProjectsToggle = node("details", undefined, "co-other-projects");
     otherProjectsToggle.append(node("summary", "其他企劃"));
     otherProjectsRoot = node("div", undefined, "co-grid");
     otherProjectsToggle.append(otherProjectsRoot);
     projectsRoot.after(otherProjectsToggle);
-    let inboxTools;
-    [inboxRoot, inboxTools] = section(
-      "human-inbox",
-      "等我處理",
-      "輪到你做決定 · 依照你的步調安排",
-      "co-inbox",
-      "decision",
-      "◆",
+    let shortTools;
+    [shortRoot, shortTools] = section(
+      "short-videos",
+      "短影音正在製作",
+      "素材 → 後製 → 上映 · 拖曳調整順序",
+      "co-grid co-short-projects",
+      "short",
+      "▮",
+      "right",
     );
-    inboxTools.append(button("＋ 新增待辦", () => editInbox()));
+    shortTools.append(button("＋ 新增短影音", () => projectSource(null, "SHORT")));
     [completedRoot] = section(
       "recently-completed",
-      "最近完成",
-      "把做好的故事，好好收藏",
+      "長片完成",
+      "做好的長片 · 拖曳調整順序",
       "co-grid",
       "result",
       "★",
+      "left",
+    );
+    [shortCompletedRoot] = section(
+      "short-completed",
+      "短影音完成",
+      "上映的短影音 · 拖曳調整順序",
+      "co-grid",
+      "short-result",
+      "✦",
+      "right",
     );
     [historyRoot] = section(
       "work-history",
@@ -2743,6 +2918,7 @@
       ),
     );
     root.append(footer);
+    window.CreatorTransitions?.watch(footer);
     const folded = collapsedZones();
     for (const { section: zone } of zones.values())
       if (folded.has(zone.id)) setZone(zone, true, false);
@@ -2766,6 +2942,9 @@
     completedAge,
     doneSortKey,
     arrange,
+    shelve,
+    stepsFor,
+    SHORT_STEPS,
     featuredCount,
     memberIdentity,
     celebrates,

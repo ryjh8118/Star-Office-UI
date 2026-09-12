@@ -812,9 +812,9 @@ html[data-env-time]:not([data-env-weather="SNOW"]):not([data-env-weather="HEAVY_
 }
 
 /* ============================================================ the rooms */
-/* Five rooms of one lodge. Each keeps its own light; all share the same sky,
-   timber, depth and type. HOME → WORK → DECISION → RESULT → HISTORY reads as
-   MORNING → DAY → AFTERNOON → SUNSET → NIGHT. */
+/* Six rooms of one lodge. Each keeps its own light; all share the same sky,
+   timber, depth and type. HOME → WORK → SHORT → DECISION → RESULT → HISTORY
+   reads as MORNING → DAY → NOON → AFTERNOON → SUNSET → NIGHT. */
 [data-zone] {
   --band-h: 150px;
   --tile: 196px;
@@ -840,89 +840,15 @@ html[data-env-time]:not([data-env-weather="SNOW"]):not([data-env-weather="HEAVY_
   --zone-accent: #d9a45a;
   --zone-glow: #ffd79a;
 }
-[data-zone="work"] {
-  --zone-wall-1: #e6f6f8;
-  --zone-wall-2: #c3e5eb;
-  --zone-seam: #2f7c8a24;
-  --zone-trim: #3c6f7a;
-  --zone-sill: #4f8793;
-  --zone-frame: #2d5964;
-  --zone-glass: #bdf2ff;
-  --zone-plaque: #f4fcfdf5;
-  --zone-plaque-edge: #7fbfcb;
-  --zone-ink: #143c45;
-  --zone-kicker: #365f68;
-  --zone-accent: #26aec2;
-  --zone-glow: #6fe3f2;
-  --zone-floor: #173741;
-  --zone-floor-seam: #0b1e2470;
-}
-[data-zone="decision"] {
-  --zone-wall-1: #fdf0cf;
-  --zone-wall-2: #f1d596;
-  --zone-seam: #a8741f24;
-  --zone-trim: #8c5f22;
-  --zone-sill: #a8752f;
-  --zone-frame: #6e4a1c;
-  --zone-glass: #fff1c7;
-  --zone-plaque: #fffaeaf5;
-  --zone-plaque-edge: #d9ad5a;
-  --zone-ink: #472f0c;
-  --zone-kicker: #6f5220;
-  --zone-accent: #e3a232;
-  --zone-glow: #ffc861;
-  --zone-floor: #392916;
-  --zone-floor-seam: #1d140a70;
-}
-[data-zone="result"] {
-  --zone-wall-1: #ffdcc4;
-  --zone-wall-mid: #f2aeb6;
-  --zone-wall-2: #cda2d4;
-  --zone-seam: #7b466024;
-  --zone-trim: #7b4660;
-  --zone-sill: #8f5570;
-  --zone-frame: #5a3048;
-  --zone-glass: #ffd6c9;
-  --zone-plaque: #fff6f2f5;
-  --zone-plaque-edge: #e2a0a8;
-  --zone-ink: #47202f;
-  --zone-kicker: #74435a;
-  --zone-accent: #ff8a6b;
-  --zone-glow: #ffb08a;
-  --zone-floor: #33203a;
-  --zone-floor-seam: #170c1a70;
-}
-[data-zone="history"] {
-  --zone-wall-1: #27315c;
-  --zone-wall-2: #1a2146;
-  --zone-seam: #8fb5ff17;
-  --zone-trim: #3d4a7c;
-  --zone-sill: #4a5890;
-  --zone-frame: #1e2547;
-  --zone-glass: #9fd8ff;
-  --zone-plaque: #121936f2;
-  --zone-plaque-edge: #5667a8;
-  --zone-ink: #eef1ff;
-  --zone-kicker: #b4c0ec;
-  --zone-accent: #8fd3e8;
-  --zone-glow: #7fe0d0;
-  --zone-floor: #111733;
-  --zone-floor-seam: #05081870;
-}
+/* Every other zone is an island; its palette lives in creator-islands.css. */
 
-/* The room frame: shared timber, shared depth. */
+/* An island: no frame and no ground of its own above the crest, so its scenery
+   stands against the shared sky. Island art lives in creator-islands.css. */
 .co-zone {
   position: relative;
   margin: 34px 0;
-  border: 6px solid var(--zone-frame);
-  border-radius: 16px;
-  overflow: clip;
-  /* No ground of its own: the window panes must look through to the sky. */
   background: transparent;
-  box-shadow:
-    0 0 0 1px #0d0a0880,
-    0 0 0 3px color-mix(in oklab, var(--zone-accent) 30%, #0000),
-    0 18px 40px #05080b59;
+  container-type: inline-size;
 }
 .co-zone > .co-section-header,
 .co-map-header[data-zone] {
@@ -933,7 +859,7 @@ html[data-env-time]:not([data-env-weather="SNOW"]):not([data-env-weather="HEAVY_
 }
 .co-zone > .co-section-header {
   margin: 0;
-  padding: 18px 22px 30px;
+  padding: 18px 22px 44px;
 }
 .co-zone > .co-section-header::after {
   display: none;
@@ -949,8 +875,8 @@ html[data-env-time]:not([data-env-weather="SNOW"]):not([data-env-weather="HEAVY_
   position: absolute;
   inset: 0;
 }
-/* A timber beam closes every band, collapsed or open. */
-.co-zone-scene::after {
+/* A timber beam closes the lodge band. */
+.co-map-header .co-zone-scene::after {
   content: "";
   position: absolute;
   left: 0;
@@ -1078,140 +1004,6 @@ html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-zone-sno
     0 0 / var(--tile) 110px repeat-x;
 }
 
-/* WORK · day: sky blue, cyan, teal; desks, glowing screens, a slow scan of light. */
-[data-zone="work"] .co-zone-props {
-  background:
-    linear-gradient(90deg, #0000 0 10px, #2c5560 10px 138px, #0000 0) 0 calc(100% - 16px) / 150px 6px repeat-x,
-    linear-gradient(90deg, #0000 0 44px, #8fecf7 44px 88px, #0000 0) 0 calc(100% - 34px) / 150px 26px repeat-x,
-    linear-gradient(90deg, #0000 0 63px, #22404a 63px 69px, #0000 0) 0 calc(100% - 22px) / 150px 8px repeat-x,
-    linear-gradient(90deg, #0000 0 40px, #22404a 40px 92px, #0000 0) 0 calc(100% - 30px) / 150px 34px repeat-x;
-}
-[data-zone="work"] .co-zone-light {
-  background: radial-gradient(64px 34px at 66px 60px, #6fe3f28c, #6fe3f214 60%, #0000) 0 100% / 150px 96px repeat-x;
-}
-[data-zone="work"] .co-zone-light::after {
-  content: "";
-  position: absolute;
-  bottom: 16px;
-  left: -220px;
-  width: 200px;
-  height: 44px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #a8f6ff4d, #0000);
-}
-.is-zone-live[data-zone="work"] .co-zone-light::after {
-  animation: co-zone-scan 12s linear infinite;
-}
-@keyframes co-zone-scan {
-  to {
-    transform: translateX(calc(100vw + 440px));
-  }
-}
-[data-zone="work"] .co-zone-bit {
-  position: absolute;
-  right: calc(18px + var(--i) * 10px);
-  bottom: 24px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #5ff0b0;
-  box-shadow: 0 0 6px #5ff0b0;
-}
-.is-zone-live[data-zone="work"] .co-zone-bit {
-  animation: co-zone-led 2.6s steps(2, end) calc(var(--i) * -0.65s) infinite;
-}
-@keyframes co-zone-led {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-/* DECISION · afternoon: amber and gold; a lamp over the papers, notes on the wall. */
-[data-zone="decision"] .co-zone-props {
-  background:
-    linear-gradient(90deg, #0000 0 164px, #ffd76a 164px 180px, #0000 180px 184px, #ffb86a 184px 196px, #0000 0)
-      0 calc(var(--win-y) + 18px) / var(--tile) 16px repeat-x,
-    linear-gradient(90deg, #0000 0 10px, #6b4a1c 10px 214px, #0000 0) 0 calc(100% - 16px) / 230px 6px repeat-x,
-    linear-gradient(90deg, #0000 0 31px, #5a3d14 31px 34px, #0000 0) 0 calc(100% - 22px) / 230px 34px repeat-x,
-    linear-gradient(90deg, #0000 0 20px, #d99a2e 20px 46px, #0000 0) 0 calc(100% - 56px) / 230px 12px repeat-x,
-    linear-gradient(90deg, #0000 0 120px, #fffaf0 120px 168px, #0000 0) 0 calc(100% - 22px) / 230px 12px repeat-x,
-    linear-gradient(90deg, #0000 0 126px, #f4e6c6 126px 174px, #0000 0) 0 calc(100% - 30px) / 230px 8px repeat-x;
-}
-[data-zone="decision"] .co-zone-light {
-  background: radial-gradient(90px 58px at 33px 58px, #ffc861a6, #ffc86122 60%, #0000) 0 100% / 230px 110px repeat-x;
-}
-.is-zone-live[data-zone="decision"] .co-zone-light {
-  animation: co-zone-breathe 7s ease-in-out infinite alternate;
-}
-@keyframes co-zone-breathe {
-  to {
-    filter: brightness(1.12);
-  }
-}
-
-/* RESULT · sunset: coral, pink and violet; keepsakes on a shelf, a little sparkle. */
-[data-zone="result"] .co-zone-props {
-  background:
-    linear-gradient(var(--zone-sill), var(--zone-sill)) 0 calc(100% - 24px) / 100% 5px no-repeat,
-    linear-gradient(90deg, #0000 0 30px, #f6c75a 30px 46px, #0000 0) 0 calc(100% - 38px) / 170px 14px repeat-x,
-    linear-gradient(90deg, #0000 0 34px, #b07a2a 34px 42px, #0000 0) 0 calc(100% - 29px) / 170px 9px repeat-x,
-    linear-gradient(90deg, #0000 0 84px, #ffb08a 84px 122px, #0000 0) 0 calc(100% - 33px) / 170px 20px repeat-x,
-    linear-gradient(90deg, #0000 0 80px, #7b4660 80px 126px, #0000 0) 0 calc(100% - 29px) / 170px 28px repeat-x;
-}
-[data-zone="result"] .co-zone-light {
-  background:
-    repeating-linear-gradient(115deg, #0000 0 70px, #ffc2a01f 70px 120px, #0000 120px 210px),
-    radial-gradient(120px 50px at 103px 70px, #ffb08a73, #0000) 0 100% / 170px 110px repeat-x;
-}
-[data-zone="result"] .co-zone-bit {
-  position: absolute;
-  left: calc(9% + var(--i) * 20%);
-  top: calc(22px + var(--i) * 11px);
-  width: 9px;
-  height: 9px;
-  opacity: 0.55;
-  background:
-    linear-gradient(90deg, #0000 42%, #fff3c9 42% 58%, #0000 58%),
-    linear-gradient(0deg, #0000 42%, #fff3c9 42% 58%, #0000 58%);
-}
-.is-zone-live[data-zone="result"] .co-zone-bit {
-  animation: co-env-glint 5.4s ease-in-out calc(var(--i) * -1.1s) infinite;
-}
-
-/* HISTORY · night: navy and blue-violet; archive shelves under a faint aurora. */
-[data-zone="history"] .co-zone-props {
-  background:
-    linear-gradient(var(--zone-sill), var(--zone-sill)) 0 calc(100% - 16px) / 100% 4px no-repeat,
-    repeating-linear-gradient(
-        90deg,
-        #5d78b8 0 7px,
-        #2d3a66 7px 9px,
-        #7fb8c9 9px 15px,
-        #2d3a66 15px 17px,
-        #9a86d6 17px 24px,
-        #2d3a66 24px 26px,
-        #4d6aa8 26px 31px,
-        #2d3a66 31px 34px
-      )
-      0 calc(100% - 20px) / 100% 24px no-repeat;
-}
-[data-zone="history"] .co-zone-light {
-  background: radial-gradient(160px 40px at 50% 100%, #7fe0d024, #0000) 0 100% / 320px 60px repeat-x;
-}
-[data-zone="history"] .co-zone-light::before {
-  content: "";
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  top: 0;
-  height: 80px;
-  background: linear-gradient(100deg, #0000 8%, #5ff0c233 30%, #6fd8ff2e 50%, #a88cff29 70%, #0000 92%);
-  filter: blur(8px);
-}
-.is-zone-live[data-zone="history"] .co-zone-light::before {
-  animation: co-env-aurora-a 44s ease-in-out infinite alternate;
-}
-
 /* ----------------------------------------------------- room signboards */
 .co-zone-plaque {
   position: relative;
@@ -1317,11 +1109,16 @@ html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-zone-sno
   transition:
     padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
     visibility 0s;
+  /* The island's cliff face: shade under the crest, rock strata, region glow. */
   background:
-    radial-gradient(680px 210px at 50% 0, color-mix(in oklab, var(--zone-glow) 22%, #0000), #0000 70%) no-repeat,
-    repeating-linear-gradient(180deg, #0000 0 58px, var(--zone-floor-seam) 58px 60px),
-    repeating-linear-gradient(90deg, #0000 0 239px, color-mix(in oklab, var(--zone-floor-seam) 60%, #0000) 239px 241px),
-    var(--zone-floor);
+    linear-gradient(180deg, #00000066, #0000 34px) no-repeat,
+    radial-gradient(680px 210px at 50% 0, color-mix(in oklab, var(--zone-glow) 16%, #0000), #0000 70%) no-repeat,
+    repeating-linear-gradient(176deg, #0000 0 38px, var(--isle-strata) 38px 41px),
+    repeating-linear-gradient(94deg, #0000 0 211px, #ffffff08 211px 213px),
+    var(--isle-rock);
+  box-shadow:
+    inset 16px 0 22px -14px #0000008c,
+    inset -16px 0 22px -14px #0000008c;
 }
 .co-zone.is-settled .co-zone-body {
   overflow: visible;
@@ -1334,14 +1131,6 @@ html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-zone-sno
     padding 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
     visibility 0s 0.45s;
 }
-[data-zone="history"] .co-zone-body {
-  background:
-    radial-gradient(1px 1px at 37px 23px, #cfe0ff66, #0000) 0 0 / 173px 131px,
-    radial-gradient(680px 210px at 50% 0, #6fd8ff1f, #0000 70%) no-repeat,
-    repeating-linear-gradient(180deg, #0000 0 58px, var(--zone-floor-seam) 58px 60px),
-    var(--zone-floor);
-}
-
 /* HOME is the header band, the lodge map and the members below it. */
 .co-map-header[data-zone="home"] {
   /* A flex child of <body>: without this, a wrapped narrow band shrinks under the map. */

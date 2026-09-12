@@ -13,6 +13,9 @@ STEPS = list(zip(
     ['素材','校正','導演','工單','確認','粗剪','定剪','定剪學習','後製','後製學習','上映','會員影片','短影音']))
 IDS = [s[0] for s in STEPS]
 LABELS = dict(STEPS)
+# A short video runs a fixed three-step chain; the long-form chain is the default.
+SHORT_IDS = ['INDEX','AI_POST','PUBLISH']
+FORMATS = {'LONG','SHORT'}
 ALIASES = {'RAW':'INDEX','ROUGH_CUT_LEARNING':'POST_LEARNING',
            'PRODUCTION_LEARNING':'POST_LEARNING','HUMAN_POST_QC':'AI_POST',
            'FINAL_QC':'AI_POST'}
@@ -51,7 +54,12 @@ def evidence(project, history=()):
         result[identity] = {'key':identity,'stage':stage,'target':target,'timestamp':stamp}
     return sorted(result.values(), key=lambda e:(seconds(e['timestamp']), e['key']))
 
+def is_short(meta):
+    return meta.get('format') == 'SHORT'
+
 def enabled_ids(meta):
+    if is_short(meta):
+        return list(SHORT_IDS)
     return [s for s in IDS if s not in meta.get('disabled_steps',[])]
 
 def set_chain(meta, count, stamp, source, actor):

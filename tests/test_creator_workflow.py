@@ -89,6 +89,62 @@ class WorkflowTests(unittest.TestCase):
         return self.client.post('/api/creator/workflow', json={'project_id':'TEST-1','step_id':stage,'completed':completed,'revision':self.get()['revision'],**extra})
     def source(self, stage, stamp='2026-09-07T10:00:00Z', key='e1'):
         self.project['timeline'].append({'id':stage,'status':'DONE','updated_at':stamp,'ledger_entry_id':key})
+    def fmt(self, value, pid='TEST-1'):
+        return self.client.post('/api/creator/project-format', json={'project_id':pid,'format':value,'revision':self.get()['revision']})
+    @staticmethod
+    def done(meta):
+        return [s for s in cw.IDS if meta['workflow'][s]['status']=='COMPLETED']
+    def test_short_video_runs_material_post_release_only(self):
+        self.assertEqual(cw.enabled_ids({'format':'SHORT','disabled_steps':['AI_POST']}),['INDEX','AI_POST','PUBLISH'])
+        self.project['project_type']='VIDEO_PROJECT'
+        created = self.client.post('/api/creator/projects',json={'display_name':'開箱短片','format':'SHORT'}).json
+        pid = next(iter(created['local_projects']))
+        self.assertEqual(created['projects'][pid]['format'],'SHORT')
+        toggle = lambda step: self.client.post('/api/creator/workflow',json={'project_id':pid,'step_id':step,'completed':True,'revision':self.get()['revision']})
+        self.assertEqual(toggle('AI_ROUGH_CUT').status_code,400) # not part of a short video
+        meta = toggle('AI_POST').json['projects'][pid]
+        self.assertEqual(self.done(meta),['INDEX','AI_POST'])
+        self.assertFalse(cp.finished(meta))
+        self.assertTrue(cp.finished(toggle('PUBLISH').json['projects'][pid]))
+        refused = self.client.post('/api/creator/workflow-settings',json={'project_id':pid,'revision':self.get()['revision'],'disabled_steps':['GATE']})
+        self.assertEqual(refused.status_code,409)
+        self.assertEqual(refused.json['code'],'SHORT_CHAIN')
+        self.assertEqual(self.client.post('/api/creator/projects',json={'display_name':'x','format':'VERTICAL'}).status_code,400)
+    def test_evidence_lands_on_the_short_chain(self):
+        self.project['project_type']='VIDEO_PROJECT'
+        self.source('AI_ROUGH_CUT')
+        created = self.client.post('/api/creator/projects',json={'display_name':'短片','format':'SHORT','source_project_id':'TEST-1'}).json
+        pid = next(iter(created['local_projects']))
+        self.assertEqual(self.done(self.get()['projects'][pid]),['INDEX'])
+        self.source('FINAL_QC','2026-09-08T10:00:00Z','e2')
+        self.assertEqual(self.done(self.get()['projects'][pid]),['INDEX','AI_POST'])
+    def test_switching_format_carries_progress_and_an_immediate_undo_restores_it(self):
+        self.toggle('AI_ROUGH_CUT',True)
+        short = self.fmt('SHORT').json['projects']['TEST-1']
+        self.assertEqual(self.done(short),['INDEX'])
+        self.assertEqual(short['history'][-1]['type'],'PROJECT_FORMAT')
+        # Switching straight back loses none of the marks the short chain had no room for.
+        self.assertEqual(self.done(self.fmt('LONG').json['projects']['TEST-1']),cw.IDS[:6])
+        # Once the short chain moves on, its furthest step carries back and fills the long chain.
+        self.fmt('SHORT')
+        self.toggle('AI_POST',True)
+        self.assertEqual(self.done(self.fmt('LONG').json['projects']['TEST-1']),cw.IDS[:cw.IDS.index('AI_POST')+1])
+        revision = self.get()['revision']
+        self.assertEqual(self.client.post('/api/creator/project-format',json={'project_id':'TEST-1','format':'LONG','revision':revision}).json['revision'],revision)
+        for bad in [{'format':'SHORT','revision':revision-1},{'format':'VERTICAL','revision':revision},{'format':None,'revision':revision}]:
+            self.assertIn(self.client.post('/api/creator/project-format',json={'project_id':'TEST-1',**bad}).status_code,[400,409])
+        self.assertEqual(self.get()['revision'],revision)
+    def test_completed_shelf_order_is_kept_apart_from_the_working_order(self):
+        self.get()
+        self.client.post('/api/creator/project-order',json={'order':['TEST-1']})
+        shelf = self.client.post('/api/creator/project-order',json={'order':['TEST-1'],'scope':'completed'})
+        self.assertEqual(shelf.status_code,200)
+        self.assertEqual(shelf.json['completed_order'],['TEST-1'])
+        self.assertEqual(shelf.json['project_order'],['TEST-1'])
+        self.client.post('/api/creator/project-order',json={'order':[],'scope':'completed'})
+        self.assertEqual(self.get()['project_order'],['TEST-1'])
+        for bad in [{'order':['TEST-1'],'scope':'archive'},{'order':['Original'],'scope':'completed'}]:
+            self.assertEqual(self.client.post('/api/creator/project-order',json=bad).status_code,400)
     def test_thirteen_stages_and_closure_each_target(self):
         self.assertEqual(len(cw.IDS),13)
         for count, step in enumerate(cw.IDS,1):

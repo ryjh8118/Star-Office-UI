@@ -1,0 +1,485 @@
+/* Sky islands. The lodge is the mother island at the top; every section below it
+   is an island of its own region, floating in the shared sky. Decorative only.
+   Scenery tiles at fixed pixel sizes and repeats; nothing is stretched to fit. */
+
+/* ------------------------------------------------------------ the archipelago */
+/* 代辦事項 spans the sky; long form and short videos float side by side beneath
+   it, first at work and then finished; the work history closes the chain. */
+#creator-office {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(24px, 3.4vw, 64px);
+  align-items: start;
+}
+#creator-office > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+#creator-office > .co-isle-half {
+  grid-column: auto;
+}
+/* Islands never line up exactly; the right-hand one floats a little lower. */
+#creator-office > .co-isle-half.is-right {
+  margin-top: 96px;
+}
+.co-isle-half .co-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+}
+.co-isle-half.is-right.co-stage.is-on-stage {
+  transition-delay: 0.1s;
+}
+@media (max-width: 1000px) {
+  #creator-office > .co-isle-half {
+    grid-column: 1 / -1;
+  }
+  #creator-office > .co-isle-half.is-right {
+    margin-top: 34px;
+  }
+}
+
+/* ------------------------------------------------------------------ palettes */
+.co-zone,
+#office-members {
+  --crest-h: 30px;
+  --isle-rock: #3a2c24;
+  --isle-strata: #00000033;
+  --isle-top: #7fbf5a;
+  --isle-top-2: #69a84d;
+  --isle-lip: #4f3a2a;
+}
+/* 和風櫻花島 · cherry blossom, stone lanterns, a vermilion torii. */
+[data-zone="decision"] {
+  --zone-plaque: #fff7faf5;
+  --zone-plaque-edge: #efb3c8;
+  --zone-ink: #4a1f30;
+  --zone-kicker: #7a4a5c;
+  --zone-accent: #e0668f;
+  --zone-glow: #ffb3cf;
+  --isle-rock: #3b2a2d;
+  --isle-strata: #24181a99;
+  --isle-top: #8cc46c;
+  --isle-top-2: #74ad57;
+  --isle-lip: #4a3326;
+  --isle-props:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120'><path d='M62 120 C62 100 60 88 52 76 M60 96 C66 84 76 76 88 72' stroke='%235b3a2e' stroke-width='6' fill='none' stroke-linecap='round'/><g fill='%23f4a9c4'><circle cx='44' cy='58' r='22'/><circle cx='70' cy='44' r='27'/><circle cx='96' cy='62' r='20'/><circle cx='60' cy='72' r='17'/></g><g fill='%23fbd0e0'><circle cx='64' cy='36' r='12'/><circle cx='40' cy='52' r='9'/><circle cx='92' cy='54' r='8'/></g><rect x='156' y='98' width='12' height='22' fill='%238f8a84'/><rect x='150' y='86' width='24' height='14' rx='2' fill='%23a8a29a'/><rect x='157' y='89' width='10' height='8' fill='%23ffd27a'/><path d='M145 88 L162 74 L179 88 Z' fill='%23706a64'/></svg>")
+      0 100% / 220px 120px repeat-x,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='660' height='130'><g fill='%23cf3a2f'><path d='M372 26 Q440 16 508 26 L508 37 Q440 28 372 37 Z'/><rect x='384' y='50' width='112' height='9'/><rect x='398' y='34' width='12' height='96'/><rect x='470' y='34' width='12' height='96'/><rect x='434' y='37' width='12' height='14'/></g><rect x='368' y='22' width='144' height='6' rx='3' fill='%232b1c1c'/></svg>")
+      0 100% / 660px 130px repeat-x;
+  --isle-glow: radial-gradient(22px 18px at 162px 93px, #ffd27acc, #ffd27a00) 0 100% / 220px 120px repeat-x;
+  --isle-fall: block;
+}
+/* 北歐雪松島 · snowy pines and a red cabin with a lit window. */
+[data-zone="work"] {
+  --zone-plaque: #f4fcfdf5;
+  --zone-plaque-edge: #7fbfcb;
+  --zone-ink: #143c45;
+  --zone-kicker: #365f68;
+  --zone-accent: #26aec2;
+  --zone-glow: #6fe3f2;
+  --isle-rock: #2b3945;
+  --isle-strata: #18222a99;
+  --isle-top: #f2f7ff;
+  --isle-top-2: #d3e1f1;
+  --isle-lip: #5d6f80;
+  --isle-props:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='130'><rect x='37' y='108' width='8' height='22' fill='%234a3526'/><path d='M41 18 L68 62 L56 62 L78 96 L62 96 L84 114 L-2 114 L20 96 L4 96 L26 62 L14 62 Z' fill='%23234b43'/><path d='M41 18 L53 38 L47 36 L41 42 L35 36 L29 38 Z M26 62 L34 58 L41 64 L48 58 L56 62 L52 67 L30 67 Z M20 96 L30 92 L41 98 L52 92 L62 96 L58 100 L24 100 Z' fill='%23f2f7ff'/><rect x='114' y='112' width='6' height='18' fill='%234a3526'/><path d='M117 56 L135 88 L126 88 L141 114 L93 114 L108 88 L99 88 Z' fill='%232e5f53'/><path d='M117 56 L125 70 L117 68 L109 70 Z M108 88 L117 84 L126 88 L122 92 L112 92 Z' fill='%23f2f7ff'/></svg>")
+      0 100% / 160px 130px repeat-x,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='120'><g transform='translate(400 36)'><rect x='80' y='2' width='10' height='26' fill='%235a4a44'/><rect x='6' y='36' width='94' height='48' fill='%238a3b2c'/><path d='M-8 40 L53 0 L114 40 Z' fill='%23f4f8ff'/><path d='M-2 42 L53 8 L108 42 L108 46 L53 13 L-2 46 Z' fill='%23c9d6e6'/><rect x='20' y='50' width='20' height='16' fill='%23ffd27a'/><path d='M30 50 L30 66 M20 58 L40 58' stroke='%236d2e22' stroke-width='2'/><rect x='64' y='52' width='20' height='32' fill='%234a2a20'/></g></svg>")
+      0 100% / 640px 120px repeat-x;
+  --isle-glow: radial-gradient(36px 26px at 430px 94px, #ffd27acc, #ffd27a00) 0 100% / 640px 120px repeat-x;
+}
+/* 熱帶椰林島 · palms, a beach umbrella, sand and a waterfall into the sky. */
+[data-zone="short"] {
+  --zone-plaque: #f1fffcf5;
+  --zone-plaque-edge: #8fdccf;
+  --zone-ink: #0f3b36;
+  --zone-kicker: #2f6660;
+  --zone-accent: #16ad9e;
+  --zone-glow: #7ff0dc;
+  --isle-rock: #3a2d20;
+  --isle-strata: #231a1299;
+  --isle-top: #f1d995;
+  --isle-top-2: #e0c277;
+  --isle-lip: #7d6238;
+  --isle-props:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='250' height='150'><path d='M74 150 C70 116 76 84 92 56' stroke='%238a6a3e' stroke-width='9' fill='none' stroke-linecap='round'/><path d='M74 146 C72 120 76 92 90 62' stroke='%23a8844f' stroke-width='3' stroke-dasharray='4 7' fill='none'/><g fill='%232f9a57'><path d='M92 54 Q64 30 26 46 Q62 42 92 60 Z'/><path d='M92 54 Q120 26 158 38 Q122 40 94 60 Z'/><path d='M92 54 Q74 76 54 104 Q82 76 96 58 Z'/><path d='M92 54 Q114 76 132 102 Q104 74 90 58 Z'/><path d='M92 54 Q90 24 108 8 Q98 32 96 56 Z'/></g><g fill='%2346b86d'><path d='M92 54 Q70 40 44 48 Q70 46 92 58 Z'/><path d='M92 54 Q114 38 140 42 Q114 46 94 58 Z'/></g><circle cx='87' cy='62' r='5' fill='%23704a24'/><circle cx='97' cy='63' r='5' fill='%23704a24'/></svg>")
+      0 100% / 250px 150px repeat-x,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='100'><path d='M360 100 L366 44' stroke='%23fffaf0' stroke-width='3'/><path d='M330 50 Q366 18 402 50 Z' fill='%23ff6b6b'/><path d='M354 48 Q366 26 378 48 Z' fill='%23fff3c4'/><rect x='392' y='90' width='42' height='8' rx='4' fill='%2338b6c9'/></svg>")
+      0 100% / 520px 100px repeat-x;
+  --isle-fall: block;
+}
+/* 沙漠綠洲島 · saguaro, a pyramid and a pool of oasis water. */
+[data-zone="result"] {
+  --zone-plaque: #fff8eef5;
+  --zone-plaque-edge: #eab77f;
+  --zone-ink: #4a2a0c;
+  --zone-kicker: #7a5028;
+  --zone-accent: #e48a34;
+  --zone-glow: #ffc27a;
+  --isle-rock: #57321f;
+  --isle-strata: #3a1f1299;
+  --isle-top: #e9bd78;
+  --isle-top-2: #d8a45e;
+  --isle-lip: #8a5a30;
+  --isle-props:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='120'><g fill='%23508a48'><path d='M58 120 L58 42 Q58 30 69 30 Q80 30 80 42 L80 120 Z'/><path d='M58 84 L44 84 Q35 84 35 75 L35 58 Q35 51 41 51 Q47 51 47 58 L47 71 L58 71 Z'/><path d='M80 74 L94 74 Q103 74 103 65 L103 50 Q103 43 97 43 Q91 43 91 50 L91 62 L80 62 Z'/></g><path d='M64 40 L64 116 M74 40 L74 116' stroke='%233f7038' stroke-width='2'/><circle cx='69' cy='29' r='4' fill='%23ff8fb1'/><path d='M136 120 Q142 100 156 100 Q170 100 176 120 Z' fill='%23a0643a'/></svg>")
+      0 100% / 200px 120px repeat-x,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='140'><path d='M420 140 L500 50 L580 140 Z' fill='%23e8bf78'/><path d='M500 50 L580 140 L520 140 Z' fill='%23c9965a'/><path d='M446 140 L500 80 M554 140 L500 80' stroke='%23d9a964' stroke-width='1.5'/><ellipse cx='626' cy='134' rx='36' ry='6' fill='%2356b8c9'/></svg>")
+      0 100% / 700px 140px repeat-x;
+}
+/* 地中海白屋島 · whitewashed houses, blue domes, bougainvillea and a windmill. */
+[data-zone="short-result"] {
+  --zone-plaque: #f4f9fff5;
+  --zone-plaque-edge: #9fc2ef;
+  --zone-ink: #0f2a52;
+  --zone-kicker: #3b5b85;
+  --zone-accent: #2a6fd6;
+  --zone-glow: #8ec5ff;
+  --isle-rock: #334154;
+  --isle-strata: #1f293699;
+  --isle-top: #f1ede1;
+  --isle-top-2: #dfd8c5;
+  --isle-lip: #8a8574;
+  --isle-props:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='120'><rect x='18' y='62' width='58' height='58' fill='%23fbfdff'/><rect x='72' y='42' width='46' height='78' fill='%23eef3f9'/><path d='M72 42 Q95 10 118 42 Z' fill='%232a62c4'/><rect x='93' y='6' width='4' height='12' fill='%23eef3f9'/><rect x='88' y='10' width='14' height='3' fill='%23eef3f9'/><rect x='28' y='76' width='12' height='16' rx='6' fill='%232a62c4'/><rect x='86' y='60' width='16' height='20' rx='8' fill='%232a62c4'/><rect x='50' y='92' width='14' height='28' fill='%232a62c4'/><path d='M14 62 L80 62 L80 57 L14 57 Z' fill='%23dfe7f0'/><rect x='160' y='76' width='74' height='44' fill='%23fbfdff'/><path d='M156 76 L238 76 L238 70 L156 70 Z' fill='%23dfe7f0'/><rect x='172' y='90' width='12' height='14' fill='%232a62c4'/><rect x='206' y='90' width='12' height='14' fill='%232a62c4'/><g fill='%23d86aa8'><circle cx='242' cy='112' r='5'/><circle cx='250' cy='106' r='4'/><circle cx='256' cy='114' r='5'/></g></svg>")
+      0 100% / 280px 120px repeat-x,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='720' height='140'><path d='M492 140 L500 64 L528 64 L536 140 Z' fill='%23fbfdff'/><path d='M496 66 Q514 44 532 66 Z' fill='%23a0522d'/><path d='M514 60 L478 26 M514 60 L552 28 M514 60 L480 96 M514 60 L550 94' stroke='%238a6a4a' stroke-width='3'/><g fill='%23fffaf0'><path d='M478 26 L492 30 L510 52 Z'/><path d='M552 28 L548 42 L520 54 Z'/><path d='M480 96 L476 82 L506 66 Z'/><path d='M550 94 L536 96 L520 68 Z'/></g><circle cx='514' cy='60' r='4' fill='%235a4a44'/><rect x='508' y='112' width='12' height='28' fill='%232a62c4'/></svg>")
+      0 100% / 720px 140px repeat-x;
+}
+/* 月夜古城島 · a castle with lit windows and bare trees. */
+[data-zone="history"] {
+  --zone-plaque: #121936f2;
+  --zone-plaque-edge: #5667a8;
+  --zone-ink: #eef1ff;
+  --zone-kicker: #b4c0ec;
+  --zone-accent: #8fd3e8;
+  --zone-glow: #7fe0d0;
+  --isle-rock: #1d2140;
+  --isle-strata: #0e112699;
+  --isle-top: #3f5d4e;
+  --isle-top-2: #2f4b3e;
+  --isle-lip: #1a2a24;
+  --isle-props: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='440' height='150'><g fill='%232a2f58'><rect x='150' y='70' width='140' height='80'/><rect x='128' y='40' width='42' height='110'/><rect x='270' y='40' width='42' height='110'/><rect x='198' y='30' width='44' height='56'/><path d='M124 42 L149 4 L174 42 Z M266 42 L291 4 L316 42 Z M194 32 L220 2 L246 32 Z'/><path d='M150 70 h12 v-8 h12 v8 h12 v-8 h12 v8 h12 v-8 h12 v8 h12 v-8 h12 v8 h12 v-8 h12 v8 h14 v4 h-140 Z'/></g><g fill='%23ffd27a'><rect x='144' y='58' width='9' height='14' rx='4.5'/><rect x='286' y='58' width='9' height='14' rx='4.5'/><rect x='215' y='44' width='10' height='15' rx='5'/><rect x='176' y='96' width='10' height='14' rx='5'/><rect x='254' y='96' width='10' height='14' rx='5'/></g><path d='M204 150 L204 122 Q220 106 236 122 L236 150 Z' fill='%23141830'/><path d='M40 150 L44 96 M44 110 L28 92 M44 104 L60 84 M44 120 L58 110' stroke='%23232746' stroke-width='4' stroke-linecap='round'/><path d='M390 150 L393 104 M393 116 L380 100 M393 110 L406 96' stroke='%23232746' stroke-width='3' stroke-linecap='round'/></svg>")
+    0 100% / 440px 150px repeat-x;
+  --isle-glow:
+    radial-gradient(18px 20px at 148px 65px, #ffd27acc, #ffd27a00) 0 100% / 440px 150px repeat-x,
+    radial-gradient(18px 20px at 290px 65px, #ffd27acc, #ffd27a00) 0 100% / 440px 150px repeat-x,
+    radial-gradient(18px 20px at 220px 51px, #ffd27acc, #ffd27a00) 0 100% / 440px 150px repeat-x;
+}
+/* The mother island under the lodge. */
+#office-members {
+  --isle-rock: #4a3527;
+  --isle-strata: #2e201699;
+}
+
+/* ------------------------------------------------------------ scenery band */
+.co-zone > .co-section-header .co-zone-scene > :not(.co-isle-crest) {
+  inset: 0 0 calc(var(--crest-h) - 4px) 0;
+}
+.co-isle-props {
+  background: var(--isle-props, none);
+}
+/* The time of day tints the scenery itself, never the sky behind it. */
+.co-isle-shade {
+  background-color: var(--env-shade);
+  mask: var(--isle-props, none);
+  transition: background-color 0.9s ease;
+}
+.co-isle-light {
+  background: var(--isle-glow, none);
+  opacity: clamp(0, calc((var(--env-lamp) - 0.4) * 2.2), 1);
+  transition: opacity 0.9s ease;
+}
+/* The ground the scenery stands on: grass, snow or sand with a soft edge. */
+.co-isle-crest {
+  top: auto;
+  height: var(--crest-h);
+  background:
+    radial-gradient(circle at 12px 11px, var(--isle-top) 0 9px, #0000 9.5px) 0 0 / 24px 22px repeat-x,
+    radial-gradient(circle at 8px 13px, var(--isle-top-2) 0 6px, #0000 6.5px) 9px 2px / 31px 22px repeat-x,
+    linear-gradient(180deg, var(--isle-top) 0 60%, var(--isle-top-2) 60% 82%, var(--isle-lip) 82%) 0 10px / auto 20px
+      repeat-x;
+}
+.co-isle-crest::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--env-shade);
+  mask:
+    radial-gradient(circle at 12px 11px, #000 0 9px, #0000 9.5px) 0 0 / 24px 22px repeat-x,
+    linear-gradient(#000 0 0) 0 10px / auto 20px repeat-x;
+  transition: background-color 0.9s ease;
+}
+html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-isle-crest::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(12px + var(--snow-depth));
+  background:
+    radial-gradient(circle at 12px 11px, #f7faff 0 10px, #0000 10.5px) 0 0 / 24px 22px repeat-x,
+    linear-gradient(#f7faff 0 0) 0 10px / auto var(--snow-depth) repeat-x;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------ signboards */
+.co-isle-name {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 9px;
+  border-radius: 20px;
+  font: 600 11px/1.7 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--zone-kicker);
+  background: color-mix(in oklab, var(--zone-accent) 14%, #0000);
+  border: 1px solid color-mix(in oklab, var(--zone-accent) 40%, #0000);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------- the rock it hangs from */
+.co-isle-under {
+  position: relative;
+  height: clamp(70px, 11cqw, 190px);
+  margin: 0 1.5%;
+  pointer-events: none;
+}
+.co-isle-rock {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(
+    0 0, 100% 0, 98.5% 14%, 95% 20%, 92% 36%, 86.5% 42%, 81% 58%, 73% 64%, 66% 80%, 58% 85%,
+    52% 100%, 45% 90%, 37% 82%, 29% 70%, 21% 60%, 14% 45%, 7% 32%, 2.5% 16%
+  );
+  background:
+    linear-gradient(180deg, #0000 0, #0000 30%, #00000073 100%),
+    repeating-linear-gradient(170deg, #0000 0 15px, var(--isle-strata) 15px 18px),
+    repeating-linear-gradient(12deg, #0000 0 23px, #ffffff0a 23px 25px),
+    var(--isle-rock);
+}
+/* Mist gathers under the tip, in the colour the sky's clouds have now. */
+.co-isle-under::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  right: 26%;
+  bottom: -34px;
+  height: 58px;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--cloud-time, #fff) 62%, #0000), #0000);
+}
+.co-isle-fall {
+  display: var(--isle-fall, none);
+  position: absolute;
+  left: 63%;
+  top: 76%;
+  width: 11px;
+  height: 150px;
+  background:
+    repeating-linear-gradient(180deg, #ffffff80 0 7px, #ffffff00 7px 19px) 0 0 / auto 19px,
+    linear-gradient(90deg, #d6f1ff00, #d6f1ffd9 30% 70%, #d6f1ff00);
+  mask: linear-gradient(180deg, #000 30%, #0000);
+}
+.is-zone-live .co-isle-fall {
+  animation: co-isle-pour 0.9s linear infinite;
+}
+@keyframes co-isle-pour {
+  to {
+    background-position:
+      0 19px,
+      0 0;
+  }
+}
+.co-isle-pebble {
+  position: absolute;
+  width: 34px;
+  height: 26px;
+  clip-path: polygon(22% 0, 78% 6%, 100% 42%, 72% 100%, 30% 94%, 0 48%);
+  background:
+    linear-gradient(180deg, var(--isle-top) 0 22%, #0000 22%),
+    repeating-linear-gradient(170deg, #0000 0 6px, var(--isle-strata) 6px 8px),
+    var(--isle-rock);
+}
+.co-isle-pebble:nth-child(3) {
+  left: 4%;
+  top: 38%;
+}
+.co-isle-pebble:nth-child(4) {
+  right: 5%;
+  top: 58%;
+  width: 22px;
+  height: 17px;
+}
+.co-isle-pebble:nth-child(5) {
+  left: 24%;
+  top: 92%;
+  width: 16px;
+  height: 12px;
+}
+.is-zone-live .co-isle-pebble {
+  animation: co-isle-drift 7s ease-in-out calc(var(--i) * -2.4s) infinite alternate;
+}
+@keyframes co-isle-drift {
+  to {
+    transform: translateY(-9px) rotate(4deg);
+  }
+}
+/* The lodge's own rock hangs under the members' parlour. */
+#office-members {
+  position: relative;
+  margin-bottom: 160px !important;
+}
+.co-isle-under[data-zone="home"] {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  top: 100%;
+  height: 130px;
+  margin: 0;
+}
+body.co-home-collapsed .co-map-header[data-zone="home"] {
+  margin-bottom: 40px;
+}
+
+/* ---------------------------------------------------------------- the checklist */
+.co-todo-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 14px;
+  background: #fffaf6;
+  border: 2px dashed color-mix(in oklab, var(--zone-accent) 70%, #fff);
+}
+.co-todo-add:focus-within {
+  border-style: solid;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--zone-accent) 22%, #0000);
+}
+.co-todo-plus {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font: 700 18px/1 system-ui, sans-serif;
+  color: #fff;
+  background: var(--zone-accent);
+}
+#creator-office .co-todo-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 16px/1.4 system-ui, sans-serif;
+  color: #3f2f21;
+}
+.co-todo-items {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.co-todo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 4px;
+  border-radius: 12px;
+  background: #fffaf2;
+  border: 1px solid #e2cdb8;
+  border-bottom-width: 3px;
+  color: #3f2f21;
+}
+.co-todo.is-dragging {
+  opacity: 0.45;
+}
+.co-todo-check {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+.co-todo-check input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  accent-color: var(--zone-accent);
+  cursor: pointer;
+}
+.co-todo-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.co-todo-title {
+  font: 600 16px/1.45 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+  transition: color 0.2s ease;
+}
+.co-todo-meta,
+.co-todo-notes {
+  font-size: 12px;
+  color: #8a6f5c;
+  overflow-wrap: anywhere;
+}
+.co-todo-notes {
+  white-space: pre-wrap;
+}
+.co-todo.is-done {
+  background: #f1efe6;
+}
+.co-todo.is-done .co-todo-title {
+  color: #8f8272;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklab, var(--zone-accent) 70%, #000);
+}
+.co-todo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+#creator-office .co-todo-actions .co-button {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 12px !important;
+}
+.co-todo .co-grip {
+  font-size: 20px;
+  padding: 4px 6px;
+}
+.co-todo-archive {
+  margin-top: 14px;
+  color: #6f5a47;
+}
+.co-todo-archive p {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0;
+}
+@media (max-width: 600px) {
+  .co-todo {
+    flex-wrap: wrap;
+  }
+  .co-todo-actions {
+    width: 100%;
+    padding-left: 34px;
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .co-isle-fall,
+  .co-isle-pebble {
+    animation: none !important;
+  }
+}
