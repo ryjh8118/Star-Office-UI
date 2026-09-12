@@ -889,15 +889,9 @@
           node("p", date(v.stamp), "co-muted"),
         );
         if (v.contexts.length) card.append(contextFrames(v.contexts));
-        if (v.key === "CHATGPT_WORK")
+        if (v.key === "CHATGPT_WORK" && browserStatus.connected)
           card.append(
-            node(
-              "p",
-              browserStatus.connected
-                ? "Chrome · ChatGPT 已連線"
-                : "ChatGPT 網頁尚未連線",
-              "co-muted co-browser-status",
-            ),
+            node("p", "Chrome · ChatGPT 已連線", "co-muted co-browser-status"),
           );
         membersRoot.append(card);
       }
@@ -914,20 +908,10 @@
     for (const context of contexts) {
       const frame = node("span", undefined, "co-work-context");
       frame.dataset.kind = context.kind;
-      frame.title =
-        (context.kind === "REPO" ? "REPO · " : "") +
-        context.name +
-        " · " +
-        context.action;
+      const layer = window.CreatorContexts.layer(context.kind);
+      frame.title = layer + " · " + context.name + " · " + context.action;
       frame.append(
-        node(
-          "small",
-          context.kind === "REPO"
-            ? "REPO"
-            : context.kind === "PROJECT"
-              ? "企劃"
-              : "工作",
-        ),
+        node("small", layer),
         node("span", context.name, "co-context-name"),
       );
       list.append(frame);

@@ -53,7 +53,19 @@
       const repo =
         item.repo_context ||
         (item.repo ? { id: path(item.repo), name: basename(item.repo) } : null);
-      if (repo) return { kind: "REPO", id: repo.id, name: repo.name };
+      if (repo)
+        return {
+          kind: repo.layer === "STAR_OFFICE" ? "OFFICE" : "REPO",
+          id: repo.id,
+          name: repo.name,
+        };
+      // An unregistered folder is still a real place; name it, never guess a plan.
+      if (basename(item.worktree))
+        return {
+          kind: "FOLDER",
+          id: path(item.worktree),
+          name: basename(item.worktree),
+        };
       return {
         kind: "WORK",
         id: item.native_id || item.job_id,
@@ -92,6 +104,15 @@
     }
     return [...output.values()];
   }
-  scope.CreatorContexts = { collect };
-  if (typeof module !== "undefined") module.exports = { collect };
+  // Every frame says which layer is doing the work.
+  const LAYERS = {
+    PROJECT: "企劃",
+    REPO: "REPO",
+    OFFICE: "STAR OFFICE",
+    FOLDER: "資料夾",
+    WORK: "工作",
+  };
+  const layer = (kind) => LAYERS[kind] || LAYERS.WORK;
+  scope.CreatorContexts = { collect, layer };
+  if (typeof module !== "undefined") module.exports = { collect, layer };
 })(typeof window === "undefined" ? globalThis : window);

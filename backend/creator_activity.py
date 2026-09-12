@@ -28,14 +28,19 @@ def repo_context(workspace):
         pass
     return None
 
+# Codex writes most tool work as custom_tool_call and most thinking as a
+# reasoning item; a thread that only did those once read as idle while working.
+CODEX_TOOLS = {'function_call','function_call_output','custom_tool_call','custom_tool_call_output',
+               'local_shell_call','local_shell_call_output','web_search_call'}
+
 def codex_event(row):
     payload = row.get('payload') or {}
     kind = payload.get('type')
-    work = (row.get('type') == 'response_item' and (kind in {'function_call','function_call_output'} or kind == 'message' and payload.get('role') == 'assistant')) or (row.get('type') == 'event_msg' and kind in {'task_started','task_complete','task_failed','turn_aborted','agent_message','agent_reasoning'})
+    work = (row.get('type') == 'response_item' and (kind in CODEX_TOOLS or kind == 'reasoning' or kind == 'message' and payload.get('role') == 'assistant')) or (row.get('type') == 'event_msg' and kind in {'task_started','task_complete','task_failed','turn_aborted','agent_message','agent_reasoning'})
     if not work:
         return None
     terminal = kind in {'task_complete','task_failed','turn_aborted'} or (kind == 'message' and payload.get('channel') == 'final')
-    return ('工作已完成' if terminal else '正在使用工具' if kind in {'function_call','function_call_output'} else '正在整理回覆' if kind in {'message','agent_message'} else '正在思考'), terminal
+    return ('工作已完成' if terminal else '正在使用工具' if kind in CODEX_TOOLS else '正在整理回覆' if kind in {'message','agent_message'} else '正在思考'), terminal
 
 def claude_event(row):
     message = row.get('message') or {}
@@ -66,7 +71,10 @@ def tail(path):
             f.readline()
         return f.read(LIMIT).splitlines()
 
-def enrich(board, home):
+def enrich(board, home, office_root=Path(__file__).resolve().parents[1]):
+    # The Office's own repository is its own layer. Identity comes from the Git
+    # marker of the checkout serving this request, never from a folder name.
+    office = repo_context(office_root)
     for item in (board.get('native_coverage') or {}).get('observations', []):
         source = SOURCES.get(item.get('source'))
         if not source:
@@ -74,6 +82,8 @@ def enrich(board, home):
         store, classify = source
         context = repo_context(item.get('worktree'))
         if context:
+            if office and context['id'] == office['id']:
+                context['layer'] = 'STAR_OFFICE'
             item['repo_context'] = context
         provenance = item.get('provenance') or {}
         # Windows native databases may return extended-length paths.

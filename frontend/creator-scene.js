@@ -48,7 +48,7 @@
     const role = roles[key];
     if (!view.running)
       return { point: role.rest, place: role.place, mode: "rest" };
-    const repo = view.contexts?.some((c) => c.kind === "REPO");
+    const repo = view.contexts?.some((c) => ["REPO", "OFFICE"].includes(c.kind));
     return {
       point: repo ? [76 + Object.keys(roles).indexOf(key) * 3, 39] : role.work,
       place: repo ? "工程桌" : role.room,
