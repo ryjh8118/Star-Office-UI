@@ -1145,6 +1145,165 @@ body {
   outline: 3px solid #9a7542;
   outline-offset: 4px;
 }
+/* Copying a long-form card to 短影音: the card's name rides the pointer, the
+   short-video island shows it will take the drop, and the copy glows on landing. */
+.co-drag-ghost {
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 10px;
+  max-width: 280px;
+  margin: 14px 0 0 14px;
+  padding: 8px 12px 8px 8px;
+  border: 2px solid #947049;
+  border-radius: 12px;
+  background: #f6e7cbf2;
+  box-shadow: 0 12px 28px #0b141a66;
+  color: #493b2c;
+  pointer-events: none;
+  rotate: -3deg;
+  transition: rotate 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+.co-drag-ghost img {
+  grid-row: span 2;
+  width: 64px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.co-drag-ghost strong {
+  overflow: hidden;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.co-drag-ghost small {
+  grid-column: 2;
+  font-size: 11px;
+  color: #786452;
+}
+.co-drag-ghost:not(:has(img)) strong,
+.co-drag-ghost:not(:has(img)) small {
+  grid-column: 1 / -1;
+}
+.co-drag-ghost.is-copy {
+  margin-top: 64px;
+  rotate: 2deg;
+  border-color: #16ad9e;
+  background: #e6fff9f5;
+}
+.co-drag-ghost.is-copy small {
+  color: #0f6b61;
+  font-weight: 700;
+}
+.co-short-drop {
+  position: fixed;
+  z-index: 9999;
+  right: max(16px, 4vw);
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: min(300px, 40vw);
+  padding: 26px 18px;
+  translate: 0 -50%;
+  border: 3px dashed #7ff0dc;
+  border-radius: 22px;
+  background: #0f3b36e0;
+  box-shadow: 0 16px 40px #04121080;
+  color: #e6fff9;
+  text-align: center;
+  animation: co-short-drop-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: scale 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+.co-short-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #16ad9e;
+  color: #fff;
+  font-size: 22px;
+}
+.co-short-drop strong {
+  font-size: 17px;
+}
+.co-short-drop small {
+  font-size: 13px;
+  color: #b9f3e8;
+}
+.co-short-drop.is-copy-target {
+  scale: 1.06;
+  border-style: solid;
+  background: #16ad9ef0;
+  box-shadow: 0 0 0 6px #7ff0dc55, 0 18px 44px #04121099;
+}
+.co-short-drop.is-copy-target small {
+  color: #fff;
+  font-weight: 700;
+}
+@keyframes co-short-drop-in {
+  from {
+    opacity: 0;
+    translate: 24px -50%;
+  }
+}
+@media (max-width: 900px) {
+  .co-short-drop {
+    right: 50%;
+    top: auto;
+    bottom: 18px;
+    translate: 50% 0;
+    width: min(320px, 86vw);
+    padding: 16px;
+  }
+  @keyframes co-short-drop-in {
+    from {
+      opacity: 0;
+      translate: 50% 24px;
+    }
+  }
+}
+body.co-copying-short #short-videos > .co-zone-fold {
+  outline: 3px dashed #7ff0dccc;
+  outline-offset: -6px;
+  border-radius: 14px;
+  transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+}
+body.co-copying-short #short-videos.is-copy-target > .co-zone-fold {
+  outline: 4px solid #7ff0dc;
+  box-shadow: inset 0 0 0 999px #7ff0dc1f, 0 0 36px #7ff0dc80;
+}
+.co-project.is-just-copied {
+  animation: co-just-copied 2.4s ease-out;
+}
+@keyframes co-just-copied {
+  0% {
+    filter: drop-shadow(0 0 0 #7ff0dc00);
+    translate: 0 -18px;
+  }
+  18% {
+    filter: drop-shadow(0 0 22px #7ff0dc);
+    translate: 0 0;
+  }
+  100% {
+    filter: drop-shadow(0 0 0 #7ff0dc00);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-drag-ghost {
+    transition: none;
+  }
+  .co-project.is-just-copied {
+    animation: none;
+    outline: 3px solid #16ad9e;
+  }
+}
 .co-format-switch {
   margin: 4px 0 18px;
   padding: 12px 14px;
@@ -1211,104 +1370,6 @@ body {
 .co-house-framebox .co-cover-placeholder .co-cover-icon {
   font-size: clamp(20px, 4cqw, 44px);
 }
-.co-resident-track {
-  position: absolute;
-  z-index: 3;
-  left: 19%;
-  right: 13%;
-  bottom: 3.5%;
-  height: clamp(44px, 10cqw, 112px);
-  pointer-events: none;
-}
-.co-resident {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 100%;
-  animation: co-stroll var(--stroll-duration) linear var(--stroll-delay)
-    infinite;
-  will-change: left, transform;
-}
-.co-resident-facing,
-.co-resident-sprite {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-.co-resident-facing {
-  animation: co-face var(--stroll-duration) steps(1, end) var(--stroll-delay)
-    infinite;
-}
-.co-resident-sprite {
-  animation: co-footsteps 0.65s ease-in-out infinite;
-  filter: drop-shadow(0 3px 2px #271a1645);
-}
-.co-resident-sprite img {
-  position: absolute;
-  object-fit: fill;
-  max-width: none;
-  pointer-events: none;
-  user-select: none;
-}
-.co-resident.is-perched {
-  left: 55%;
-  transform: none;
-}
-.co-resident.is-perched,
-.co-resident.is-perched .co-resident-facing,
-.co-resident.is-perched .co-resident-sprite {
-  animation: none;
-}
-.co-house:not(.is-on-screen) .co-resident,
-.co-house:not(.is-on-screen) .co-resident-facing,
-.co-house:not(.is-on-screen) .co-resident-sprite {
-  animation-play-state: paused;
-}
-@keyframes co-stroll {
-  0%,
-  10% {
-    left: 0;
-    transform: translateX(0);
-  }
-  45%,
-  55% {
-    left: 100%;
-    transform: translateX(-100%);
-  }
-  90%,
-  100% {
-    left: 0;
-    transform: translateX(0);
-  }
-}
-@keyframes co-face {
-  0% {
-    transform: scaleX(1);
-  }
-  50% {
-    transform: scaleX(-1);
-  }
-  100% {
-    transform: scaleX(1);
-  }
-}
-@keyframes co-footsteps {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-1.5deg);
-  }
-  50% {
-    transform: translateY(-2px) rotate(1.5deg);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .co-resident,
-  .co-resident-facing,
-  .co-resident-sprite {
-    animation: none !important;
-  }
-}
-
 .co-stage-settings {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1475,20 +1536,10 @@ body {
   justify-content: flex-end;
   margin: 0 0 12px;
 }
-.co-house .co-resident-track {
-  left: 10%;
-  right: 10%;
-  bottom: 4.1cqw;
-  height: clamp(32px, 6.5cqw, 70px);
-}
-
 /* A continuous house and earth foundation, with no floating second panel. */
 .co-house-framebox {
   clip-path: inset(0 0 4.1cqw 0);
   margin-bottom: -4.1cqw;
-}
-.co-house .co-resident-track {
-  bottom: 0;
 }
 .co-project-body {
   position: relative;

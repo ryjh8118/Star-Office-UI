@@ -224,7 +224,7 @@
               body: JSON.stringify(value),
             }),
       });
-      if (["projects", "project-source"].includes(path))
+      if (["projects", "project-source", "project-copy"].includes(path))
         presentation = await json("/api/creator/presentation");
       storeReady = true;
       signature = "";
@@ -1533,6 +1533,9 @@
         "co-source-name",
       ),
     );
+    const copiedFrom = presentation.projects[p.project_id]?.copied_from;
+    if (copiedFrom?.name)
+      body.append(node("p", "複製自長片「" + copiedFrom.name + "」", "co-source-name co-copied-from"));
     const completed = doneSteps;
     const next = nextStep;
     const statusBlock = node("div", undefined, "co-progress");
@@ -1631,8 +1634,16 @@
       "co-button primary",
     );
     done.disabled = !storeReady;
+    actions.append(done);
+    // The same copy the drag makes, for keyboards and for phones where the
+    // short-video island sits below rather than beside.
+    if (!isShort(p) && !projectDone(p)) {
+      const copy = button("⇢ 複製到短影音", () => copyToShort(p), "co-button quiet co-copy-short");
+      copy.title = "在「短影音正在製作」複製一份（素材 → 後製 → 上映），長片保留在原處";
+      copy.disabled = !storeReady;
+      actions.append(copy);
+    }
     actions.append(
-      done,
       button("對應企劃", () => projectSource(p), "co-button quiet"),
       button(isShort(p) ? "流程設定" : "設定階段", () => stageSettings(p), "co-button quiet"),
       button("完整時間軸", () => showTimeline(p), "co-button quiet"),
@@ -1885,40 +1896,15 @@
         spark.style.setProperty("--delay", delay);
         house.append(spark);
       }
-    if (!window.CreatorResidents?.length) return house;
+    if (!window.CreatorYard) return house;
     let hash = 2166136261;
     for (const char of p.project_id)
       hash = Math.imul(hash ^ char.codePointAt(0), 16777619) >>> 0;
-    const character = window.CreatorResidents.find(
+    // The house floats over a sky island where its resident plays.
+    const character = window.CreatorResidents?.find(
       (c) => c.name === presentation.projects[p.project_id]?.resident_character,
     );
-    if (!character) return house;
-    const track = node("div", undefined, "co-resident-track");
-    track.setAttribute("aria-hidden", "true");
-    const resident = node(
-      "div",
-      undefined,
-      "co-resident" + (character.fixed ? " is-perched" : ""),
-    );
-    resident.dataset.character = character.name;
-    resident.dataset.motion = character.fixed ? "fixed" : "roaming";
-    const [x, y, w, h] = character.bounds;
-    resident.style.aspectRatio = `${w} / ${h}`;
-    resident.style.setProperty("--stroll-duration", `${24 + (hash % 17)}s`);
-    resident.style.setProperty("--stroll-delay", `${-(hash % 19)}s`);
-    const facing = node("div", undefined, "co-resident-facing");
-    const sprite = node("div", undefined, "co-resident-sprite");
-    const img = node("img");
-    img.src = "/static/renguin-characters/residents/" + character.file;
-    img.alt = "";
-    img.loading = "lazy";
-    img.draggable = false;
-    img.style.cssText = `width:${(character.size[0] / w) * 100}%;height:${(character.size[1] / h) * 100}%;left:${(-x / w) * 100}%;top:${(-y / h) * 100}%`;
-    sprite.append(img);
-    facing.append(sprite);
-    resident.append(facing);
-    track.append(resident);
-    house.append(track);
+    house.append(window.CreatorYard.build({ character, seed: hash }));
     return house;
   }
   function suggestions() {
@@ -2297,12 +2283,39 @@
         ?.focus({ preventScroll: true });
     }
   }
+  // A long-form card dropped on 短影音正在製作 is copied there; the original stays put.
+  async function copyToShort(p) {
+    if (!(await save("project-copy", { project_id: p.project_id, format: "SHORT" }))) return;
+    const copy = Object.entries(presentation.projects).find(
+      ([, meta]) => meta.copied_from?.project_id === p.project_id && !meta.hidden,
+    );
+    toast("已複製「" + projectName(p) + "」到短影音 · 長片仍保留在原處");
+    const card = copy && root.querySelector(`[data-project-id="${CSS.escape(copy[0])}"]`);
+    if (!card) return;
+    card.classList.remove("is-just-copied");
+    void card.offsetWidth;
+    card.classList.add("is-just-copied");
+    setTimeout(() => card.classList.remove("is-just-copied"), 2600);
+  }
   function projectSorting(card, p, index, shelf = "active") {
     const bar = node("div", undefined, "co-project-sort");
     const ids = shelves[shelf].ids;
-    let pin = null;
+    const copies = shelf === "active";
+    const handle = button(
+      copies ? "⠿ 拖曳" : "⠿ 拖曳排序",
+      () => {},
+      "co-button quiet co-project-drag",
+    );
+    handle.title = copies
+      ? "拖曳排序；拖到右邊「短影音正在製作」會複製一份過去，長片保留在原處"
+      : "拖曳排序，或使用上、下方向鍵移動";
+    handle.setAttribute("aria-label", (copies ? "拖曳排序或複製到短影音 " : "拖曳排序 ") + projectName(p));
+    handle.draggable = false;
+    handle.disabled = !storeReady;
+    let pin = null,
+      pinned = false;
     if (shelf === "active") {
-      const pinned = !!pinnedAt(p);
+      pinned = !!pinnedAt(p);
       card.dataset.pinned = String(pinned);
       pin = button(
         pinned ? "取消置頂" : "📌 置頂",
@@ -2315,26 +2328,18 @@
         ? "取消置頂，回到一般排序"
         : "置頂到長片正在製作最前面（" + PIN_LIMIT_TEXT + "）";
       pin.disabled = !storeReady;
-      if (pinned) {
-        const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
-        badge.title = "置頂企劃依置頂的先後固定排在最前面";
-        bar.append(badge, node("small", "固定在最前面"), pin);
-        card.querySelector(".co-project-body").prepend(bar);
-        return;
-      }
     } else delete card.dataset.pinned;
-    const handle = button(
-      "⠿ 拖曳排序",
-      () => {},
-      "co-button quiet co-project-drag",
-    );
-    handle.title = "拖曳排序，或使用上、下方向鍵移動";
-    handle.setAttribute("aria-label", "拖曳排序 " + projectName(p));
-    handle.draggable = false;
-    handle.disabled = !storeReady;
+    const shortZone = () => document.getElementById(shelves.short.section);
+    let ghost = null,
+      pad = null;
     const clearDrag = () => {
       dragging = false;
       projectDragId = null;
+      ghost?.remove();
+      pad?.remove();
+      ghost = pad = null;
+      document.body.classList.remove("co-copying-short");
+      shortZone()?.classList.remove("is-copy-target");
       root
         .querySelectorAll(".co-project.is-dragging,.co-project.is-drop-target")
         .forEach((e) => e.classList.remove("is-dragging", "is-drop-target"));
@@ -2349,26 +2354,63 @@
       );
     });
     // Pointer dragging works with mouse, touch and pen; other card controls remain independent.
-    let touchTarget = null;
+    let touchTarget = null,
+      overShort = false;
     handle.addEventListener("pointerdown", (e) => {
       if (!storeReady || e.button !== 0) return;
       e.preventDefault();
       projectDragId = p.project_id;
       dragging = true;
       touchTarget = null;
+      overShort = false;
       handle.setPointerCapture(e.pointerId);
       card.classList.add("is-dragging");
+      if (!copies) return;
+      // The card's name travels with the pointer, so a drag across the sky to the
+      // short-video island is visibly carrying something.
+      ghost = node("div", undefined, "co-drag-ghost");
+      ghost.setAttribute("aria-hidden", "true");
+      const cover = presentation.projects[p.project_id]?.cover?.url;
+      if (cover) {
+        const img = node("img");
+        img.src = cover;
+        img.alt = "";
+        ghost.append(img);
+      }
+      ghost.append(node("strong", projectName(p)), node("small", "拖到右邊「短影音正在製作」複製一份"));
+      ghost.style.translate = `${e.clientX}px ${e.clientY}px`;
+      // The short-video island is far shorter than the long-form column, so from
+      // most cards it is out of sight; a pad in view always takes the drop.
+      pad = node("div", undefined, "co-short-drop");
+      pad.setAttribute("aria-hidden", "true");
+      pad.append(node("span", "▮", "co-short-drop-icon"), node("strong", "短影音正在製作"), node("small", "拖到這裡 · 複製一份"));
+      document.body.append(pad, ghost);
+      document.body.classList.add("co-copying-short");
     });
     handle.addEventListener("pointermove", (e) => {
       if (projectDragId !== p.project_id) return;
       e.preventDefault();
-      if (e.clientY < 65) window.scrollBy(0, -24);
-      else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
       const hovered = document.elementFromPoint(e.clientX, e.clientY);
+      // A card is ordered on its own shelf; a long-form card may also be copied
+      // onto the short-video island, anywhere on it, or onto the pad.
+      overShort = copies && !!hovered?.closest(`#${shelves.short.section}, .co-short-drop`);
+      // Holding still on the pad must not scroll the page out from under it.
+      if (!hovered?.closest(".co-short-drop")) {
+        if (e.clientY < 65) window.scrollBy(0, -24);
+        else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
+      }
       if (shelf === "active" && hovered?.closest(".co-other-projects > summary"))
         otherProjectsToggle.open = true;
-      // A card only lands on its own shelf.
-      const target = hovered?.closest(`#${shelves[shelf].section} .co-project`);
+      if (ghost) ghost.style.translate = `${e.clientX}px ${e.clientY}px`;
+      shortZone()?.classList.toggle("is-copy-target", overShort);
+      pad?.classList.toggle("is-copy-target", overShort);
+      if (pad) pad.querySelector("small").textContent = overShort ? "放開 · 複製一份，長片保留" : "拖到這裡 · 複製一份";
+      ghost?.classList.toggle("is-copy", overShort);
+      if (ghost)
+        ghost.querySelector("small").textContent = overShort
+          ? "放開 → 複製到短影音，長片保留"
+          : "拖到右邊「短影音正在製作」複製一份";
+      const target = overShort ? null : hovered?.closest(`#${shelves[shelf].section} .co-project`);
       touchTarget = target?.dataset.projectId || null;
       root
         .querySelectorAll(".is-drop-target")
@@ -2377,11 +2419,20 @@
     });
     handle.addEventListener("pointerup", async (e) => {
       if (projectDragId !== p.project_id) return;
-      const target = touchTarget;
+      const target = touchTarget,
+        copy = overShort;
       clearDrag();
-      await moveProject(p.project_id, target, shelf);
+      if (copy) await copyToShort(p);
+      else await moveProject(p.project_id, target, shelf);
     });
     handle.addEventListener("pointercancel", clearDrag);
+    if (pinned) {
+      const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
+      badge.title = "置頂企劃依置頂的先後固定排在最前面";
+      bar.append(badge, handle, node("small", "固定在最前面"), pin);
+      card.querySelector(".co-project-body").prepend(bar);
+      return;
+    }
     if (shelf !== "active") {
       const finished = shelves[shelf].scope === "completed" && validTime(stampDone(p));
       bar.append(
@@ -2425,6 +2476,11 @@
           // The retained card must carry the fresh card's live and pinned state.
           Object.assign(previous.dataset, fresh.dataset);
           if (!previous.querySelector(".co-video-player") || playingLinks.get(id) !== presentation.projects[id]?.link?.url) {
+            // The same resident keeps playing on its island rather than starting over.
+            const island = previous.querySelector(".co-yard"),
+              rebuilt = fresh.querySelector(".co-yard");
+            if (island && rebuilt && island.dataset.resident === rebuilt.dataset.resident)
+              rebuilt.replaceWith(island);
             previous.querySelector(".co-house").replaceWith(fresh.querySelector(".co-house"));
             playingLinks.delete(id);
           }
@@ -2567,7 +2623,7 @@
           node(
             "p",
             payload || loaded
-              ? "還沒有短影音。按「＋ 新增短影音」開始，或在長片的「設定階段」改為短影音。"
+              ? "還沒有短影音。按「＋ 新增短影音」開始，或把左邊長片的「⠿ 拖曳」拉到這裡複製一份。"
               : "正在讀取專案資料…",
             "co-empty",
           ),
@@ -2814,7 +2870,7 @@
     [shortRoot, shortTools] = section(
       "short-videos",
       "短影音正在製作",
-      "素材 → 後製 → 上映 · 拖曳調整順序",
+      "素材 → 後製 → 上映 · 左邊的長片可直接拖進來複製",
       "co-grid co-short-projects",
       "short",
       "▮",

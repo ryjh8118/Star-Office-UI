@@ -134,6 +134,48 @@ class WorkflowTests(unittest.TestCase):
         for bad in [{'format':'SHORT','revision':revision-1},{'format':'VERTICAL','revision':revision},{'format':None,'revision':revision}]:
             self.assertIn(self.client.post('/api/creator/project-format',json={'project_id':'TEST-1',**bad}).status_code,[400,409])
         self.assertEqual(self.get()['revision'],revision)
+    def copy_short(self, pid='TEST-1', fmt='SHORT'):
+        return self.client.post('/api/creator/project-copy', json={'project_id':pid,'format':fmt})
+    def test_copying_a_long_video_into_shorts_keeps_the_original(self):
+        self.project['project_type']='VIDEO_PROJECT'
+        self.source('AI_ROUGH_CUT')
+        self.get()
+        self.client.post('/api/creator/project',json={'project_id':'TEST-1','display_name':'機場REEL'})
+        self.client.post('/api/creator/project-link',json={'project_id':'TEST-1','url':'https://youtu.be/dQw4w9WgXcQ','revision':self.get()['revision']})
+        before = copy.deepcopy(self.get()['projects']['TEST-1'])
+        data = self.copy_short().json
+        pid = next(iter(data['local_projects']))
+        twin = self.get()['projects'][pid]
+        # The long card is untouched and stays on the long chain.
+        original = self.get()['projects']['TEST-1']
+        self.assertNotIn('format', original)
+        self.assertEqual(self.done(original), self.done(before))
+        self.assertEqual(original['link'], before['link'])
+        # The copy is its own short card, answering to the same source.
+        self.assertEqual(twin['format'],'SHORT')
+        self.assertEqual(twin['display_name'],'機場REEL')
+        self.assertEqual(twin['source_project_id'],'TEST-1')
+        self.assertEqual(twin['copied_from']['project_id'],'TEST-1')
+        self.assertEqual(twin['link'], before['link'])
+        self.assertEqual(twin['history'][-1]['type'],'PROJECT_COPIED')
+        self.assertEqual(cw.enabled_ids(twin),['INDEX','AI_POST','PUBLISH'])
+        self.assertEqual(self.done(twin),['INDEX'])  # rough cut done: 素材 carries, 後製 does not
+        self.assertEqual(self.get()['project_order'][0], pid)
+        # New evidence reaches the copy too; a second drop does not make a duplicate.
+        self.source('FINAL_QC','2026-09-08T10:00:00Z','e2')
+        self.assertEqual(self.done(self.get()['projects'][pid]),['INDEX','AI_POST'])
+        refused = self.copy_short()
+        self.assertEqual(refused.status_code,409)
+        self.assertEqual(refused.json['code'],'ALREADY_COPIED')
+        self.assertEqual(len(self.get()['local_projects']),1)
+        # Removing the copy lets it be copied again; shorts, removed cards and bad input are refused.
+        self.client.post('/api/creator/project',json={'project_id':pid,'hidden':True,'confirmed':True})
+        again = next(k for k in self.copy_short().json['local_projects'] if k != pid)
+        self.assertEqual(self.copy_short(again).status_code,409)
+        self.assertEqual(self.copy_short(fmt='LONG').status_code,400)
+        self.assertEqual(self.copy_short('Original').status_code,400)
+        self.client.post('/api/creator/project',json={'project_id':'TEST-1','hidden':True,'confirmed':True})
+        self.assertEqual(self.copy_short().status_code,409)
     def test_completed_shelf_order_is_kept_apart_from_the_working_order(self):
         self.get()
         self.client.post('/api/creator/project-order',json={'order':['TEST-1']})

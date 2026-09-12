@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import sqlite3
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime, timezone
 from uuid import uuid4
 from urllib.parse import urlsplit
@@ -477,6 +478,57 @@ def project_format():
         text = '你將專案改為短影音（素材 → 後製 → 上映）' if fmt == 'SHORT' else '你將專案改為長影片流程'
         meta.setdefault('history', []).append({'type':'PROJECT_FORMAT','timestamp':stamp,'source':'USER','text':text,'format':fmt})
         release_pins(data)
+    return change(update)
+
+COPY_FIELDS = ('cover', 'link', 'workflow', 'workflow_evidence', 'workflow_user_at')
+
+@bp.post('/api/creator/project-copy')
+def project_copy():
+    """Copy a long-form card into 短影音: the original stays where it is.
+
+    The copy is an Office card of its own on the short chain. It answers to the
+    same source as the original, so evidence that arrives later reaches both, and
+    it starts from the progress the original already has.
+    """
+    from creator_workflow import IDS, enabled_ids, is_short, set_chain
+    value = body()
+    pid = project_id(value.get('project_id'))
+    if value.get('format') != 'SHORT':
+        abort(400)
+    def update(data):
+        meta = data['projects'].setdefault(pid, {})
+        if meta.get('hidden') or is_short(meta):
+            abort(409)
+        from renguin_boundary import projects
+        sources = (projects(current_app.static_folder).get('projection') or {}).get('projects', [])
+        local = data.setdefault('local_projects', {})
+        card = local.get(pid) or next((p for p in sources if p['project_id'] == pid), {})
+        name = meta.get('display_name') or card.get('project_name') or pid
+        if any((m.get('copied_from') or {}).get('project_id') == pid and not m.get('hidden')
+               for m in data['projects'].values()):
+            abort(make_response(jsonify(error=f'「{name}」已經複製到短影音了', code='ALREADY_COPIED'), 409))
+        sid = meta.get('source_project_id', None if pid in local else pid)
+        if not any(p['project_id'] == sid and p.get('classification') == 'REGISTERED'
+                   and p.get('project_type') in {'YOUTUBE', 'VIDEO_PROJECT'} for p in sources):
+            sid = None
+        copy = 'OFFICE-' + uuid4().hex
+        stamp = now()
+        local[copy] = {'project_id':copy,'project_name':name,'classification':'REGISTERED','project_type':'VIDEO_PROJECT'}
+        twin = {k: deepcopy(meta[k]) for k in COPY_FIELDS if meta.get(k) is not None}
+        twin.update(display_name=name, source_project_id=sid, format='SHORT',
+                    copied_from={'project_id': pid, 'name': name, 'timestamp': stamp},
+                    history=[{'type':'PROJECT_COPIED','timestamp':stamp,'source':'USER',
+                              'text':f'你從長片「{name}」複製成短影音（素材 → 後製 → 上映）','copied_from':pid}])
+        # Completing a later step fills the ones before it, so the short chain keeps
+        # every step up to the furthest one the original already finished.
+        saved = twin.get('workflow') or {}
+        last = max((IDS.index(s) for s in IDS if saved.get(s, {}).get('status') == 'COMPLETED'), default=-1)
+        set_chain(twin, sum(IDS.index(s) <= last for s in enabled_ids(twin)), stamp, 'USER', 'USER')
+        data['projects'][copy] = twin
+        from creator_residents import assign
+        from creator_projects import resolve
+        assign(resolve(sources, data), data['projects'])
+        data['project_order'] = [copy, *data.get('project_order', [])]
     return change(update)
 
 @bp.post('/api/creator/pin')
