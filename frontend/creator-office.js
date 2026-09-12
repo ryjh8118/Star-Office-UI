@@ -1652,6 +1652,11 @@
     );
     body.append(actions);
     card.append(body);
+    const yard = projectYard(p);
+    if (yard) {
+      card.classList.add("has-yard");
+      card.append(yard);
+    }
     return card;
   }
   function projectSource(p, format = "LONG") {
@@ -1896,16 +1901,19 @@
         spark.style.setProperty("--delay", delay);
         house.append(spark);
       }
-    if (!window.CreatorYard) return house;
+    return house;
+  }
+  // The whole house, roof to foundation, stands on a sky island of its own; its
+  // resident plays on the grass at its foot.
+  function projectYard(p) {
+    if (!window.CreatorYard) return null;
     let hash = 2166136261;
     for (const char of p.project_id)
       hash = Math.imul(hash ^ char.codePointAt(0), 16777619) >>> 0;
-    // The house floats over a sky island where its resident plays.
     const character = window.CreatorResidents?.find(
       (c) => c.name === presentation.projects[p.project_id]?.resident_character,
     );
-    house.append(window.CreatorYard.build({ character, seed: hash }));
-    return house;
+    return window.CreatorYard.build({ character, seed: hash });
   }
   function suggestions() {
     const items = [];
@@ -2476,16 +2484,19 @@
           // The retained card must carry the fresh card's live and pinned state.
           Object.assign(previous.dataset, fresh.dataset);
           if (!previous.querySelector(".co-video-player") || playingLinks.get(id) !== presentation.projects[id]?.link?.url) {
-            // The same resident keeps playing on its island rather than starting over.
-            const island = previous.querySelector(".co-yard"),
-              rebuilt = fresh.querySelector(".co-yard");
-            if (island && rebuilt && island.dataset.resident === rebuilt.dataset.resident)
-              rebuilt.replaceWith(island);
             previous.querySelector(".co-house").replaceWith(fresh.querySelector(".co-house"));
             playingLinks.delete(id);
           }
           // Keep the card and any playing iframe connected during live updates.
           previous.querySelector(".co-project-body").replaceWith(fresh.querySelector(".co-project-body"));
+          // The same resident keeps playing on its island rather than starting over.
+          const island = previous.querySelector(":scope > .co-yard"),
+            rebuilt = fresh.querySelector(":scope > .co-yard");
+          if (!island || !rebuilt || island.dataset.resident !== rebuilt.dataset.resident) {
+            island?.remove();
+            if (rebuilt) previous.append(rebuilt);
+          }
+          previous.classList.toggle("has-yard", !!previous.querySelector(":scope > .co-yard"));
           return previous;
         }
         playingLinks.delete(id);
@@ -2652,7 +2663,7 @@
       }
       houseObserver.disconnect();
       root
-        .querySelectorAll(".co-house")
+        .querySelectorAll(".co-house, .co-yard")
         .forEach((house) => houseObserver.observe(house));
       renderInbox();
     }
