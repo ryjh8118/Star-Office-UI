@@ -101,6 +101,20 @@
         },
         activity.action || "正在工作",
       );
+      // A tool/process reference is its own frame, never folded into the
+      // 企劃／REPO identity above — using BIONIC's pipeline is not BIONIC
+      // working, and never implies one agent controls another.
+      if (activity.process) {
+        const key = observation.agent + ":PROCESS:" + activity.process.ref;
+        if (!output.has(key))
+          output.set(key, {
+            kind: "PROCESS",
+            id: activity.process.ref,
+            name: activity.process.label,
+            agent: observation.agent,
+            action: activity.process.label,
+          });
+      }
     }
     return [...output.values()];
   }
@@ -110,6 +124,7 @@
     REPO: "REPO",
     OFFICE: "STAR OFFICE",
     FOLDER: "資料夾",
+    PROCESS: "流程",
     WORK: "工作",
   };
   const layer = (kind) => LAYERS[kind] || LAYERS.WORK;

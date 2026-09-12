@@ -169,3 +169,42 @@ test("every working layer is named: 企劃, REPO and STAR OFFICE side by side", 
   assert.equal(layer("WORK"), "工作");
   assert.equal(layer(undefined), "工作");
 });
+test("using another agent's process is its own frame, never merged into or replacing the project/repo identity", () => {
+  const result = run({
+    observations: [
+      observation("a", {
+        agent: "ASTRA",
+        visual_activity: {
+          state: "WORKING",
+          timestamp: 100,
+          expires_after_seconds: 90,
+          process: { ref: "BIONIC", label: "使用 BIONIC 粗剪流程" },
+        },
+      }),
+    ],
+  });
+  assert.deepEqual(
+    result.map((x) => [x.kind, layer(x.kind), x.name]),
+    [
+      ["REPO", "REPO", "Star_Office_UI"],
+      ["PROCESS", "流程", "使用 BIONIC 粗剪流程"],
+    ],
+  );
+  // The process frame belongs to the agent that used it, not to BIONIC.
+  assert.equal(result[1].agent, "ASTRA");
+});
+test("a process reference without live work never surfaces a frame", () => {
+  const result = run({
+    observations: [
+      observation("a", {
+        visual_activity: {
+          state: "RECENT",
+          timestamp: 100,
+          expires_after_seconds: 90,
+          process: { ref: "BIONIC", label: "使用 BIONIC 粗剪流程" },
+        },
+      }),
+    ],
+  });
+  assert.equal(result.length, 0);
+});

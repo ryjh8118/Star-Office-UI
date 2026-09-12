@@ -76,6 +76,26 @@ class CreatorActivityTests(unittest.TestCase):
                          {'type':'event_msg','payload':{'type':'task_complete'},'timestamp':stamp(5)},
                          {'type':'event_msg','payload':{'type':'token_count'},'timestamp':stamp(4)}])
         self.assertEqual(item['visual_activity']['state'],'RECENT')
+    def test_astra_using_bionic_pipeline_is_a_process_not_control(self):
+        # ASTRA runs BIONIC's own rough-cut script as a tool. That is process
+        # use, never proof ASTRA controls BIONIC or that BIONIC is executing.
+        rows=[{'type':'response_item','payload':{'type':'custom_tool_call','name':'exec',
+              'input':'Get-Content 11_Workflow_Governance/03_Runtime/bionic_premiere_lazy_host.py'},'timestamp':stamp(5)}]
+        item=self.codex(rows)
+        self.assertEqual(item['visual_activity']['state'],'WORKING')
+        self.assertEqual(item['visual_activity']['process'],{'ref':'BIONIC','label':'使用 BIONIC 粗剪流程'})
+    def test_generic_tool_use_carries_no_bionic_process(self):
+        rows=[{'type':'response_item','payload':{'type':'custom_tool_call','name':'exec','input':'rg -n foo bar'},'timestamp':stamp(5)}]
+        item=self.codex(rows)
+        self.assertEqual(item['visual_activity']['state'],'WORKING')
+        self.assertNotIn('process',item['visual_activity'])
+    def test_stale_bionic_reference_does_not_relabel_current_unrelated_work(self):
+        # The BIONIC-naming call is old; the still-active work is something else.
+        rows=[{'type':'response_item','payload':{'type':'custom_tool_call','input':'bionic_premiere_lazy_host.py'},'timestamp':stamp(200)},
+              {'type':'response_item','payload':{'type':'custom_tool_call','input':'apply_patch other_file.py'},'timestamp':stamp(4)}]
+        item=self.codex(rows)
+        self.assertEqual(item['visual_activity']['state'],'WORKING')
+        self.assertNotIn('process',item['visual_activity'])
     def repo(self,name):
         root=self.home/name
         (root/'.git').mkdir(parents=True)

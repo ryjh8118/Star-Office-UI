@@ -1,9 +1,24 @@
 """Bounded visual work signals from real native events; never executor leases."""
 import json
+import re
 from pathlib import Path
 from datetime import datetime, timezone
 
 LIMIT = 1024*1024
+
+# Naming BIONIC's own pipeline files is real tool use. It is never evidence
+# that this agent controls the BIONIC agent, or that BIONIC itself is running;
+# BIONIC's own presence is read only from its own native store, never guessed
+# from another agent's command text.
+BIONIC_PROCESS_MARKERS = re.compile(r'(?i)bionic_premiere_lazy_host|BIONIC_ROUGH_CUT|bionic_activity_bridge')
+
+def bionic_process_reference(row):
+    payload = row.get('payload') or {}
+    try:
+        blob = json.dumps(payload, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return False
+    return bool(BIONIC_PROCESS_MARKERS.search(blob))
 
 def repo_context(workspace):
     # A real Git marker identifies repository work. Never infer a project
@@ -99,22 +114,32 @@ def enrich(board, home, office_root=Path(__file__).resolve().parents[1]):
             continue
         now = datetime.now(timezone.utc)
         latest = None
+        bionic_ref_stamp = None
         for line in rows:
             try:
                 row = json.loads(line)
-                event = classify(row)
-                if not event:
-                    continue
                 stamp = row.get('timestamp')
                 parsed = datetime.fromisoformat(stamp.replace('Z','+00:00'))
-                if parsed.tzinfo and parsed <= now:
-                    latest = {'timestamp':stamp,'type':'RECENT_WORK_EVENT','action':event[0],'terminal':event[1]}
+                if not (parsed.tzinfo and parsed <= now):
+                    continue
             except (ValueError,TypeError,AttributeError):
                 continue
+            if bionic_process_reference(row):
+                bionic_ref_stamp = stamp
+            event = classify(row)
+            if event:
+                latest = {'timestamp':stamp,'type':'RECENT_WORK_EVENT','action':event[0],'terminal':event[1]}
         if latest:
             item['last_work_event'] = latest
             elapsed = (now-datetime.fromisoformat(latest['timestamp'].replace('Z','+00:00'))).total_seconds()
-            item['visual_activity'] = {'state':'WORKING' if not latest['terminal'] and 0 <= elapsed < 90 else 'RECENT',
+            activity = {'state':'WORKING' if not latest['terminal'] and 0 <= elapsed < 90 else 'RECENT',
                 'timestamp':latest['timestamp'],'expires_after_seconds':90,'action':latest['action'],
                 'source':'NATIVE_WORK_EVENT','executor_claim':False}
+            if bionic_ref_stamp and activity['state'] == 'WORKING':
+                ref_elapsed = (now-datetime.fromisoformat(bionic_ref_stamp.replace('Z','+00:00'))).total_seconds()
+                if 0 <= ref_elapsed < 90:
+                    # Presentation only: this agent is using BIONIC's rough-cut
+                    # pipeline as a tool, not delegating to or controlling BIONIC.
+                    activity['process'] = {'ref':'BIONIC','label':'使用 BIONIC 粗剪流程'}
+            item['visual_activity'] = activity
     return board
