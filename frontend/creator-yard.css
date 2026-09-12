@@ -1,0 +1,866 @@
+/* The sky island under each house, where its resident plays. Sizes are in cqw of
+   the house, so the island scales with the card. Decorative only. */
+.co-yard {
+  --yard-ground: 18cqw; /* where feet meet the grass */
+  --yard-grass: #86c46f;
+  --yard-grass-dark: #4f8f48;
+  --yard-grass-light: #bfe7a0;
+  --yard-soil: #8a6242;
+  --yard-rock: #6d5140;
+  --yard-rock-dark: #3f2f27;
+  --yard-canopy: #3f9a5a;
+  --yard-canopy-light: #76c985;
+  --yard-trunk: #7a5234;
+  --yard-flower: #ff8fb8;
+  --yard-flower-eye: #ffe27a;
+  --yard-snow: transparent;
+  position: relative;
+  height: 30cqw;
+  margin-top: 1.2cqw;
+  overflow-x: clip;
+  pointer-events: none;
+}
+[data-zone="work"] .co-yard {
+  --yard-grass: #8fc19b;
+  --yard-grass-dark: #5b8f6f;
+  --yard-grass-light: #d3ebd8;
+  --yard-canopy: #2f6f55;
+  --yard-canopy-light: #4f9474;
+  --yard-flower: #9fd3ff;
+  --yard-flower-eye: #ffffff;
+  --yard-snow: #f4fbff;
+}
+[data-zone="short"] .co-yard {
+  --yard-grass: #6fd06a;
+  --yard-grass-dark: #37934a;
+  --yard-grass-light: #b3f294;
+  --yard-canopy: #1f9a62;
+  --yard-canopy-light: #52c984;
+  --yard-flower: #ff5f8f;
+  --yard-flower-eye: #ffd23f;
+}
+[data-zone="result"] .co-yard {
+  --yard-grass: #e2c77f;
+  --yard-grass-dark: #b48f4c;
+  --yard-grass-light: #f6e6b0;
+  --yard-soil: #b07a4a;
+  --yard-rock: #9a6a45;
+  --yard-rock-dark: #5e3f2a;
+  --yard-canopy: #4f9a52;
+  --yard-canopy-light: #86c872;
+  --yard-flower: #ff7aa8;
+  --yard-flower-eye: #fff3c4;
+}
+[data-zone="short-result"] .co-yard {
+  --yard-grass: #a4d48b;
+  --yard-grass-dark: #6aa35c;
+  --yard-grass-light: #daf2bd;
+  --yard-canopy: #71904a;
+  --yard-canopy-light: #a5bf6a;
+  --yard-flower: #a78bfa;
+  --yard-flower-eye: #fff6a8;
+}
+
+/* ------------------------------------------------------------------ the rock */
+.co-yard-isle {
+  position: absolute;
+  inset: 0;
+  animation: co-yard-bob 6s ease-in-out var(--bob-delay, 0s) infinite;
+}
+.co-yard-grass {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 14.6cqw;
+  height: 7.6cqw;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 18% 22% at 30% 40%, var(--yard-snow) 60%, transparent 64%),
+    radial-gradient(ellipse 14% 18% at 70% 55%, var(--yard-snow) 60%, transparent 64%),
+    radial-gradient(ellipse at 50% 32%, var(--yard-grass-light), var(--yard-grass) 52%, var(--yard-grass-dark) 100%);
+  box-shadow:
+    inset 0 -0.7cqw 0 var(--yard-grass-dark),
+    0 1.3cqw 0 var(--yard-soil);
+}
+/* Tufts spilling over the lip of the grass. */
+.co-yard-grass::after {
+  content: "";
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: -1.1cqw;
+  height: 1.6cqw;
+  background: radial-gradient(circle at 50% 0, var(--yard-grass-dark) 0 0.55cqw, transparent 0.6cqw) 0 0 / 2.3cqw 1.6cqw repeat-x;
+}
+.co-yard-rock {
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 19.4cqw;
+  height: 10.4cqw;
+  background:
+    repeating-linear-gradient(174deg, transparent 0 1.5cqw, #0000001c 1.5cqw 1.8cqw),
+    linear-gradient(180deg, var(--yard-soil) 0 16%, var(--yard-rock) 34%, var(--yard-rock-dark) 100%);
+  clip-path: polygon(0 0, 100% 0, 95% 20%, 86% 36%, 76% 58%, 64% 72%, 55% 100%, 45% 80%, 34% 68%, 22% 46%, 9% 28%);
+}
+/* Roots dangling from the underside. */
+.co-yard-rock::after {
+  content: "";
+  position: absolute;
+  inset: 12% 18% 0;
+  background:
+    linear-gradient(var(--yard-grass-dark), var(--yard-grass-dark)) 18% 0 / 0.3cqw 46% no-repeat,
+    linear-gradient(var(--yard-grass-dark), var(--yard-grass-dark)) 71% 0 / 0.3cqw 58% no-repeat,
+    linear-gradient(var(--yard-trunk), var(--yard-trunk)) 44% 0 / 0.25cqw 72% no-repeat;
+  opacity: 0.8;
+}
+.co-yard-pebble {
+  position: absolute;
+  width: calc(2.6cqw - var(--i) * 0.5cqw);
+  aspect-ratio: 4 / 3;
+  border-radius: 45% 45% 55% 55% / 30% 30% 70% 70%;
+  background: linear-gradient(var(--yard-grass) 0 32%, var(--yard-rock) 34%, var(--yard-rock-dark));
+  animation: co-yard-pebble 4.6s ease-in-out calc(var(--i) * -1.7s) infinite;
+}
+.co-yard-cloud {
+  position: absolute;
+  left: 0;
+  top: calc(7cqw + var(--i) * 8cqw);
+  width: 15cqw;
+  height: 4.4cqw;
+  background:
+    radial-gradient(circle at 30% 65%, #fff 0 1.9cqw, transparent 2cqw),
+    radial-gradient(circle at 55% 45%, #fff 0 2.4cqw, transparent 2.5cqw),
+    radial-gradient(circle at 76% 68%, #fff 0 1.6cqw, transparent 1.7cqw);
+  opacity: calc(0.5 - var(--i) * 0.18);
+  translate: -20cqw 0;
+  animation: co-yard-drift calc(46s + var(--i) * 21s) linear calc(var(--i) * -27s) infinite;
+}
+
+/* ------------------------------------------------------------ tree and swing */
+.co-yard-tree {
+  position: absolute;
+  left: var(--tree-x);
+  top: 0;
+  width: 16cqw;
+  height: 18.6cqw;
+  translate: -50% 0;
+}
+.co-yard-trunk {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 1.9cqw;
+  height: 12cqw;
+  translate: -50% 0;
+  border-radius: 0.8cqw 0.8cqw 0.3cqw 0.3cqw;
+  background: linear-gradient(90deg, var(--yard-trunk), #a9774d 45%, var(--yard-trunk));
+}
+.co-yard-branch {
+  position: absolute;
+  left: 50%;
+  top: 3.6cqw;
+  width: 10.6cqw;
+  height: 0.9cqw;
+  border-radius: 1cqw;
+  background: var(--yard-trunk);
+  rotate: -4deg;
+  transform-origin: 0 50%;
+}
+.co-yard[data-tree="right"] .co-yard-branch {
+  left: auto;
+  right: 50%;
+  rotate: 4deg;
+  transform-origin: 100% 50%;
+}
+.co-yard-canopy {
+  position: absolute;
+  left: 50%;
+  top: -1cqw;
+  width: 15cqw;
+  height: 10.5cqw;
+  translate: -50% 0;
+  background:
+    radial-gradient(ellipse 30% 22% at 50% 12%, var(--yard-snow) 70%, transparent 74%),
+    radial-gradient(circle at 26% 64%, var(--yard-canopy) 0 3.6cqw, transparent 3.7cqw),
+    radial-gradient(circle at 74% 60%, var(--yard-canopy) 0 3.8cqw, transparent 3.9cqw),
+    radial-gradient(circle at 50% 40%, var(--yard-canopy-light) 0 4.4cqw, transparent 4.5cqw),
+    radial-gradient(circle at 50% 70%, var(--yard-canopy) 0 3.6cqw, transparent 3.7cqw);
+  transform-origin: 50% 100%;
+  animation: co-yard-rustle 5.5s ease-in-out infinite;
+}
+.co-yard-bird {
+  position: absolute;
+  left: 58%;
+  top: -2.1cqw;
+  width: 2.4cqw;
+  height: 1.8cqw;
+  border-radius: 55% 60% 45% 50%;
+  background: radial-gradient(circle at 70% 35%, #2b2b2b 0 0.2cqw, transparent 0.25cqw), #ffcf5a;
+  transform-origin: 50% 100%;
+  animation: co-yard-peck 3.4s ease-in-out infinite;
+}
+.co-yard-bird::after {
+  content: "";
+  position: absolute;
+  right: -0.6cqw;
+  top: 40%;
+  border-left: 0.7cqw solid #f08a24;
+  border-top: 0.3cqw solid transparent;
+  border-bottom: 0.3cqw solid transparent;
+}
+.co-yard[data-tree="right"] .co-yard-bird {
+  left: 26%;
+  scale: -1 1;
+}
+.co-yard-treeswing,
+.co-yard-swing {
+  position: absolute;
+  width: 5cqw;
+  height: 12cqw;
+  border-inline: 0.3cqw solid #b98b58;
+}
+.co-yard-treeswing {
+  left: var(--swing-x);
+  top: 4cqw;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  animation: co-yard-sway 4s ease-in-out infinite;
+}
+.co-yard-treeswing::after,
+.co-yard-seat {
+  content: "";
+  position: absolute;
+  left: -0.9cqw;
+  right: -0.9cqw;
+  bottom: -0.3cqw;
+  height: 0.9cqw;
+  border-radius: 0.3cqw;
+  background: #8a5a36;
+  box-shadow: 0 0.3cqw 0 #5e3c24;
+}
+.co-yard[data-play="swing"] .co-yard-treeswing {
+  opacity: 0;
+}
+
+/* --------------------------------------------------------- flowers and flutter */
+.co-yard-flower {
+  position: absolute;
+  width: 1.6cqw;
+  height: 1.6cqw;
+  translate: -50% -100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--yard-flower-eye) 0 26%, var(--yard-flower) 30% 62%, transparent 66%);
+  transform-origin: 50% 100%;
+  animation: co-yard-sway calc(3s + var(--i) * 0.7s) ease-in-out calc(var(--i) * -0.9s) infinite;
+}
+.co-yard-flower::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 0.12cqw);
+  top: 78%;
+  width: 0.24cqw;
+  height: 1cqw;
+  background: var(--yard-grass-dark);
+}
+.co-yard-flutter,
+.co-yard-butterfly {
+  position: absolute;
+  width: 2.2cqw;
+  height: 1.8cqw;
+}
+.co-yard-flutter {
+  left: var(--tree-x);
+  top: calc(5cqw + var(--i) * 4cqw);
+  animation: co-yard-flit calc(9s + var(--i) * 4s) ease-in-out calc(var(--i) * -5s) infinite;
+}
+.co-yard-flutter::before,
+.co-yard-flutter::after,
+.co-yard-butterfly::before,
+.co-yard-butterfly::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  border-radius: 60% 40% 60% 40%;
+  background: radial-gradient(circle at 50% 40%, #fff8 0 18%, transparent 22%), var(--wing, #ffb347);
+  animation: co-yard-flap 0.28s ease-in-out infinite alternate;
+}
+.co-yard-flutter::before,
+.co-yard-butterfly::before {
+  left: 0;
+  transform-origin: 100% 50%;
+}
+.co-yard-flutter::after,
+.co-yard-butterfly::after {
+  right: 0;
+  transform-origin: 0 50%;
+}
+.co-yard-flutter + .co-yard-flutter {
+  --wing: #b69cff;
+}
+
+/* ------------------------------------------------------------------ resident */
+.co-yard-actor {
+  --size: calc(10cqw * var(--scale, 1));
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(var(--yard-ground) - var(--size));
+  height: var(--size);
+  translate: -50% 0;
+  transition:
+    left var(--walk, 0ms) linear,
+    translate 0.5s ease;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.co-yard-rig,
+.co-yard-joy,
+.co-yard-facing,
+.co-yard-body,
+.co-yard-sprite {
+  position: absolute;
+  inset: 0;
+}
+.co-yard-body,
+.co-yard-joy {
+  transform-origin: 50% 100%;
+}
+.co-yard-sprite {
+  filter: drop-shadow(0 0.35cqw 0.25cqw #271a1650);
+}
+.co-yard-sprite img {
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+.co-yard-actor[data-facing="left"] .co-yard-facing {
+  scale: -1 1;
+}
+.co-yard-shadow {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -0.5cqw;
+  height: 1.1cqw;
+  border-radius: 50%;
+  background: #1c2a1a40;
+}
+.co-yard-emote {
+  position: absolute;
+  left: 50%;
+  bottom: 96%;
+  font-size: 2.6cqw;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 0 0.4cqw #0008,
+    0 0.15cqw 0 #0005;
+  opacity: 0;
+  translate: -50% 0;
+}
+.co-yard-swing,
+.co-yard-ball,
+.co-yard-kite,
+.co-yard-butterfly {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+/* walking, and chasing a butterfly */
+.co-yard[data-play="walk"] .co-yard-body,
+.co-yard[data-play="butterfly"] .co-yard-body {
+  animation: co-yard-step 0.42s ease-in-out infinite;
+}
+.co-yard[data-play="butterfly"] .co-yard-body {
+  animation-duration: 0.3s;
+}
+.co-yard-butterfly {
+  --wing: #ff9ad5;
+  left: 104%;
+  top: 4%;
+}
+.co-yard[data-play="butterfly"] .co-yard-butterfly {
+  opacity: 1;
+  animation: co-yard-lead 1.7s ease-in-out infinite;
+}
+/* hopping */
+.co-yard[data-play="hop"] .co-yard-body {
+  animation: co-yard-hop 0.9s cubic-bezier(0.3, 0.6, 0.4, 1) infinite;
+}
+.co-yard[data-play="hop"] .co-yard-shadow {
+  animation: co-yard-shadow 0.9s cubic-bezier(0.3, 0.6, 0.4, 1) infinite;
+}
+/* dancing */
+.co-yard[data-play="dance"] .co-yard-body {
+  animation: co-yard-dance 1.1s ease-in-out infinite;
+}
+.co-yard[data-play="dance"] .co-yard-facing {
+  animation: co-yard-turn 2.2s steps(1, end) infinite;
+}
+/* waving hello */
+.co-yard[data-play="wave"] .co-yard-body {
+  animation: co-yard-wave 0.5s ease-in-out infinite alternate;
+}
+/* napping in the shade */
+.co-yard[data-play="nap"] .co-yard-body {
+  animation: co-yard-nap 3.2s ease-in-out infinite;
+}
+.co-yard[data-play="nap"] .co-yard-emote {
+  font-size: 2cqw;
+}
+/* kicking a ball and running it down */
+.co-yard[data-play="ball"] .co-yard-ball {
+  opacity: 1;
+  animation: co-yard-ball 1.9s linear infinite;
+}
+.co-yard[data-play="ball"] .co-yard-body {
+  animation: co-yard-kick 1.9s ease-in-out infinite;
+}
+.co-yard-ball {
+  left: 86%;
+  bottom: -0.2cqw;
+  width: 2.6cqw;
+  height: 2.6cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, #fff 0 16%, #ff6b6b 20% 56%, #c93f3f 100%);
+  box-shadow: inset -0.3cqw -0.3cqw 0 #0002;
+}
+/* flying a kite */
+/* The string leaves the resident's paw; the kite rides high over the grass. */
+.co-yard-kite {
+  left: 72%;
+  bottom: 52%;
+  width: calc(19cqw / var(--scale, 1));
+  height: calc(15cqw / var(--scale, 1));
+  transform-origin: 0 100%;
+}
+.co-yard-kite svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.co-yard-string {
+  fill: none;
+  stroke: #fffc;
+  stroke-width: 0.6;
+}
+.co-yard-kite-tail {
+  fill: none;
+  stroke: #ffd23f;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.co-yard-kite-sail {
+  fill: #ff6f91;
+  stroke: #fff;
+  stroke-width: 1;
+}
+.co-yard-kite-spar {
+  fill: none;
+  stroke: #ffffffb0;
+  stroke-width: 0.6;
+}
+.co-yard[data-play="kite"] .co-yard-kite {
+  opacity: 1;
+  animation: co-yard-kite 2.8s ease-in-out infinite alternate;
+}
+.co-yard[data-play="kite"] .co-yard-body {
+  animation: co-yard-wave 1.4s ease-in-out infinite alternate;
+}
+/* on the swing: lifted onto the seat, swinging from the branch */
+.co-yard[data-play="swing"] .co-yard-actor {
+  translate: -50% -2cqw;
+}
+.co-yard-swing {
+  left: calc(50% - 2.5cqw);
+  bottom: -0.3cqw;
+}
+.co-yard[data-play="swing"] .co-yard-swing {
+  opacity: 1;
+  transition: none;
+}
+.co-yard[data-play="swing"] .co-yard-rig {
+  transform-origin: 50% calc(var(--size) - 12cqw);
+  animation: co-yard-swing 2.4s ease-in-out infinite;
+}
+.co-yard[data-play="swing"] .co-yard-shadow {
+  animation: co-yard-swing-shadow 2.4s ease-in-out infinite;
+}
+/* a playing resident lets you know how it feels */
+.co-yard:is([data-play="ball"], [data-play="swing"], [data-play="kite"], [data-play="butterfly"], [data-play="dance"], [data-play="hop"], [data-play="nap"], [data-play="wave"])
+  .co-yard-emote:not(:empty) {
+  animation: co-yard-emote 1.9s ease-out infinite;
+}
+/* poked: a leap, a spin, and hearts */
+.co-yard-actor.is-poked .co-yard-joy {
+  animation: co-yard-poke 0.9s cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+.co-yard-heart {
+  position: absolute;
+  left: 50%;
+  bottom: 70%;
+  font-size: 2.4cqw;
+  line-height: 1;
+  color: #ff5c8a;
+  text-shadow: 0 0 0.4cqw #fff;
+  opacity: 0;
+  animation: co-yard-heart 1.2s ease-out calc(var(--i) * 0.12s) forwards;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- keyframes */
+@keyframes co-yard-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -1.1cqw;
+  }
+}
+@keyframes co-yard-pebble {
+  0%,
+  100% {
+    translate: -50% 0;
+    rotate: -6deg;
+  }
+  50% {
+    translate: -50% -1.4cqw;
+    rotate: 8deg;
+  }
+}
+@keyframes co-yard-drift {
+  to {
+    translate: 120cqw 0;
+  }
+}
+@keyframes co-yard-rustle {
+  0%,
+  100% {
+    rotate: -1.5deg;
+  }
+  50% {
+    rotate: 1.5deg;
+  }
+}
+@keyframes co-yard-peck {
+  0%,
+  40%,
+  100% {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  48% {
+    rotate: 28deg;
+  }
+  56% {
+    rotate: 0deg;
+  }
+  70% {
+    translate: 0 -0.9cqw;
+  }
+  78% {
+    translate: 0 0;
+  }
+}
+@keyframes co-yard-sway {
+  0%,
+  100% {
+    rotate: -4deg;
+  }
+  50% {
+    rotate: 4deg;
+  }
+}
+@keyframes co-yard-flit {
+  0%,
+  100% {
+    translate: -6cqw 0;
+  }
+  25% {
+    translate: 4cqw -3cqw;
+  }
+  50% {
+    translate: 9cqw 1.5cqw;
+  }
+  75% {
+    translate: -2cqw 3cqw;
+  }
+}
+@keyframes co-yard-flap {
+  from {
+    scale: 1 1;
+  }
+  to {
+    scale: 0.25 1;
+  }
+}
+@keyframes co-yard-step {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -4deg;
+  }
+  50% {
+    translate: 0 -9%;
+    rotate: 4deg;
+  }
+}
+@keyframes co-yard-lead {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  30% {
+    translate: 1.5cqw -3cqw;
+  }
+  60% {
+    translate: -0.5cqw -1cqw;
+  }
+  80% {
+    translate: 2cqw -2.4cqw;
+  }
+}
+@keyframes co-yard-hop {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1.1 0.88;
+  }
+  25% {
+    translate: 0 -38%;
+    scale: 0.94 1.08;
+  }
+  50% {
+    translate: 0 -55%;
+    scale: 1 1;
+  }
+  80% {
+    translate: 0 0;
+    scale: 1 1;
+  }
+}
+@keyframes co-yard-shadow {
+  0%,
+  80%,
+  100% {
+    scale: 1 1;
+    opacity: 1;
+  }
+  50% {
+    scale: 0.55 0.8;
+    opacity: 0.5;
+  }
+}
+@keyframes co-yard-dance {
+  0%,
+  100% {
+    rotate: -12deg;
+    translate: 0 0;
+  }
+  25% {
+    translate: 0 -16%;
+  }
+  50% {
+    rotate: 12deg;
+    translate: 0 0;
+  }
+  75% {
+    translate: 0 -16%;
+  }
+}
+@keyframes co-yard-turn {
+  0% {
+    scale: 1 1;
+  }
+  50% {
+    scale: -1 1;
+  }
+}
+@keyframes co-yard-wave {
+  from {
+    rotate: -9deg;
+  }
+  to {
+    rotate: 9deg;
+  }
+}
+@keyframes co-yard-nap {
+  0%,
+  100% {
+    rotate: -12deg;
+    scale: 1 0.95;
+  }
+  50% {
+    rotate: -16deg;
+    scale: 1.02 0.91;
+  }
+}
+@keyframes co-yard-kick {
+  0%,
+  100% {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  8% {
+    rotate: -10deg;
+  }
+  15% {
+    rotate: 12deg;
+    translate: 6% 0;
+  }
+  26% {
+    rotate: 0deg;
+    translate: 0 0;
+  }
+  84% {
+    translate: 0 0;
+  }
+  91% {
+    translate: 0 -18%;
+  }
+}
+@keyframes co-yard-ball {
+  0%,
+  14% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  38% {
+    translate: 9cqw -7cqw;
+    rotate: 300deg;
+  }
+  58% {
+    translate: 15cqw 0;
+    rotate: 520deg;
+  }
+  72% {
+    translate: 11cqw -2.6cqw;
+    rotate: 620deg;
+  }
+  86% {
+    translate: 4cqw 0;
+    rotate: 700deg;
+  }
+  100% {
+    translate: 0 0;
+    rotate: 720deg;
+  }
+}
+@keyframes co-yard-kite {
+  from {
+    rotate: -7deg;
+    translate: 0 0;
+  }
+  to {
+    rotate: 6deg;
+    translate: 0 -1cqw;
+  }
+}
+@keyframes co-yard-swing {
+  0%,
+  100% {
+    rotate: -22deg;
+  }
+  50% {
+    rotate: 22deg;
+  }
+}
+@keyframes co-yard-swing-shadow {
+  0%,
+  100% {
+    translate: -18% 0;
+    scale: 0.7 1;
+  }
+  50% {
+    translate: 18% 0;
+    scale: 0.7 1;
+  }
+}
+@keyframes co-yard-emote {
+  0% {
+    opacity: 0;
+    translate: -50% 0.5cqw;
+    scale: 0.6;
+  }
+  20% {
+    opacity: 1;
+    scale: 1.1;
+  }
+  70% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: -50% -3.5cqw;
+  }
+}
+@keyframes co-yard-poke {
+  0% {
+    translate: 0 0;
+    scale: 1 1;
+    rotate: 0deg;
+  }
+  14% {
+    translate: 0 0;
+    scale: 1.18 0.8;
+  }
+  50% {
+    translate: 0 -85%;
+    scale: 0.95 1.08;
+    rotate: 360deg;
+  }
+  82% {
+    translate: 0 0;
+    scale: 1.1 0.9;
+    rotate: 360deg;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1 1;
+    rotate: 360deg;
+  }
+}
+@keyframes co-yard-heart {
+  0% {
+    opacity: 0;
+    translate: -50% 0;
+    scale: 0.4;
+  }
+  25% {
+    opacity: 1;
+    scale: 1.15;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(-50% + (var(--i) - 1) * 5cqw) -7cqw;
+    scale: 0.9;
+  }
+}
+
+/* Off screen, the island holds still. */
+.co-house:not(.is-on-screen) .co-yard,
+.co-house:not(.is-on-screen) .co-yard * ,
+.co-house:not(.is-on-screen) .co-yard *::before,
+.co-house:not(.is-on-screen) .co-yard *::after {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-yard *,
+  .co-yard *::before,
+  .co-yard *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .co-yard-heart {
+    display: none;
+  }
+}
