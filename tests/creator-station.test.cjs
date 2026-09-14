@@ -59,6 +59,24 @@ test("the reduced film does not move", () => {
   }
 });
 
+test("the film waits at the closed airlock until the creator goes in", () => {
+  for (const mode of ["full", "quick"]) {
+    const f = S.frame(mode, S.GATE[mode]);
+    assert.equal(f.door, 0, mode + ": the doors are still closed at the gate");
+    assert.ok(f.veil > 0.9, mode + ": the office is still covered");
+    assert.ok(S.GATE[mode] > S.SHOTS[mode].approach[0] && S.GATE[mode] < S.SHOTS[mode].through[0]);
+  }
+  assert.equal(S.GATE.reduced, 0);
+  const js = read("creator-station.js");
+  assert.match(js, /else if \(!entered && t >= gateAt\) \{\s*t = gateAt;/, "time stops at the door until going in");
+  assert.match(js, /點擊進入 STAR OFFICE/);
+  assert.match(js, /overlay\.addEventListener\("pointerdown", \(e\) => \{\s*if \(!skip\.contains\(e\.target\)\) goIn\(\);/);
+  assert.match(js, /document\.removeEventListener\("visibilitychange", onHidden\)/, "a hidden tab waits at the door and leaves no listener behind");
+  assert.match(js, /channel-icon\.png/, "the channel's own icon looks out of the station");
+  assert.doesNotMatch(js, /<ellipse cx="0" cy="-150" rx="13" ry="16"\/>/, "the drawn penguin silhouette is gone");
+  assert.ok(fs.existsSync(path.join(__dirname, "../frontend/renguin-characters/system/channel-icon.png")));
+});
+
 test("the station is decoration scoped to itself, and still for reduced motion", () => {
   const css = read("creator-station.css");
   const plain = css.replace(/\/\*[\s\S]*?\*\//g, "");

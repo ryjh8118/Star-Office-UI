@@ -517,12 +517,13 @@ def project_copy():
 
     The copy is an Office card of its own on the short chain. It answers to the
     same source as the original, so evidence that arrives later reaches both, and
-    it starts from the progress the original already has.
+    it starts from the progress the original already has. Dropped on 短影音完成,
+    it also carries the user's own completion mark.
     """
     from creator_workflow import IDS, enabled_ids, is_short, set_chain
     value = body()
     pid = project_id(value.get('project_id'))
-    if value.get('format') != 'SHORT':
+    if value.get('format') != 'SHORT' or type(value.get('done', False)) is not bool:
         abort(400)
     def update(data):
         meta = data['projects'].setdefault(pid, {})
@@ -553,6 +554,9 @@ def project_copy():
         saved = twin.get('workflow') or {}
         last = max((IDS.index(s) for s in IDS if saved.get(s, {}).get('status') == 'COMPLETED'), default=-1)
         set_chain(twin, sum(IDS.index(s) <= last for s in enabled_ids(twin)), stamp, 'USER', 'USER')
+        if value.get('done'):
+            twin['manual_done'] = {'type':'USER_MANUAL_DONE','done':True,'timestamp':stamp}
+            twin['history'].append(dict(twin['manual_done']))
         data['projects'][copy] = twin
         from creator_residents import assign
         from creator_projects import resolve

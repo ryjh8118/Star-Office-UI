@@ -305,9 +305,8 @@
   top: calc(var(--yard-ground) - var(--size));
   height: var(--size);
   translate: -50% 0;
-  transition:
-    left var(--walk, 0ms) linear,
-    translate 0.5s ease;
+  /* Walking is a compositor animation started by creator-yard.js. */
+  transition: translate 0.5s ease;
   pointer-events: auto;
   cursor: pointer;
 }

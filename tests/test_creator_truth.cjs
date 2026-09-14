@@ -301,11 +301,56 @@ for (const key of ["CHATGPT_WORK", "ASTRA", "CLAUDE", "BIONIC"]) {
 }
 assert.equal(C.memberIdentity("UNKNOWN").asset, null);
 
+// A folder Content OS registered again and again shows once. Copies the user made
+// or touched stay; untouched system copies fold behind the best-evidenced one.
+{
+  const card = (project_id, extra = {}) => ({ project_id, project_name: "GYM CLUB", ...extra });
+  const meta = {
+    "WORKSPACE-a": { cover: { url: "/c.webp" } },
+    "PROJECT-b": { workflow: { INDEX: { status: "COMPLETED" } }, workflow_evidence: {}, resident_character: "x" },
+    "PROJECT-c": {},
+    "PROJECT-d": { history: [{ type: "WORKFLOW_USER", source: "USER" }] },
+    "OFFICE-1": { display_name: "GYM CLUB" },
+  };
+  const local = new Set(["OFFICE-1"]);
+  const fold = (cards) => C.foldDuplicates(cards, (p) => meta[p.project_id], (p) => local.has(p.project_id));
+  const folded = fold([card("PROJECT-b"), card("WORKSPACE-a"), card("PROJECT-c"), card("PROJECT-d"), card("OFFICE-1"), card("OTHER", { project_name: "新加坡" })]);
+  assert.deepEqual([...folded.keys()].sort(), ["PROJECT-b", "PROJECT-c"], "untouched system copies fold");
+  assert.equal(folded.get("PROJECT-c"), "WORKSPACE-a", "behind a card the user touched");
+  assert.ok(!folded.has("PROJECT-d"), "a second touched copy is the user's and stays");
+  assert.ok(!folded.has("OFFICE-1"), "a card the user made is never folded");
+  assert.equal(fold([card("PROJECT-c"), card("OTHER", { project_name: "新加坡" })]).size, 0, "different names never fold");
+  const untouched = fold([card("PROJECT-c"), card("PROJECT-e", { workspace: "E:\\20260619_GYM CLUB" }), card("WORKSPACE-z")]);
+  assert.equal(untouched.get("PROJECT-c"), "PROJECT-e", "with no user state the folder-bound record leads");
+  assert.equal(untouched.get("WORKSPACE-z"), "PROJECT-e");
+  assert.equal(fold([card("PROJECT-c"), card("PROJECT-x", { project_name: " gym  club " })]).size, 1, "spacing and case do not make a new project");
+  assert.equal(fold([card("PROJECT-c"), card("PROJECT-r", { project_name: "GYM CLUB~recover" })]).get("PROJECT-r"), "PROJECT-c", "a Premiere auto-save is the same project");
+  assert.equal(fold([card("PROJECT-z"), card("PROJECT-a", { project_name: "GYM CLUB~recover" })]).get("PROJECT-a"), "PROJECT-z", "and never the one that stands for it");
+  assert.equal(fold([card("PROJECT-c"), card("PROJECT-v", { project_name: "GYM CLUB 2" })]).size, 0, "a sequel is not a copy");
+  assert.equal(C.userTouched({ workflow: {}, resident_character: "x", source_name: "GYM" }), false, "derived state is not the user's");
+  assert.equal(C.userTouched({ cover: null, disabled_steps: [] }), false);
+  assert.equal(C.userTouched({ manual_done: { done: false } }), true);
+}
+
+// 最新加入: a card the user made dates from its creation, a system project from
+// its first canonical event; only the past week's newest few are called out.
+{
+  const now = Date.parse("2026-09-14T12:00:00+08:00") / 1000;
+  assert.equal(C.addedStamp({ history: [{ type: "PROJECT_CREATED", timestamp: "2026-09-14T01:00:00Z" }] }, true, []), Date.parse("2026-09-14T01:00:00Z") / 1000);
+  assert.equal(C.addedStamp({}, false, [now - 50, NaN, now - 400]), now - 400, "the first event across folded copies");
+  assert.ok(Number.isNaN(C.addedStamp({}, false, [])), "nothing known is not new");
+  const list = ["a", "b", "c", "d", "e"].map((project_id) => ({ project_id }));
+  const at = { a: now - 3600, b: now - 8 * 86400, c: now - 60, d: NaN, e: now - 7200 };
+  assert.deepEqual(C.freshest(list, (p) => at[p.project_id], now).map((p) => p.project_id), ["c", "a", "e"]);
+  assert.deepEqual(C.freshest(list, (p) => at[p.project_id], now, 5).map((p) => p.project_id), ["c", "a", "e"], "a week old is no longer new");
+  assert.deepEqual(C.freshest([{ project_id: "f" }], () => now + 86400, now), [], "a stamp from the future proves nothing");
+}
+
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 75 + filing.length,
+    checks: 97 + filing.length,
     scope:
-      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order, island decks, task-cloud filing, completed shelf order, short-video steps and member identity",
+      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order, island decks, task-cloud filing, completed shelf order, short-video steps, member identity, duplicate folding and newest projects",
   }),
 );

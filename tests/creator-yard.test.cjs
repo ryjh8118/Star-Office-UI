@@ -112,7 +112,12 @@ test("a long-form card copies onto the short-video island, and only long-form ca
   assert.match(office, /save\("project-copy", \{ project_id: p\.project_id, format: "SHORT" \}\)/);
   assert.match(office, /const copies = shelf === "active";/);
   assert.match(office, /hovered\?\.closest\(`#\$\{shelves\.short\.section\}, \.co-short-drop, \.cw-beacon\[data-island="short"\]`\)/, "the short-video island, its pad or its beacon takes the copy");
-  assert.match(office, /if \(copy\) await copyToShort\(p\);\s*else await moveProject/);
+  assert.match(office, /if \(copy\) await copyToShort\(p\);\s*else if \(finish\) await finishShort\(p\);\s*else await moveProject/);
+  // 短影音完成 takes a long-form card as a finished short copy, and a short video as itself.
+  assert.match(office, /const finishes = copies \|\| shelf === "short";/);
+  assert.match(office, /hovered\?\.closest\(`#\$\{shelves\.shortCompleted\.section\}, \.co-done-drop, \.cw-beacon\[data-island="short-result"\]`\)/);
+  assert.match(office, /save\("project-copy", \{ project_id: p\.project_id, format: "SHORT", done: true \}\)/);
+  assert.doesNotMatch(office, /"co-short-drop co-done-drop"/, "the done pad is never mistaken for the copy pad");
   assert.match(office, /\["projects", "project-source", "project-copy"\]\.includes\(path\)/);
   assert.match(office, /if \(!isShort\(p\) && !projectDone\(p\)\) \{/, "the copy button is for unfinished long-form cards");
 });

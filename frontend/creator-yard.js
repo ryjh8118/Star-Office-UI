@@ -70,8 +70,19 @@
     clearTimeout(timers.get(yard));
     const emote = actor.querySelector(".co-yard-emote");
     actor.dataset.facing = next.facing > 0 ? "right" : "left";
-    actor.style.setProperty("--walk", next.walk + "ms");
+    // The resident is placed at once and walks there as a translation from where
+    // it stood, drawn by the compositor so a busy page never makes it stutter.
+    const from = parseFloat(actor.style.left);
     actor.style.left = next.x + "%";
+    const width = actor.offsetParent?.clientWidth;
+    if (next.walk && width && Number.isFinite(from) && from !== next.x) {
+      const half = actor.offsetWidth / 2;
+      actor.getAnimations?.().forEach((a) => a.id === "walk" && a.cancel());
+      actor.animate(
+        [{ translate: `${((from - next.x) * width / 100 - half).toFixed(1)}px 0` }, { translate: `${(-half).toFixed(1)}px 0` }],
+        { id: "walk", duration: next.walk, easing: "linear" },
+      );
+    }
     emote.textContent = "";
     yard.dataset.play = next.walk && next.play !== "butterfly" ? "walk" : next.play;
     timers.set(
