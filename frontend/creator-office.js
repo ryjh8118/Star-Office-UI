@@ -1,6 +1,58 @@
 /* Creator Office UX. Canonical/executor inputs are read-only; user presentation is separate. */
 (() => {
   "use strict";
+  // The station, its entry and the system timeline ship as files of their own,
+  // attached here at this script's version so the page shell never changes for them.
+  const layers = (() => {
+    if (typeof document.createElement !== "function" || !document.head) return false;
+    let version = "";
+    try {
+      version = new URL(document.currentScript.src).searchParams.get("v") || "";
+    } catch {}
+    const at = (file) => "/static/" + file + (version ? "?v=" + encodeURIComponent(version) : "");
+    if (!document.querySelector('link[rel="icon"]')) {
+      const icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.href =
+        "data:image/svg+xml," +
+        encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='#141a3d'/><path d='M32 10l6 16 16 6-16 6-6 16-6-16-16-6 16-6z' fill='#ffd27a'/></svg>");
+      document.head.append(icon);
+    }
+    // The entry covers the page from the first frame; the station lifts it, and
+    // if the station never arrives the cover lifts itself.
+    let intro = "";
+    try {
+      intro = new URLSearchParams(location.search).get("intro") || "";
+    } catch {}
+    if (intro !== "off" && !document.hidden && document.body) {
+      const cover = document.createElement("div");
+      cover.id = "so-intro-cover";
+      cover.setAttribute("aria-hidden", "true");
+      cover.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:radial-gradient(120% 90% at 50% 40%,#1b1a4a,#070919 60%,#03040c);transition:opacity .3s ease";
+      document.body.append(cover);
+      setTimeout(() => cover.remove(), 6000);
+    }
+    for (const file of ["creator-station.css", "creator-timeline.css"]) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = at(file);
+      document.head.append(link);
+    }
+    const scripts = {};
+    for (const file of ["creator-station.js", "creator-timeline.js"]) {
+      const script = document.createElement("script");
+      script.src = at(file);
+      script.async = false;
+      document.head.append(script);
+      scripts[file] = script;
+    }
+    // Run fn with the layer's global once its file has run; never if it fails.
+    const when = (file, global, fn) => {
+      if (window[global]) return fn(window[global]);
+      scripts[file]?.addEventListener("load", () => window[global] && fn(window[global]), { once: true });
+    };
+    return { at, when };
+  })();
   const routeLabels = {
     INDEX: "素材",
     CALIBRATION: "校正",
@@ -120,6 +172,7 @@
     todoArchive,
     inboxRoot,
     historyRoot,
+    historyNote = null,
     world = null,
     syncButton,
     dialog,
@@ -397,10 +450,13 @@
     const grouped = new Map(Object.keys(historyMeta).map((k) => [k, []]));
     const records = archived();
     for (const p of records) grouped.get(historyGroup(p)).push(p);
+    const kinds = [...grouped.values()].filter((list) => list.length).length;
+    const milestones = window.CreatorTimeline?.counts?.();
     zoneSummary("history", [
-      records.length + " 筆紀錄",
-      [...grouped.values()].filter((list) => list.length).length + " 個分類",
+      ...(milestones ? [Object.values(milestones).reduce((a, b) => a + b, 0) + " 個里程碑"] : []),
+      records.length + " 筆工作紀錄",
     ]);
+    if (historyNote) historyNote.textContent = records.length + " 筆 · " + kinds + " 個分類";
     for (const list of grouped.values())
       list.sort(
         (a, b) => (epoch(b.updated_at) || 0) - (epoch(a.updated_at) || 0),
@@ -1293,37 +1349,85 @@
       d.append(actions);
     } else await execute();
   }
-  function confirmRemove(p) {
-    const d = modal("移除「" + projectName(p) + "」？");
-    d.append(
-      node(
-        "p",
-        "只會從 RENGUIN OFFICE 移除。不會刪除影片素材、Premiere 專案、Content OS 資料或硬碟檔案。",
-      ),
-      node("p", "需要時可從「已移除的專案」恢復。", "co-muted"),
-    );
-    const actions = node("div", undefined, "co-actions");
-    actions.append(
-      button("取消", () => d.close()),
-      button(
-        "移除專案",
-        async () => {
-          if (
-            await save("project", {
-              project_id: p.project_id,
-              hidden: true,
-              confirmed: true,
-            })
-          ) {
-            d.close();
-            toast("專案已移除，可從頁面下方恢復。");
-          }
-        },
-        "co-button danger",
-      ),
-    );
-    d.append(actions);
+  // Removing asks nothing; it waits instead. A removed card leaves the desk at
+  // once but nothing is written until the undo window closes, so 復原 is exact:
+  // the pin, the order and the history stay as they were. Only then is the
+  // project hidden in the presentation store, as 移除專案 always did, and it can
+  // still come back from 已移除的專案. Content OS and the files are never touched.
+  const UNDO_MS = 7000;
+  const pendingRemoval = new Map();
+  let removalTimer = null,
+    undoBar = null;
+  function removeProject(p) {
+    if (!storeReady || pendingRemoval.has(p.project_id)) return;
+    pendingRemoval.set(p.project_id, projectName(p));
+    expanded.delete(p.project_id);
+    signature = "";
+    render();
+    showUndo();
+    clearTimeout(removalTimer);
+    removalTimer = setTimeout(commitRemovals, UNDO_MS);
   }
+  function showUndo() {
+    document.querySelector(".co-toast")?.remove();
+    undoBar?.remove();
+    const names = [...pendingRemoval.values()];
+    undoBar = node("div", undefined, "co-toast co-undo");
+    undoBar.role = "status";
+    const text = node(
+      "span",
+      names.length === 1 ? "已移除專案「" + names[0] + "」" : "已移除 " + names.length + " 個專案",
+      "co-undo-text",
+    );
+    const undo = button("復原", undoRemovals, "co-undo-button");
+    undo.setAttribute("aria-label", names.length === 1 ? "復原「" + names[0] + "」" : "復原這 " + names.length + " 個專案");
+    const fuse = node("span", undefined, "co-undo-fuse");
+    fuse.style.animationDuration = UNDO_MS + "ms";
+    undoBar.append(text, node("span", "｜", "co-undo-sep"), undo, fuse);
+    document.body.append(undoBar);
+  }
+  function undoRemovals() {
+    clearTimeout(removalTimer);
+    removalTimer = null;
+    const ids = [...pendingRemoval.keys()];
+    pendingRemoval.clear();
+    undoBar?.remove();
+    undoBar = null;
+    signature = "";
+    render();
+    toast(ids.length === 1 ? "已復原，專案回到原本的位置" : "已復原 " + ids.length + " 個專案");
+    root
+      .querySelector(`.co-project[data-project-id="${CSS.escape(ids[0] || "")}"] .co-project-drag`)
+      ?.focus({ preventScroll: true });
+  }
+  async function commitRemovals() {
+    clearTimeout(removalTimer);
+    removalTimer = null;
+    undoBar?.remove();
+    undoBar = null;
+    for (const id of [...pendingRemoval.keys()]) {
+      // The card stays hidden while its write is in flight, then the store decides.
+      const ok = await save("project", { project_id: id, hidden: true, confirmed: true });
+      const name = pendingRemoval.get(id);
+      pendingRemoval.delete(id);
+      if (!ok) toast("「" + name + "」沒有移除成功，已放回原處。");
+    }
+    signature = "";
+    render();
+  }
+  // Leaving the page keeps a removal the user let go of.
+  window.addEventListener?.("pagehide", () => {
+    if (!pendingRemoval.size) return;
+    clearTimeout(removalTimer);
+    for (const id of pendingRemoval.keys())
+      fetch("/api/creator/project", {
+        method: "POST",
+        keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: id, hidden: true, confirmed: true }),
+      }).catch(() => {});
+    pendingRemoval.clear();
+  });
   function renameProject(p, heading) {
     editingName = true;
     const form = node("form", undefined, "co-rename");
@@ -1684,7 +1788,7 @@
       button(isShort(p) ? "流程設定" : "設定階段", () => stageSettings(p), "co-button quiet co-more"),
       button("完整時間軸", () => showTimeline(p), "co-button quiet co-more"),
       button("查看詳情", () => showDetails(p), "co-button quiet co-more"),
-      button("移除專案", () => confirmRemove(p), "co-button danger co-more"),
+      button("移除專案", () => removeProject(p), "co-button danger co-more"),
       expandToggle(card, p, "⋯ 更多"),
     );
     side.append(actions);
@@ -2459,6 +2563,261 @@
     card.classList.add("is-just-copied");
     setTimeout(() => card.classList.remove("is-just-copied"), 2600);
   }
+  // One card is carried at a time: from its ⠿ handle at once, or from the card
+  // itself after a short move with a mouse or a long press with a finger, so a
+  // swipe that scrolls the page never lifts anything. While carried, a card on
+  // its own shelf reorders, the short-video island copies a long-form card, and
+  // the stardust recycler at the bottom of the screen removes it — only when the
+  // card is let go inside the recycler's core. Dragged out again, it is safe.
+  const dragPlans = new WeakMap();
+  const LONG_PRESS_MS = 420,
+    PRESS_SLOP = 10,
+    MOUSE_SLOP = 6;
+  const CARD_CONTROLS =
+    "button, a, input, textarea, select, label, summary, iframe, video, form, [contenteditable], .co-video-player";
+  let drag = null;
+  function bindCardDrag(card) {
+    if (card.dataset.dragBound) return;
+    card.dataset.dragBound = "true";
+    card.addEventListener("pointerdown", (e) => {
+      if (drag || !storeReady || editingName || e.button !== 0 || !dragPlans.has(card)) return;
+      if (e.target.closest(CARD_CONTROLS)) return;
+      const touch = e.pointerType !== "mouse";
+      const press = { x: e.clientX, y: e.clientY, id: e.pointerId, timer: 0 };
+      const off = () => {
+        clearTimeout(press.timer);
+        card.classList.remove("is-pressing");
+        removeEventListener("pointermove", move);
+        removeEventListener("pointerup", off);
+        removeEventListener("pointercancel", off);
+      };
+      const move = (ev) => {
+        if (ev.pointerId !== press.id) return;
+        const far = Math.hypot(ev.clientX - press.x, ev.clientY - press.y);
+        if (touch) {
+          if (far > PRESS_SLOP) off();
+        } else if (far > MOUSE_SLOP) {
+          off();
+          startDrag(card, ev, card);
+        }
+      };
+      addEventListener("pointermove", move);
+      addEventListener("pointerup", off);
+      addEventListener("pointercancel", off);
+      if (!touch) return;
+      card.classList.add("is-pressing");
+      card.style.setProperty("--press-ms", LONG_PRESS_MS + "ms");
+      press.timer = setTimeout(() => {
+        off();
+        // Chrome refuses (and logs) a buzz before the page has had a tap.
+        if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.(12);
+        startDrag(card, { clientX: press.x, clientY: press.y, pointerId: press.id }, card);
+      }, LONG_PRESS_MS);
+    });
+    // A long press must not open the phone's own menu.
+    card.addEventListener("contextmenu", (e) => {
+      if (card.classList.contains("is-pressing") || drag?.card === card) e.preventDefault();
+    });
+  }
+  // The recycler: a small black hole that wakes when a card heads down, pulls
+  // harder as the card nears, and swallows it only on release inside its core.
+  function stardustRecycler() {
+    const el = node("div", undefined, "co-trash");
+    el.setAttribute("aria-hidden", "true");
+    const hole = node("div", undefined, "co-trash-hole");
+    for (let i = 0; i < 8; i++) {
+      const mote = node("i", undefined, "co-trash-mote");
+      mote.style.setProperty("--i", i);
+      hole.append(mote);
+    }
+    hole.append(node("span", undefined, "co-trash-disk"), node("span", undefined, "co-trash-core"));
+    const label = node("div", undefined, "co-trash-label");
+    const hint = node("small", "拖到這裡移除 · 可以復原");
+    label.append(node("strong", "星塵回收艙"), hint);
+    // The box stays put and takes the drop; only the body inside rises and glows,
+    // so where it pulls never lags behind where it is drawn.
+    const body = node("div", undefined, "co-trash-body");
+    body.append(hole, label);
+    el.append(body);
+    let geometry = null,
+      armed = false;
+    const measure = () => {
+      // It floats above the island dock whenever the dock is on screen.
+      const dock = document.querySelector(".cw-dock")?.getBoundingClientRect();
+      const lift = dock?.width && dock.top < innerHeight && dock.bottom > 0 ? innerHeight - dock.top + 8 : 0;
+      el.style.setProperty("--lift", Math.max(0, lift) + "px");
+      const r = el.getBoundingClientRect();
+      const size = hole.offsetWidth;
+      geometry = { x: r.left + r.width / 2, y: r.top + size / 2, r: size / 2 };
+    };
+    return {
+      el,
+      measure,
+      // 0 far away, rising to 0.95 at the rim; 1 only inside the core.
+      pull(x, y) {
+        if (!geometry) measure();
+        const d = Math.hypot(x - geometry.x, y - geometry.y);
+        const core = geometry.r * 1.1,
+          reach = geometry.r * 3.4;
+        const pull = d <= core ? 1 : Math.max(0, Math.min(0.95, 1 - (d - core) / (reach - core)));
+        el.style.setProperty("--pull", pull.toFixed(3));
+        if ((pull >= 1) !== armed) {
+          armed = pull >= 1;
+          el.classList.toggle("is-armed", armed);
+          hint.textContent = armed ? "放開即移除" : "拖到這裡移除 · 可以復原";
+        }
+        return pull;
+      },
+      wake() {
+        el.classList.add("is-awake");
+      },
+      center: () => geometry,
+    };
+  }
+  function startDrag(card, e, capture) {
+    const plan = dragPlans.get(card);
+    if (!plan || drag) return;
+    const { p, shelf } = plan;
+    const copies = shelf === "active";
+    projectDragId = p.project_id;
+    dragging = true;
+    try {
+      capture.setPointerCapture(e.pointerId);
+    } catch {}
+    getSelection?.()?.removeAllRanges();
+    card.classList.add("is-dragging");
+    document.body.classList.add("co-card-dragging");
+    // The card's name travels with the pointer, so wherever it goes it is
+    // visibly carrying something.
+    const ghost = node("div", undefined, "co-drag-ghost");
+    ghost.setAttribute("aria-hidden", "true");
+    const cover = presentation.projects[p.project_id]?.cover?.url;
+    if (cover) {
+      const img = node("img");
+      img.src = cover;
+      img.alt = "";
+      ghost.append(img);
+    }
+    const hint = copies ? "拖到右邊「短影音正在製作」複製一份" : "放到其他卡片上排序";
+    ghost.append(node("strong", projectName(p)), node("small", hint));
+    let pad = null;
+    if (copies) {
+      // The short-video island is far shorter than the long-form column, so from
+      // most cards it is out of sight; a pad in view always takes the drop.
+      pad = node("div", undefined, "co-short-drop");
+      pad.setAttribute("aria-hidden", "true");
+      pad.append(node("span", "▮", "co-short-drop-icon"), node("strong", "短影音正在製作"), node("small", "拖到這裡 · 複製一份"));
+      document.body.classList.add("co-copying-short");
+    }
+    const recycler = stardustRecycler();
+    document.body.append(...[pad, recycler.el, ghost].filter(Boolean));
+    recycler.measure();
+    drag = { card, p, shelf, copies, ghost, pad, recycler, hint, pointerId: e.pointerId, startY: e.clientY, target: null, overShort: false, overTrash: false };
+    addEventListener("pointermove", onDragMove, { passive: false });
+    addEventListener("pointerup", onDragEnd);
+    addEventListener("pointercancel", cancelDrag);
+    addEventListener("keydown", dragKey, true);
+    addEventListener("touchmove", holdPage, { passive: false });
+    addEventListener("resize", recycler.measure);
+    onDragMove(e);
+  }
+  // Once a finger has lifted a card, the page must not scroll under it.
+  function holdPage(e) {
+    if (drag && e.cancelable) e.preventDefault();
+  }
+  function dragKey(e) {
+    if (e.key !== "Escape") return;
+    e.preventDefault();
+    e.stopPropagation();
+    cancelDrag();
+  }
+  function onDragMove(e) {
+    if (!drag || (e.pointerId !== undefined && e.pointerId !== drag.pointerId)) return;
+    e.preventDefault?.();
+    const { p, shelf, copies, ghost, pad, recycler } = drag;
+    const hovered = document.elementFromPoint(e.clientX, e.clientY);
+    const pull = recycler.pull(e.clientX, e.clientY);
+    if (pull > 0 || e.clientY - drag.startY > 24) recycler.wake();
+    const overTrash = pull >= 1;
+    // A card is ordered on its own shelf; a long-form card may also be copied
+    // onto the short-video island, anywhere on it, onto its beacon, or the pad.
+    const overShort =
+      !overTrash && copies && !!hovered?.closest(`#${shelves.short.section}, .co-short-drop, .cw-beacon[data-island="short"]`);
+    // Holding still on the pad, the dock or near the recycler must not scroll the page away.
+    if (!hovered?.closest(".co-short-drop, .cw-dock") && pull === 0) {
+      if (e.clientY < 65) window.scrollBy(0, -24);
+      else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
+    }
+    // Near the core the card shrinks and is drawn toward it.
+    const hole = recycler.center();
+    const tow = overTrash ? 0.6 : pull * 0.35;
+    const x = e.clientX + (hole.x - e.clientX) * tow,
+      y = e.clientY + (hole.y - e.clientY) * tow;
+    ghost.style.translate = `${x}px ${y}px`;
+    ghost.style.setProperty("--pull", pull.toFixed(3));
+    ghost.classList.toggle("is-trash", overTrash);
+    drag.card.classList.toggle("is-trash-armed", overTrash);
+    document.getElementById(shelves.short.section)?.classList.toggle("is-copy-target", overShort);
+    document.querySelector('.cw-beacon[data-island="short"]')?.classList.toggle("is-copy-target", overShort);
+    pad?.classList.toggle("is-copy-target", overShort);
+    if (pad) pad.querySelector("small").textContent = overShort ? "放開 · 複製一份，長片保留" : "拖到這裡 · 複製一份";
+    ghost.classList.toggle("is-copy", overShort);
+    ghost.querySelector("small").textContent = overTrash
+      ? "放開 → 移除，可以復原"
+      : overShort
+        ? "放開 → 複製到短影音，長片保留"
+        : drag.hint;
+    const target = overShort || overTrash ? null : hovered?.closest(`#${shelves[shelf].section} .co-project`);
+    drag.target = target && target.dataset.projectId !== p.project_id ? target.dataset.projectId : null;
+    root.querySelectorAll(".is-drop-target").forEach((el) => el.classList.remove("is-drop-target"));
+    if (drag.target) target.classList.add("is-drop-target");
+    drag.overShort = overShort;
+    drag.overTrash = overTrash;
+  }
+  function endDrag(swallowed) {
+    const { card, ghost, pad, recycler } = drag;
+    removeEventListener("pointermove", onDragMove, { passive: false });
+    removeEventListener("pointerup", onDragEnd);
+    removeEventListener("pointercancel", cancelDrag);
+    removeEventListener("keydown", dragKey, true);
+    removeEventListener("touchmove", holdPage, { passive: false });
+    removeEventListener("resize", recycler.measure);
+    drag = null;
+    dragging = false;
+    projectDragId = null;
+    pad?.remove();
+    document.body.classList.remove("co-copying-short", "co-card-dragging");
+    document.getElementById(shelves.short.section)?.classList.remove("is-copy-target");
+    document.querySelector('.cw-beacon[data-island="short"]')?.classList.remove("is-copy-target");
+    card.classList.remove("is-trash-armed");
+    root
+      .querySelectorAll(".co-project.is-dragging,.co-project.is-drop-target")
+      .forEach((e) => e.classList.remove("is-dragging", "is-drop-target"));
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!swallowed || still) {
+      ghost.remove();
+      recycler.el.remove();
+      return;
+    }
+    // The card spirals into the core, and the hole closes after it.
+    ghost.classList.add("is-swallowed");
+    recycler.el.classList.add("is-closing");
+    setTimeout(() => {
+      ghost.remove();
+      recycler.el.remove();
+    }, 520);
+  }
+  function cancelDrag() {
+    if (drag) endDrag(false);
+  }
+  async function onDragEnd(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const { p, shelf, target, overShort: copy, overTrash: trash } = drag;
+    endDrag(trash);
+    if (trash) removeProject(p);
+    else if (copy) await copyToShort(p);
+    else await moveProject(p.project_id, target, shelf);
+  }
   function projectSorting(card, p, index, shelf = "active") {
     const bar = node("div", undefined, "co-project-sort");
     const ids = shelves[shelf].ids;
@@ -2468,9 +2827,10 @@
       () => {},
       "co-button quiet co-project-drag",
     );
-    handle.title = copies
-      ? "拖曳排序；拖到右邊「短影音正在製作」會複製一份過去，長片保留在原處"
-      : "拖曳排序，或使用上、下方向鍵移動";
+    handle.title =
+      (copies
+        ? "拖曳排序；拖到右邊「短影音正在製作」會複製一份過去，長片保留在原處"
+        : "拖曳排序，或使用上、下方向鍵移動") + "；拖到下方星塵回收艙或按 Delete 移除（可復原）";
     handle.setAttribute("aria-label", (copies ? "拖曳排序或複製到短影音 " : "拖曳排序 ") + projectName(p));
     handle.draggable = false;
     handle.disabled = !storeReady;
@@ -2491,24 +2851,14 @@
         : "置頂到長片正在製作最前面（" + PIN_LIMIT_TEXT + "）";
       pin.disabled = !storeReady;
     } else delete card.dataset.pinned;
-    const shortZone = () => document.getElementById(shelves.short.section);
-    const shortBeacon = () => document.querySelector('.cw-beacon[data-island="short"]');
-    let ghost = null,
-      pad = null;
-    const clearDrag = () => {
-      dragging = false;
-      projectDragId = null;
-      ghost?.remove();
-      pad?.remove();
-      ghost = pad = null;
-      document.body.classList.remove("co-copying-short");
-      shortZone()?.classList.remove("is-copy-target");
-      shortBeacon()?.classList.remove("is-copy-target");
-      root
-        .querySelectorAll(".co-project.is-dragging,.co-project.is-drop-target")
-        .forEach((e) => e.classList.remove("is-dragging", "is-drop-target"));
-    };
+    handle.setAttribute("aria-keyshortcuts", "ArrowUp ArrowDown Delete");
     handle.addEventListener("keydown", async (e) => {
+      // The keyboard's way to the recycler, without opening the card.
+      if (["Delete", "Backspace"].includes(e.key)) {
+        e.preventDefault();
+        removeProject(p);
+        return;
+      }
       if (!["ArrowUp", "ArrowDown"].includes(e.key)) return;
       e.preventDefault();
       await moveProject(
@@ -2517,83 +2867,21 @@
         shelf,
       );
     });
-    // Pointer dragging works with mouse, touch and pen; other card controls remain independent.
-    let touchTarget = null,
-      overShort = false;
+    dragPlans.set(card, { p, shelf });
     handle.addEventListener("pointerdown", (e) => {
       if (!storeReady || e.button !== 0) return;
       e.preventDefault();
-      projectDragId = p.project_id;
-      dragging = true;
-      touchTarget = null;
-      overShort = false;
-      handle.setPointerCapture(e.pointerId);
-      card.classList.add("is-dragging");
-      if (!copies) return;
-      // The card's name travels with the pointer, so a drag across the sky to the
-      // short-video island is visibly carrying something.
-      ghost = node("div", undefined, "co-drag-ghost");
-      ghost.setAttribute("aria-hidden", "true");
-      const cover = presentation.projects[p.project_id]?.cover?.url;
-      if (cover) {
-        const img = node("img");
-        img.src = cover;
-        img.alt = "";
-        ghost.append(img);
-      }
-      ghost.append(node("strong", projectName(p)), node("small", "拖到右邊「短影音正在製作」複製一份"));
-      ghost.style.translate = `${e.clientX}px ${e.clientY}px`;
-      // The short-video island is far shorter than the long-form column, so from
-      // most cards it is out of sight; a pad in view always takes the drop.
-      pad = node("div", undefined, "co-short-drop");
-      pad.setAttribute("aria-hidden", "true");
-      pad.append(node("span", "▮", "co-short-drop-icon"), node("strong", "短影音正在製作"), node("small", "拖到這裡 · 複製一份"));
-      document.body.append(pad, ghost);
-      document.body.classList.add("co-copying-short");
+      startDrag(card, e, handle);
     });
-    handle.addEventListener("pointermove", (e) => {
-      if (projectDragId !== p.project_id) return;
-      e.preventDefault();
-      const hovered = document.elementFromPoint(e.clientX, e.clientY);
-      // A card is ordered on its own shelf; a long-form card may also be copied
-      // onto the short-video island, anywhere on it, onto its beacon, or the pad.
-      overShort =
-        copies && !!hovered?.closest(`#${shelves.short.section}, .co-short-drop, .cw-beacon[data-island="short"]`);
-      // Holding still on the pad or the dock must not scroll the page out from under it.
-      if (!hovered?.closest(".co-short-drop, .cw-dock")) {
-        if (e.clientY < 65) window.scrollBy(0, -24);
-        else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
-      }
-      if (ghost) ghost.style.translate = `${e.clientX}px ${e.clientY}px`;
-      shortZone()?.classList.toggle("is-copy-target", overShort);
-      shortBeacon()?.classList.toggle("is-copy-target", overShort);
-      pad?.classList.toggle("is-copy-target", overShort);
-      if (pad) pad.querySelector("small").textContent = overShort ? "放開 · 複製一份，長片保留" : "拖到這裡 · 複製一份";
-      ghost?.classList.toggle("is-copy", overShort);
-      if (ghost)
-        ghost.querySelector("small").textContent = overShort
-          ? "放開 → 複製到短影音，長片保留"
-          : "拖到右邊「短影音正在製作」複製一份";
-      const target = overShort ? null : hovered?.closest(`#${shelves[shelf].section} .co-project`);
-      touchTarget = target?.dataset.projectId || null;
-      root
-        .querySelectorAll(".is-drop-target")
-        .forEach((el) => el.classList.remove("is-drop-target"));
-      target?.classList.add("is-drop-target");
-    });
-    handle.addEventListener("pointerup", async (e) => {
-      if (projectDragId !== p.project_id) return;
-      const target = touchTarget,
-        copy = overShort;
-      clearDrag();
-      if (copy) await copyToShort(p);
-      else await moveProject(p.project_id, target, shelf);
-    });
-    handle.addEventListener("pointercancel", clearDrag);
+    bindCardDrag(card);
+    const recycle = button("🗑", () => removeProject(p), "co-button quiet co-trash-button");
+    recycle.setAttribute("aria-label", "移除「" + projectName(p) + "」（" + UNDO_MS / 1000 + " 秒內可復原）");
+    recycle.title = "移除專案，" + UNDO_MS / 1000 + " 秒內可復原 · 也可以把卡片拖到下方的星塵回收艙";
+    recycle.disabled = !storeReady;
     if (pinned) {
       const badge = node("span", "📌 置頂 " + (index + 1) + " / " + PIN_LIMIT, "co-pin-badge");
       badge.title = "置頂企劃依置頂的先後固定排在最前面";
-      bar.append(badge, handle, node("small", "固定在最前面"), pin);
+      bar.append(badge, handle, node("small", "固定在最前面"), pin, recycle);
       card.querySelector(".co-project-body").prepend(bar);
       return;
     }
@@ -2603,12 +2891,13 @@
       bar.append(
         handle,
         node("small", place + (finished ? " · 完成於 " + date(stampDone(p), true) : "")),
+        recycle,
       );
       if (index >= DECK_HERO) bar.append(expandToggle(card, p));
       card.querySelector(".co-project-body").prepend(bar);
       return;
     }
-    bar.append(handle, node("small", place), pin);
+    bar.append(handle, node("small", place), pin, recycle);
     if (index >= DECK_HERO) {
       const promote = button(
         "移到前面",
@@ -2708,6 +2997,7 @@
       { ...presentation, revision: undefined, environment: undefined },
       response.status,
       storeReady,
+      [...pendingRemoval.keys()],
       (window.RenguinOperations?.current.jobs || []).map((j) => [
         j.project_id,
         window.RenguinOperations.effective(j),
@@ -2719,7 +3009,7 @@
         (presentation.project_order || []).map((id, i) => [id, i]),
       );
       const projects = arrange(
-        primary(),
+        primary().filter((p) => !pendingRemoval.has(p.project_id)),
         pinnedAt,
         (a, b) =>
           (projectRank.get(a.project_id) ?? Infinity) -
@@ -3114,13 +3404,30 @@
         start: "work",
       });
     else root.append(inboxRoot, ...ISLANDS.map(({ id }) => islands[id].deck));
-    [historyRoot] = section(
+    // 系統年表: the product's own history on top, and below it, folded, 工作紀錄 —
+    // every record the card grid leaves out, so none of them loses its way in.
+    const [chronicle] = section(
       "work-history",
-      "工作紀錄",
-      "辦公室記得的每一筆工作 · 依工作發生的地方分組",
-      "co-history",
+      "系統年表",
+      "RENGUIN AI System 的發展航線 · 每一個第一次都有證據",
+      "co-chronicle",
       "history",
-      "☾",
+      "✦",
+    );
+    const timelineHost = node("div", undefined, "co-timeline");
+    const records = node("details", undefined, "tl-archive");
+    records.id = "work-records";
+    const recordsSummary = node("summary");
+    historyNote = node("span", "", "tl-archive-note");
+    recordsSummary.append(node("span", "☾ 工作紀錄"), historyNote);
+    historyRoot = node("div", undefined, "co-history");
+    records.append(recordsSummary, historyRoot);
+    chronicle.append(timelineHost, records);
+    layers?.when("creator-timeline.js", "CreatorTimeline", (timeline) =>
+      timeline.mount(timelineHost, {
+        url: layers.at("creator-milestones.json"),
+        changed: () => renderHistory(),
+      }),
     );
     const footer = node("footer", undefined, "co-technical-footer");
     footer.append(
