@@ -1,5 +1,23 @@
 # Renguin World — Character System
 
+## 2026-09-15 display derivative update
+
+`scripts/build_world_thumbnails.py` creates proportional, alpha-trimmed lossless
+WebP derivatives **offline**, using `characters.asset_path` and the existing
+public-visibility rules. Original images are unchanged. The 96/160/256 px files
+live under `backend/renguin_world/art/portraits`, outside Flask's static tree.
+Their manifest is a display-output index, not a new character authority.
+
+The existing thumbnail endpoint first resolves the current permitted authority
+file, then selects a derivative by the source SHA-256 and requested size. Private
+or revoked sources return 404 even if a derivative exists. Changed public art
+without a matching derivative falls back to the permitted original with
+`X-World-Art: original-needs-offline-build`; rerun the build before release to
+restore the transfer budget. No request crops, compresses or generates an image.
+
+The original V1 notes below describe the previous on-request PNG implementation
+where they mention trimming. Identity, visibility and source authority rules remain.
+
 ## Authorities that already exist (discovered, referenced, never copied)
 
 | Authority | Location | What the world takes |

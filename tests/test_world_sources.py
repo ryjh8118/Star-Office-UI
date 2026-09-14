@@ -218,6 +218,31 @@ class CharacterRegistry(unittest.TestCase):
 
 
 class Routes(unittest.TestCase):
+    def test_offline_portrait_requires_current_authority_and_matching_source(self):
+        from renguin_world import routes
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            source = folder / 'source.png'
+            source.write_bytes(b'original-authority-bytes')
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            derivative = folder / f'{digest}-96.webp'
+            derivative.write_bytes(b'offline-derivative-bytes')
+            client = self.app(tmp)
+            with patch.object(routes, 'PORTRAITS', folder), patch.object(routes, '_character_file', return_value=source):
+                response = client.get('/api/world/character-thumb/TEST?s=96')
+                self.assertEqual(response.data, b'offline-derivative-bytes')
+                self.assertEqual(response.mimetype, 'image/webp')
+                self.assertEqual(response.headers['X-World-Art'], 'offline-derivative')
+                response.close()
+                source.write_bytes(b'changed-source-with-no-derivative')
+                response = client.get('/api/world/character-thumb/TEST?s=96')
+                self.assertEqual(response.data, source.read_bytes())
+                self.assertEqual(response.headers['X-World-Art'], 'original-needs-offline-build')
+                response.close()
+            with patch.object(routes, 'PORTRAITS', folder), patch.object(routes, '_character_file', return_value=None):
+                self.assertEqual(client.get('/api/world/character-thumb/TEST?s=96').status_code, 404)
+
     def app(self, tmp):
         import creator_history
         app = Flask('world-test')

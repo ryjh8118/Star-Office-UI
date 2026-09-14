@@ -1,0 +1,184 @@
+[
+  {
+    "id": "paper-island",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      880,
+      600
+    ],
+    "foot_anchor": [
+      0,
+      0
+    ],
+    "eras": [
+      "ERA_01",
+      "ERA_02",
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "ground",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  },
+  {
+    "id": "river-bank",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      520,
+      260
+    ],
+    "foot_anchor": [
+      -128,
+      64
+    ],
+    "eras": [
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "ground",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  },
+  {
+    "id": "canopy-cluster",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      64,
+      64
+    ],
+    "foot_anchor": [
+      0,
+      0
+    ],
+    "eras": [
+      "ERA_01",
+      "ERA_02",
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "depth-sorted",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  },
+  {
+    "id": "timber-bridge",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      60,
+      50
+    ],
+    "foot_anchor": [
+      -128,
+      64
+    ],
+    "eras": [
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "depth-sorted",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  },
+  {
+    "id": "era-homes",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      64,
+      130
+    ],
+    "foot_anchor": [
+      0,
+      0
+    ],
+    "eras": [
+      "ERA_01",
+      "ERA_02",
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "depth-sorted",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  },
+  {
+    "id": "profession-resident",
+    "source": "ASTRA deterministic SVG; existing renderer edited",
+    "visibility": "PUBLIC",
+    "version": "paper-kit-v1",
+    "dimensions": [
+      12,
+      19
+    ],
+    "foot_anchor": [
+      0,
+      0
+    ],
+    "eras": [
+      "ERA_01",
+      "ERA_02",
+      "ERA_03",
+      "ERA_04",
+      "ERA_05",
+      "ERA_06",
+      "ERA_07",
+      "ERA_08"
+    ],
+    "layer": "independent-overlay",
+    "frontend_path": "/static/world/world-scene.js",
+    "derives_from": "4aef2c1:frontend/world/world-scene.js",
+    "sha256": "14e3b87fa8e8af31f2d21cf039168171dacb4bbcbd32b2d4a6054bb200740889",
+    "hash_scope": "source module",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "actual_image_model": null
+  }
+]

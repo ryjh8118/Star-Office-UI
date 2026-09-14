@@ -32,6 +32,9 @@
   };
   // Landmark and district tiles are fixed, so an era only ever upgrades a lot.
   const LOTS = {
+    CAMPFIRE: [0, 0],
+    CITY_WALL: [0, 0],
+    MONORAIL: [0, 0],
     CLOCK_TOWER: [-2, -2],
     MARKET: [-2, 2],
     STAR_OFFICE: [-2, -1],
@@ -46,7 +49,7 @@
     WOODEN_BRIDGE: [0, 4],
     RIVER_DOCK: [5, 4],
     CREATOR_TOTEM: [-1, -1],
-    POSTER: [1, 1],
+    POSTER: [1.8, 1.8],
   };
   const DISTRICT_ANCHORS = {
     MAIN_CITY: [0, 0],
@@ -213,26 +216,39 @@
         out += `<circle cx="${r1(x)}" cy="${r1(y - h - 19)}" r="2.2" fill="${style.trim}"/>`;
       }
     }
+    if(kind === "cabin" || kind === "house" || kind === "hut") {
+      const h=kind==='hut'?11:floors*FLOOR;
+      for(let k=4;k<h;k+=5) out += `<path d="M${r1(x-30*s)} ${r1(y-k)}l${r1(30*s)} ${r1(15*s)}" stroke="#765d47" stroke-width=".6" opacity=".32"/>`;
+      out += `<path d="M${r1(x-8*s)} ${r1(y+12*s)}v-11l-6-3v11Z" fill="#705848"/><path d="M${r1(x-20*s)} ${r1(y-h-9)}v-10l5-2v11" fill="#d5b999" stroke="#8f755b" stroke-width=".7"/>`;
+    }
     return out + "</g>";
   }
 
+  // Deterministic, code-native paper kit. Not an AI-generated asset.
   function tree(x, y, seed, grass) {
-    const tall = 12 + hash(seed) * 8 + grass * 2;
-    return (
-      `<g class="rw-tree"><line x1="${r1(x)}" y1="${r1(y)}" x2="${r1(x)}" y2="${r1(y - tall * 0.5)}" stroke="#8a5a3c" stroke-width="2.4"/>` +
-      `<ellipse cx="${r1(x)}" cy="${r1(y - tall * 0.75)}" rx="${r1(7 + hash(seed + "w") * 3)}" ry="${r1(tall * 0.42)}" fill="${hash(seed + "c") < 0.5 ? "#7cbf6a" : "#8fcb74"}" stroke="${OUTLINE}" stroke-opacity=".35"/></g>`
-    );
+    const scale = .85 + hash(seed) * .35;
+    const green = hash(seed + "c") < .5 ? "#769c72" : "#8dad78";
+    return `<g class="rw-tree" transform="translate(${r1(x)} ${r1(y)}) scale(${r1(scale)})">
+      <ellipse cy="2" rx="17" ry="7" fill="#47644d" opacity=".13"/>
+      <path d="M-2 0L-3-30H2L3 0Z" fill="#97734f"/>
+      <path d="M0-16L-11-27M0-22L9-34" fill="none" stroke="#97734f" stroke-width="2"/>
+      <path d="M-17-22C-27-28-19-42-12-43C-17-58 4-62 11-49C27-51 31-31 19-25C16-14-7-15-17-22Z" fill="#5c7d5c"/>
+      <path d="M-18-27C-27-37-13-45-9-43C-13-57 8-57 12-45C29-43 26-26 14-24C3-17-13-19-18-27Z" fill="${green}"/>
+      <path d="M-15-37C-12-45-3-44-3-48C7-54 16-43 12-40C1-45-2-29-15-31Z" fill="#bdd099" opacity=".65"/>
+      <path d="M-5-24Q6-21 17-29" fill="none" stroke="#d4deb1" opacity=".45"/>
+    </g>`;
   }
 
   function penguin(x, y, badge, extra = "") {
-    return (
-      `<g class="rw-penguin"${extra}><ellipse cx="0" cy="1" rx="4.5" ry="1.6" fill="#2c2340" opacity=".18"/>` +
-      `<ellipse cx="0" cy="-6" rx="4.2" ry="6" fill="#343a56"/>` +
-      `<ellipse cx="0" cy="-5" rx="2.6" ry="4.2" fill="#fff6e6"/>` +
-      `<circle cx="0" cy="-12.5" r="3.4" fill="#343a56"/>` +
-      `<path d="M-1.2 -12 L1.8 -11.3 L-1.2 -10.6 Z" fill="#f29a45"/>` +
-      `<rect x="-3.6" y="-9.6" width="7.2" height="2" rx="1" fill="${badge}"/></g>`
-    ).replace('<g class="rw-penguin"', `<g class="rw-penguin" transform="translate(${r1(x)} ${r1(y)})"`);
+    return `<g class="rw-penguin" transform="translate(${r1(x)} ${r1(y)})"${extra}>
+      <ellipse cy="1" rx="5" ry="1.8" fill="#47644d" opacity=".18"/>
+      <path d="M-4-7C-7-14-1-18 3-14C6-12 4-9 6-5L4-4Q5 1 0 0Q-5 1-4-5L-6-4Z" fill="#526473" stroke="#fffae9" stroke-width=".8"/>
+      <path d="M-2-11Q0-13 2-11L3-4Q0 0-3-4Z" fill="#fff1d6"/>
+      <path d="M-4-9Q0-7 4-9L4-7Q0-5-4-7Z" fill="${badge}"/>
+      <circle cx="-1.3" cy="-12" r=".65" fill="#3c4042"/><circle cx="1.6" cy="-12" r=".65" fill="#3c4042"/>
+      <path d="M-.9-10.8L1.7-10.7L.2-9.4Z" fill="#dba257"/>
+      <path d="M-4 0h3M1 0h3" stroke="#c79859" stroke-width="1.6" stroke-linecap="round"/>
+    </g>`;
   }
 
   function landmark(id, idx, style, flags, fx) {
@@ -271,7 +287,11 @@
     }
     if (id === "WOODEN_BRIDGE") {
       const color = idx >= 4 ? "#cfc5b2" : "#b98a5a";
-      svg = poly([[x - 12, y - 14], [x + 20, y + 2], [x + 12, y + 14], [x - 20, y - 2]], color);
+      svg = `<g class="rw-bridge">` + poly([[x-25,y-8],[x-13,y-16],[x+27,y+5],[x+15,y+13]], color);
+      for(let k=0;k<8;k++){const xx=x-23+k*5, yy=y-7+k*2.6;svg+=`<path d="M${xx} ${yy}l11-7" stroke="#775b43" opacity=".65"/>`;}
+      svg += `<path d="M${x-25} ${y-18}l40 21M${x-13} ${y-26}l40 21" fill="none" stroke="#765b43" stroke-width="2.6"/>`;
+      for(const [dx,dy] of [[-25,-8],[-13,-16],[15,13],[27,5]]) svg+=`<path d="M${x+dx} ${y+dy}v-12" stroke="#8a6848" stroke-width="3"/>`;
+      svg += '</g>';
       return { depth: 4.1, svg };
     }
     if (id === "MARKET") {
@@ -360,7 +380,7 @@
     if (name === "STAGE") {
       svg = prism(x, y, 0.9, 8, "#6b5b8f").svg + `<line x1="${x - 22}" y1="${y - 40}" x2="${x - 6}" y2="${y - 10}" stroke="#ffe28a" stroke-width="6" opacity=".45"/><line x1="${x + 22}" y1="${y - 40}" x2="${x + 6}" y2="${y - 10}" stroke="#ff9ad5" stroke-width="6" opacity=".45"/>`;
     }
-    const sign = `<g class="rw-sign"><rect x="${x - 26}" y="${y - 58}" width="52" height="13" rx="4" fill="#2c2748"/><text x="${x}" y="${y - 48.5}" class="rw-sign-text">${esc(label)}</text></g>`;
+    const sign = "";
     return { depth: lot[0] + lot[1], svg: `<g class="rw-special" data-special="${name}">${svg}${sign}</g>` };
   }
 
@@ -426,45 +446,50 @@
       fx.push(
         `<i class="rw-o rw-cloud" style="--x:${r1(-380 + hash("cloud" + k) * 760)};--y:${r1(-290 + hash("cloudy" + k) * 120)};--drift:${r1(18 + hash("cd" + k) * 22)}s"></i>`,
       );
-    // Floating island slab: same size and angle in every era.
-    const [nx, ny] = iso(-ISLAND - 0.5, -ISLAND - 0.5),
-      [ex, ey] = iso(ISLAND + 0.5, -ISLAND - 0.5),
-      [sx, sy] = iso(ISLAND + 0.5, ISLAND + 0.5),
-      [wx, wy] = iso(-ISLAND - 0.5, ISLAND + 0.5);
-    out.push(`<g class="rw-island">`);
-    out.push(poly([[wx, wy], [sx, sy], [sx, sy + 34], [sx - 60, sy + 70], [wx + 40, wy + 44]], "#b98b5e"));
-    out.push(poly([[sx, sy], [ex, ey], [ex - 30, ey + 40], [sx + 40, sy + 60], [sx, sy + 34]], "#9a6f4a"));
-    out.push(poly([[nx, ny], [ex, ey], [sx, sy], [wx, wy]], "#9fd08a"));
-    out.push("</g>");
-    out.push(`<g class="rw-ground">`);
-    for (let i = -ISLAND; i <= ISLAND; i++)
-      for (let j = -ISLAND; j <= ISLAND; j++) {
-        const inCity = Math.max(Math.abs(i), Math.abs(j)) <= L.radius;
-        let fill = hash("g" + i + "," + j) < 0.5 ? "#9fd08a" : "#93c77f";
-        let cls = "rw-tile";
-        if (L.river && j === 4) {
-          fill = "#8fcfe8";
-          cls += " rw-water";
-        } else if (inCity) {
-          // Only lots in use are paved; the rest of the city stays park lawn in every era.
-          const plaza = Math.abs(i) <= 1 && Math.abs(j) <= 1;
-          const paved = i === 0 || j === 0 || plaza || L.built.has(i + "," + j);
-          fill = i === 0 || j === 0 ? style.road : plaza ? shade(style.ground, 0.12) : paved ? style.ground : hash("g" + i + "," + j) < 0.5 ? "#acd997" : "#a3d38d";
-          if (i === 0 || j === 0) cls += " rw-road";
-        }
-        out.push(tile(i, j, fill, cls));
-      }
-    out.push(`</g>`);
+    // One softly cut island silhouette, repeated as offset paper strata.
+    const shore = "M-407-5Q-391-27-354-38L-282-79Q-267-83-254-92L-169-137Q-142-139-121-159L-23-203Q0-214 26-201L110-165Q132-147 158-142L251-97Q266-80 287-77L364-38Q397-21 408-1L384 22Q357 34 346 48L252 95Q221 107 203 124L118 165Q90 171 67 187L13 207Q-7 211-26 198L-115 163Q-134 150-160 143L-249 96Q-271 92-289 73L-361 36Q-392 27-407-5Z";
+    out.push(`<g class="rw-island"><ellipse cx="0" cy="102" rx="340" ry="145" fill="#476b62" opacity=".10"/>
+      <path d="${shore}" transform="translate(0 36) scale(.98 1)" fill="#a18970"/>
+      <path d="${shore}" transform="translate(0 27) scale(.995 1)" fill="#c2ab87"/>
+      <path d="${shore}" transform="translate(0 19)" fill="#aa9172"/>
+      <path d="${shore}" transform="translate(0 11)" fill="#dfc9a0"/>
+      <path d="${shore}" transform="translate(0 5)" fill="#7d9b66"/>
+      <path d="${shore}" fill="#a8c88d" stroke="#d1dda9" stroke-width="2"/></g>`);
+    out.push(`<defs><clipPath id="rw-land-clip"><path d="${shore}"/></clipPath></defs><g class="rw-ground" clip-path="url(#rw-land-clip)">`);
+    // Grass patches have organic edges, never tile outlines.
+    for(let k=0;k<24;k++) {
+      const i=(hash("meadow-i"+k)-.5)*12, j=(hash("meadow-j"+k)-.5)*12;
+      const [x,y]=iso(i,j);
+      out.push(`<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="${r1(25+hash("meadow-w"+k)*60)}" ry="${r1(10+hash("meadow-h"+k)*20)}" fill="${k%2 ? '#b5cd96' : '#94b681'}" opacity=".42"/>`);
+    }
+    const roadR = L.radius + .35;
+    const roadEnds = [iso(-roadR,0),iso(roadR,0),iso(0,-roadR),iso(0,roadR)];
+    out.push(`<path class="rw-road" d="M${pts([roadEnds[0]])}L${pts([roadEnds[1]])}M${pts([roadEnds[2]])}L${pts([roadEnds[3]])}" fill="none" stroke="#dccaab" stroke-width="23" stroke-linecap="round"/>`);
+    out.push(`<ellipse cx="0" cy="0" rx="58" ry="29" fill="#c8b28e"/><ellipse cx="0" cy="-2" rx="55" ry="27" fill="#edddbb"/>`);
+    if(L.river) {
+      const water = "M-359-48C-269-2-251 4-212 29S-147 62-128 64S-51 96-9 121S65 163 130 193";
+      out.push(`<path d="${water}" fill="none" stroke="#f0dfb8" stroke-width="34"/><path class="rw-water" d="${water}" fill="none" stroke="#78aebb" stroke-width="24"/><path d="${water}" fill="none" stroke="#a5d3d6" stroke-width="15"/>`);
+      for(let k=0;k<12;k++) {const [x,y]=iso(-5.5+k,4);out.push(`<path d="M${x-5} ${y}l10 5" fill="none" stroke="#e0f0e4" opacity=".7" stroke-linecap="round"/>`);}
+    }
+    out.push('</g>');
     // Wild edge: trees and grass outside the city; grass grows a little when the city naps.
     for (let i = -ISLAND; i <= ISLAND; i++)
       for (let j = -ISLAND; j <= ISLAND; j++) {
         const ring = Math.max(Math.abs(i), Math.abs(j));
+        if (Math.abs(i) + Math.abs(j) > 10) continue;
         if (ring <= L.radius || (L.river && j === 4)) continue;
-        if (hash("tree" + i + "," + j) < 0.33) {
-          const [x, y] = iso(i, j);
-          items.push({ depth: i + j, svg: tree(x + (hash("tx" + i + j) - 0.5) * 16, y, "t" + i + "," + j, grass) });
+        if (hash("tree" + i + "," + j) < 0.29) {
+          const [x, y] = iso(i + (hash("tx"+i+","+j)-.5)*.7, j + (hash("ty"+i+","+j)-.5)*.7);
+          items.push({ depth: i + j, svg: tree(x, y, "t" + i + "," + j, grass) });
         }
       }
+    // Small meadow clusters give the wild edge structure without adding buildings.
+    for(let k=0;k<22;k++) {
+      const i=(hash("shrub-i"+k)-.5)*11, j=(hash("shrub-j"+k)-.5)*11;
+      if(Math.max(Math.abs(i),Math.abs(j))<L.radius+.5 || (L.river && Math.abs(j-4)<.65)) continue;
+      const [x,y]=iso(i,j);
+      items.push({depth:i+j,svg:`<g transform="translate(${r1(x)} ${r1(y)})"><ellipse rx="16" ry="6" fill="#7c9b70" opacity=".25"/><path d="M-14 0Q-18-11-9-11Q-8-22 1-17Q13-23 13-11Q23-5 14 0Z" fill="#819f6d"/><path d="M-9-10Q-3-16 3-11Q10-16 14-7" fill="none" stroke="#bfd197" stroke-width="3"/><circle cx="-7" cy="-6" r="2" fill="#e3cb84"/><circle cx="7" cy="-8" r="2" fill="#e3cb84"/></g>`});
+    }
     if (grass > 0) {
       let tufts = "";
       const n = 10 + grass * 14;
@@ -528,7 +553,7 @@
       const hot = flags.has("NEW_POSTER") || flags.has("FEATURED_POSTER");
       items.push({
         depth: 2.05,
-        svg: `<g class="rw-poster${hot ? " is-hot" : ""}"><line x1="${x - 16}" y1="${y}" x2="${x - 16}" y2="${y - 30}" stroke="${OUTLINE}" stroke-width="1.5"/><line x1="${x + 16}" y1="${y + 2}" x2="${x + 16}" y2="${y - 28}" stroke="${OUTLINE}" stroke-width="1.5"/><rect x="${x - 22}" y="${y - 52}" width="44" height="26" rx="3" fill="#fff8ea" stroke="${OUTLINE}" stroke-opacity=".6"/><text x="${x}" y="${y - 41}" class="rw-poster-kicker">${poster.is_new ? "NEW" : "精選"}</text><text x="${x}" y="${y - 31}" class="rw-poster-title">${esc(title)}</text></g>`,
+        svg: `<g class="rw-poster${hot ? " is-hot" : ""}"><line x1="${x - 16}" y1="${y}" x2="${x - 16}" y2="${y - 30}" stroke="${OUTLINE}" stroke-width="1.5"/><line x1="${x + 16}" y1="${y + 2}" x2="${x + 16}" y2="${y - 28}" stroke="${OUTLINE}" stroke-width="1.5"/><rect x="${x - 22}" y="${y - 52}" width="44" height="26" rx="3" fill="#fff8ea" stroke="${OUTLINE}" stroke-opacity=".6"/><text x="${x}" y="${y - 41}" class="rw-poster-kicker">${poster.is_new ? "NEW" : "精選"}</text><text x="${x}" y="${y - 31}" class="rw-poster-title">▶</text></g>`,
       });
     }
     if (flags.has("FESTIVAL_BANNERS")) {
@@ -570,30 +595,42 @@
     }
     // Characters from the registry: the authority's own image as a small standee,
     // each on its own spot around the district anchor so nobody stands on anybody.
-    const spots = {};
-    const cast = L.cast.map((c) => {
-      const anchor = DISTRICT_ANCHORS[c.district] || [0, 0];
-      const n = (spots[c.district] = (spots[c.district] || 0) + 1) - 1;
-      const [di, dj] = SPOTS[n % SPOTS.length];
-      const [x, y] = iso(anchor[0] + di, anchor[1] + dj);
+    const placed = [];
+    // Characters cannot be painted over the visible roof/wall face of a home.
+    // Candidate scoring remains display-only; district membership is unchanged.
+    const footprints = L.slots.map(([i,j])=>{
+      const [x,y]=iso(i,j);
+      return {x,y,h:Math.max(1,visual.building_height||1)*FLOOR+25};
+    });
+    for(const [name,district] of SPECIALS) if(L.unlocked.has(district)) {
+      const [x,y]=iso(...LOTS[name]);footprints.push({x,y,h:48});
+    }
+    const cast = L.cast.map((c, index) => {
+      const anchor = DISTRICT_ANCHORS[c.district] || [0,0];
+      const candidates=[];
+      for(let t=-L.radius;t<=L.radius;t+=.7) for(const ij of [[t,.55],[.55,t]]) {
+        const point=iso(...ij);
+        candidates.push({point,rank:Math.hypot(ij[0]-anchor[0],ij[1]-anchor[1])});
+      }
+      for(let t=-L.radius;t<=L.radius;t+=.65) for(const ij of [[t,L.radius+.6],[L.radius+.6,t]]) {
+        const point=iso(...ij);candidates.push({point,rank:Math.hypot(ij[0]-anchor[0],ij[1]-anchor[1])+2});
+      }
+      candidates.sort((a,b)=>a.rank-b.rank);
+      const free=({point:[x,y]})=>!footprints.some(b=>Math.abs(x-b.x)<37 && y>b.y-b.h-4 && y<b.y+35);
+      const separated=({point})=>placed.every(p=>Math.hypot(p[0]-point[0],p[1]-point[1])>36);
+      const chosen=candidates.find(c=>free(c)&&separated(c)) || candidates.find(separated) || candidates[index%candidates.length];
+      const [x,y]=chosen.point;placed.push([x,y]);
       const pose = String(c.state || "IDLE").toLowerCase();
       const body =
         c.render_mode === "IMAGE"
           ? `<img src="/api/world/character-thumb/${encodeURIComponent(c.character_id)}?s=96" alt="${esc(c.display_name)}" loading="lazy" decoding="async" draggable="false">`
-          : `<svg class="rw-sprite rw-token-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${penguin(0, 0, "#ffd35e")}</svg><b class="rw-token-tag">鵝寶</b>`;
-      return `<div class="rw-o rw-actor is-${esc(pose)}" style="--x:${r1(x)};--y:${r1(y)}" data-character="${esc(c.character_id)}" title="${esc(c.display_name)}"><div class="rw-standee">${body}</div></div>`;
+          : `<svg class="rw-sprite rw-token-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${penguin(0, 0, "#ffd35e")}</svg><span class="rw-token-tag">職業居民</span>`;
+      return `<div class="rw-o rw-actor is-${esc(pose)}" style="--x:${r1(x)};--y:${r1(y)}" data-character="${esc(c.character_id)}" title="${esc(c.render_mode === "IMAGE" ? c.display_name : "通用職業居民（非真人化身）")}"><div class="rw-standee">${body}</div></div>`;
     });
     overlay.push(...cast);
-    // District labels float over their anchors; locked districts stay unlabelled.
-    let labels = "";
-    for (const d of state?.districts || []) {
-      if (d.status === "LOCKED") continue;
-      const anchor = DISTRICT_ANCHORS[d.id];
-      if (!anchor || d.id === "MAIN_CITY") continue;
-      const [x, y] = iso(...anchor);
-      const w = Math.max(44, String(d.name).length * 11 + 14);
-      labels += `<g class="rw-district-label${d.status === "PREVIEW" ? " is-preview" : ""}"><rect x="${r1(x - w / 2)}" y="${r1(y + 12)}" width="${r1(w)}" height="16" rx="8"/><text x="${r1(x)}" y="${r1(y + 23.5)}">${esc(d.name)}</text></g>`;
-    }
+    // Only the Office entry needs an in-scene label; districts remain in HTML below.
+    const labels = "";
+    if(L.unlocked.has("CREATOR_DISTRICT")) overlay.push(`<a class="rw-office-entry" href="/" aria-label="進入 Star Office">Office ↗</a>`);
     const sorted = items.sort((a, b) => a.depth - b.depth);
     out.push(`<g class="rw-back">${back.map((x) => x.svg).join("")}</g>`);
     out.push(`<g class="rw-city">${sorted.map((x) => x.svg).join("")}</g>`);

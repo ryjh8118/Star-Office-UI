@@ -6,7 +6,6 @@ Office pays nothing for the world until someone opens /world.
 from functools import lru_cache
 import hashlib
 from pathlib import Path
-import threading
 
 from flask import Blueprint, abort, current_app, jsonify, make_response, request, send_file
 
@@ -15,8 +14,12 @@ ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = ROOT / 'frontend'
 WORLD_DIR = FRONTEND / 'world'
 THUMB_SIZES = {96, 160, 256}
-_thumbs = {}
-_thumb_lock = threading.Lock()
+PORTRAITS = ROOT / 'backend/renguin_world/art/portraits'
+
+
+@lru_cache(maxsize=128)
+def _source_digest(path, mtime_ns, size):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def _presentation_root():
@@ -97,7 +100,11 @@ def world_character_asset(character_id):
 
 @bp.get('/api/world/character-thumb/<character_id>')
 def world_character_thumb(character_id):
-    """A small trimmed PNG of the authority's own image, so the street never loads megabytes."""
+    """Serve an offline derivative only after the current authority permits the source.
+
+    New or changed public art falls back to its original until the offline build
+    runs again. Image processing never runs inside a website request.
+    """
     size = _int('s', 160, 1, 512)
     if size not in THUMB_SIZES:
         abort(400)
@@ -105,31 +112,12 @@ def world_character_thumb(character_id):
     if not path:
         abort(404)
     stat = path.stat()
-    key = (str(path), stat.st_mtime_ns, stat.st_size, size)
-    etag = hashlib.sha1(repr(key).encode('utf-8')).hexdigest()
-    if request.if_none_match.contains(etag):
-        response = make_response('', 304)
-        response.set_etag(etag)
-        return response
-    with _thumb_lock:
-        data = _thumbs.get(key)
-    if data is None:
-        import io
-        from PIL import Image
-        with Image.open(path) as image:
-            image = image.convert('RGBA')
-            box = image.getchannel('A').getbbox()
-            if box:
-                image = image.crop(box)
-            image.thumbnail((size, size))
-            buffer = io.BytesIO()
-            image.save(buffer, 'PNG', optimize=True)
-            data = buffer.getvalue()
-        with _thumb_lock:
-            if len(_thumbs) > 96:
-                _thumbs.clear()
-            _thumbs[key] = data
-    response = make_response(data)
-    response.headers['Content-Type'] = 'image/png'
-    response.set_etag(etag)
+    digest = _source_digest(str(path), stat.st_mtime_ns, stat.st_size)
+    derivative = PORTRAITS / f'{digest}-{size}.webp'
+    if derivative.is_file():
+        response = send_file(derivative, mimetype='image/webp', conditional=True, max_age=0)
+        response.headers['X-World-Art'] = 'offline-derivative'
+    else:
+        response = send_file(path, mimetype='image/png', conditional=True, max_age=0)
+        response.headers['X-World-Art'] = 'original-needs-offline-build'
     return response

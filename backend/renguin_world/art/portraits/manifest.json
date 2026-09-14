@@ -1,0 +1,2111 @@
+[
+  {
+    "character_id": "RENGUIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9",
+    "output": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9-96.webp",
+    "size": [
+      71,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "7df4da5045c3783c3c3c5df49cc8957913319964ccdfcd71e2c474a258881d01"
+  },
+  {
+    "character_id": "RENGUIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9",
+    "output": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9-160.webp",
+    "size": [
+      118,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "0d8e58a71d0f06cc1bddf8112546f0cdd4a96480dc897e3151f6ce5ab643469e"
+  },
+  {
+    "character_id": "RENGUIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9",
+    "output": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9-256.webp",
+    "size": [
+      183,
+      249
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5b57a51f621bfcc88f9af49014940a5e439382aa6e08a6b51cad58a59928260e"
+  },
+  {
+    "character_id": "PINK_BEAR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9",
+    "output": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9-96.webp",
+    "size": [
+      82,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "70b9e5556c1a80567b05025a75678327ffde58124598e7a4f556391e8b3f5845"
+  },
+  {
+    "character_id": "PINK_BEAR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9",
+    "output": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9-160.webp",
+    "size": [
+      137,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5b3afcb9a73535f2dcd6a41a420527bda076b9edc9d15a423aa03a7f60e61e6e"
+  },
+  {
+    "character_id": "PINK_BEAR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9",
+    "output": "84e3bb7e55c8fa0457d21b81418d05ea26f8ed4b4f3ce27315baf28ea80a5ee9-256.webp",
+    "size": [
+      220,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "4110644b09de0c34c6b689fa0fc6e85deee35cdfc902071e2fa3167d15f4cecb"
+  },
+  {
+    "character_id": "XUEBAO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320",
+    "output": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320-96.webp",
+    "size": [
+      76,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f5e8c747262a69d8474bdfd61a8d23a7452b224ec7518911541ed6bcbcb9e0f9"
+  },
+  {
+    "character_id": "XUEBAO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320",
+    "output": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320-160.webp",
+    "size": [
+      126,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "ba31ba4dd4b8254e6152e528b69797b53821bf934c9bef22ff7f6439c94cd3c7"
+  },
+  {
+    "character_id": "XUEBAO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320",
+    "output": "fa37383f0f7aa9102f121a865ebdd7999092bdce5c2dbb20b44716054c498320-256.webp",
+    "size": [
+      201,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2a2aec23f147bd1b5501ac754d184abda8d3d2639e1c46413cf8a23e9e678d33"
+  },
+  {
+    "character_id": "DODO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2",
+    "output": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2-96.webp",
+    "size": [
+      74,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "9b2f6e97720117529accdb20e1012a4a6cf540e08bc700eea61c70cc42b31581"
+  },
+  {
+    "character_id": "DODO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2",
+    "output": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2-160.webp",
+    "size": [
+      124,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "135a8c4877c077520c8d3337d681de45ef6ea8ac9a8908060676c662ddb65fbd"
+  },
+  {
+    "character_id": "DODO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2",
+    "output": "fa9f3ce7fb66b24e9d7cc3871c3450710797a7895dadd794b0acc0dc697baeb2-256.webp",
+    "size": [
+      198,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "0f3d964f98c184be3bd43b3181961b63319acf8cf47256156258f74ddfabc079"
+  },
+  {
+    "character_id": "RICKY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28",
+    "output": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28-96.webp",
+    "size": [
+      87,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2b291a33dd56982c0bcce31d6355a185b0c704016a91f4bada4a44fbb680a17f"
+  },
+  {
+    "character_id": "RICKY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28",
+    "output": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28-160.webp",
+    "size": [
+      144,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3ce542a90de75b2c37974231f6221079ec0dce75856f528463f2a8eed340b441"
+  },
+  {
+    "character_id": "RICKY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28",
+    "output": "e0d05e58d7840638720771a3e85cda7e9a8e7bfd87ce7692e21a4776b5627a28-256.webp",
+    "size": [
+      231,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2e6fd0e6116978b631c0b330515d8195ca6a12d841f03ca68a60d1d619a9e08e"
+  },
+  {
+    "character_id": "PAM",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4",
+    "output": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4-96.webp",
+    "size": [
+      67,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "401d61786049c567e75554ae3ff90ae0292f4a4fd1da2da84ba5dbe6db13964d"
+  },
+  {
+    "character_id": "PAM",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4",
+    "output": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4-160.webp",
+    "size": [
+      112,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "385a6339316323da10fb1dfbbadcfa525cf819b73c541a9f20f146d899ab1d63"
+  },
+  {
+    "character_id": "PAM",
+    "source_authority": "ASSET-01",
+    "source_sha256": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4",
+    "output": "fdb422b2e7f463d7528ed51be39ff4253caf4cbd2dd09508810f84a1ab3130e4-256.webp",
+    "size": [
+      179,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "52f89ffe9b172390da884f7d7c88b61cb2ce8bf97699b8c4e244346f5036645d"
+  },
+  {
+    "character_id": "ARES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32",
+    "output": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32-96.webp",
+    "size": [
+      96,
+      65
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d4d0382fa19da373a9e5d3c7a0c1840bfdba8ff366b66c3d4eb08ada7acf2013"
+  },
+  {
+    "character_id": "ARES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32",
+    "output": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32-160.webp",
+    "size": [
+      160,
+      108
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "8e27ff48e3f6cb7470334ae473603bbeb6d017a1fa57cfc95fa1afa61ebabc30"
+  },
+  {
+    "character_id": "ARES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32",
+    "output": "4e85fc8eb931a0955d684fe7ae7d79de1fa063ca5a57462890ab196b9857ab32-256.webp",
+    "size": [
+      256,
+      173
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "57a480410d4ceb7bb8d0e710109ceb63c642c3a16b7ae9937d09963f4b198153"
+  },
+  {
+    "character_id": "DEREK",
+    "source_authority": "ASSET-01",
+    "source_sha256": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c",
+    "output": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c-96.webp",
+    "size": [
+      90,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "0c408bfd17a3e42b80d638fc2603b08927537cdafa25bcecf2ec9a375085c7d9"
+  },
+  {
+    "character_id": "DEREK",
+    "source_authority": "ASSET-01",
+    "source_sha256": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c",
+    "output": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c-160.webp",
+    "size": [
+      151,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "ccca4a85bff5be3884a26a7051b06ab08e836f14cc1b2be090843427485bd52c"
+  },
+  {
+    "character_id": "DEREK",
+    "source_authority": "ASSET-01",
+    "source_sha256": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c",
+    "output": "98a3b304803995a0db482d68a91ab6e4bc3b3e917164ffe7a8de835786382f0c-256.webp",
+    "size": [
+      241,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "fe9d707f8fe552c1e930c69b96d8e066e88fbf8be61cac038b0912152fc73be3"
+  },
+  {
+    "character_id": "ERIC",
+    "source_authority": "ASSET-01",
+    "source_sha256": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46",
+    "output": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46-96.webp",
+    "size": [
+      66,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "44c3657ce97e391a9ef1045336c8778989e09ee6e1f622b8ca5e074fe380a562"
+  },
+  {
+    "character_id": "ERIC",
+    "source_authority": "ASSET-01",
+    "source_sha256": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46",
+    "output": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46-160.webp",
+    "size": [
+      110,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d5510f042ebc3b1331d83f0ae980535c8a51ab25234af10005104f53029fa477"
+  },
+  {
+    "character_id": "ERIC",
+    "source_authority": "ASSET-01",
+    "source_sha256": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46",
+    "output": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46-256.webp",
+    "size": [
+      176,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "201f4fbe543688806a008c5860d1947bab5dd37f0e1ea4a867dcb56107f273c0"
+  },
+  {
+    "character_id": "ERIC_SENIOR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5",
+    "output": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5-96.webp",
+    "size": [
+      87,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3d5d44c75a958b5e7d9aa5194dd5951203b49bd730d271045674a42c6501116f"
+  },
+  {
+    "character_id": "ERIC_SENIOR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5",
+    "output": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5-160.webp",
+    "size": [
+      146,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "7afd24c92c9fe93553162060a18c78416c13aa5a2da12ddf56a2305b9d2c3ecd"
+  },
+  {
+    "character_id": "ERIC_SENIOR",
+    "source_authority": "ASSET-01",
+    "source_sha256": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5",
+    "output": "597347fb3d7e5c15a85e852cdbfe595beb62bbbc3e13c1a01a8945dd00274ea5-256.webp",
+    "size": [
+      233,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3ed2efd523d52b76b79b5a699e51f1d512675f38e0c482f3b7b63696c7ff1b75"
+  },
+  {
+    "character_id": "JAMES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644",
+    "output": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644-96.webp",
+    "size": [
+      76,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3c13cbba674e0812269db0b38ad209382b8f2c8ba78b242ca1bd2b0b3b25e229"
+  },
+  {
+    "character_id": "JAMES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644",
+    "output": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644-160.webp",
+    "size": [
+      126,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "731d2127d07adf68b99d63b946b477b193942d43b6b0cf86452a9d5bc7d59ede"
+  },
+  {
+    "character_id": "JAMES",
+    "source_authority": "ASSET-01",
+    "source_sha256": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644",
+    "output": "78caa8c3697dbbbde922b76c6946e50c0181ae4f417715c9f614df0c9ddab644-256.webp",
+    "size": [
+      202,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5820ae5eff504f0a9a80ed2fef9c9cb1e4dac56d29a918cb568618f5710b40a1"
+  },
+  {
+    "character_id": "LUDI",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311",
+    "output": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311-96.webp",
+    "size": [
+      73,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "6b0c865763ec52c935e041edd1eebe3ecdd275dfaddf5c3420c9aff20ffb5f7c"
+  },
+  {
+    "character_id": "LUDI",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311",
+    "output": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311-160.webp",
+    "size": [
+      121,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "ce4d5611fa403aa02e01b761116866d7aa512f92b7ce4f44ad2428af380068e4"
+  },
+  {
+    "character_id": "LUDI",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311",
+    "output": "b25ea7ace92027a3544963df00e8a6849977f56161dcbc71ec6f3036e4bdf311-256.webp",
+    "size": [
+      193,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "495bdf68ce699b0f7df8f2313b53e87357f2d17ae608e1533b562138846a9dec"
+  },
+  {
+    "character_id": "ULY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127",
+    "output": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127-96.webp",
+    "size": [
+      96,
+      77
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f625ee6e32d1068a2db8f0416e77af245b7a6195d7aebff1b58d9801ad5275b7"
+  },
+  {
+    "character_id": "ULY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127",
+    "output": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127-160.webp",
+    "size": [
+      160,
+      129
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "ef94c1f2aeb676b20d4c14398dbb35e36d72cdefda2527ad86e759b501fce048"
+  },
+  {
+    "character_id": "ULY",
+    "source_authority": "ASSET-01",
+    "source_sha256": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127",
+    "output": "12c0b20ee5a80df087d828929d8c0914fee2b1f413dd39eed28f574ffddc2127-256.webp",
+    "size": [
+      242,
+      195
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d7255443ca0128e153c20d6d6a6d41f45bb3cd87feaec48d0b7dcad1d6e0f666"
+  },
+  {
+    "character_id": "YIDA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172",
+    "output": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172-96.webp",
+    "size": [
+      96,
+      65
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "51f2de2d0fdc44690aa73a129f734e62e36d911f492456bffe21964288d9781b"
+  },
+  {
+    "character_id": "YIDA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172",
+    "output": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172-160.webp",
+    "size": [
+      160,
+      109
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "4c54c9a2fe77d5f7d0822a23178c849d57bc72c24392d3e8c9f91ff4ee6b0764"
+  },
+  {
+    "character_id": "YIDA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172",
+    "output": "b37a9adae785fe3a2eb8024accd1fef797a2b9097390e593e778a4da9140a172-256.webp",
+    "size": [
+      256,
+      174
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "b897fdcab62cbb9c0b538f266cfdcb6c13c09a54f772215a44ee2482f3422d50"
+  },
+  {
+    "character_id": "CAMILLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f",
+    "output": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f-96.webp",
+    "size": [
+      78,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "02e1f684eacb1f475b76664ed0ab7111e4bebccd7c836664745bcd1ad83a9bc0"
+  },
+  {
+    "character_id": "CAMILLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f",
+    "output": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f-160.webp",
+    "size": [
+      130,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "8e72f6f8fca7f40b263f26c3533de6dec23913005d6e0778d783f2d2e79aabf8"
+  },
+  {
+    "character_id": "CAMILLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f",
+    "output": "b4995e0e1a4d7894cecc704e815b49d2e186963544da0e2817a8f5648ae22c4f-256.webp",
+    "size": [
+      208,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "359f56a10f264707b8bdc55ebff137730503215e845a0effebfcc5ee3cff60e9"
+  },
+  {
+    "character_id": "GUO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae",
+    "output": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae-96.webp",
+    "size": [
+      84,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "85f62a0fed35abd0f6a856775ab1d0e2fda18b28cdedf533dc34dbc3da7244bd"
+  },
+  {
+    "character_id": "GUO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae",
+    "output": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae-160.webp",
+    "size": [
+      140,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "8cb059428a87ae9be9ba90aad993657d155ab7cfaf6c57bb7a9113785892709d"
+  },
+  {
+    "character_id": "GUO",
+    "source_authority": "ASSET-01",
+    "source_sha256": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae",
+    "output": "9127a2b61435ec901cd8a5442367e75fc7c6a8e3ef7c0fb9d29ad7419ba1c3ae-256.webp",
+    "size": [
+      224,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5b77abb016562b50526882068b0d6590db92bc3364ad15deb792428fb7942da2"
+  },
+  {
+    "character_id": "BINBIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e",
+    "output": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e-96.webp",
+    "size": [
+      78,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "08cb0558b44aff231352f45471be6c3f1ddc61423b2a878767644927f73c8e17"
+  },
+  {
+    "character_id": "BINBIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e",
+    "output": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e-160.webp",
+    "size": [
+      130,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "0973a5c386da64f8df7a0ec3e532ab2db5994e9923a67b0eaee4480c74fb9703"
+  },
+  {
+    "character_id": "BINBIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e",
+    "output": "766e5f683d4dbf24b8d7863ebd089cbc2728dd3f504c00d395c682a6bfd9583e-256.webp",
+    "size": [
+      209,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5fb5928ec7a41140381f58e6b60728336232b2d09ea78527c0cf307cec48a968"
+  },
+  {
+    "character_id": "GUO_JIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359",
+    "output": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359-96.webp",
+    "size": [
+      60,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d0f67276647b5acd0dfc94c0bc70ee5c0a0baeb5c70a23845d49f6610cdb966d"
+  },
+  {
+    "character_id": "GUO_JIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359",
+    "output": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359-160.webp",
+    "size": [
+      100,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "8234ae7e9c1718d0a92d111c0dc9462dbf9fdeea86afa9385a07de23e7f3e9d4"
+  },
+  {
+    "character_id": "GUO_JIN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359",
+    "output": "afe0fd5b5629aae888dd41623f17a0d7d80f099fa216588523f9a2690ab28359-256.webp",
+    "size": [
+      160,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3303c49ca1e818e5141851acf9dd900972dec17e8349af4ba800992f77b8276c"
+  },
+  {
+    "character_id": "JESSE",
+    "source_authority": "ASSET-01",
+    "source_sha256": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63",
+    "output": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63-96.webp",
+    "size": [
+      82,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "25ea95d75683f35abd7294bdafe58891e814935effb87b9f6dd577c4b1adc03c"
+  },
+  {
+    "character_id": "JESSE",
+    "source_authority": "ASSET-01",
+    "source_sha256": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63",
+    "output": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63-160.webp",
+    "size": [
+      137,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "a42f44c32d1b28207cfae5c2cd3547e1f002a9824e811ade615899bc5d68973d"
+  },
+  {
+    "character_id": "JESSE",
+    "source_authority": "ASSET-01",
+    "source_sha256": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63",
+    "output": "03991fcbac96a02fe05395d74930ab2206bce2907b53ce34ddd1dd986c31af63-256.webp",
+    "size": [
+      219,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "920c8c1c5f35cb43fd06de34a69ba82410de900862478335667b00f2c59d04ac"
+  },
+  {
+    "character_id": "XAVIER",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318",
+    "output": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318-96.webp",
+    "size": [
+      96,
+      77
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f4407c840601e61b52b541528645f3bc6cb4559301ac319013df88d0dbe17ded"
+  },
+  {
+    "character_id": "XAVIER",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318",
+    "output": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318-160.webp",
+    "size": [
+      160,
+      128
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2609b01bfee337c407350983dd6f7979ef02910d487f7686664a0bbd558a9ebc"
+  },
+  {
+    "character_id": "XAVIER",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318",
+    "output": "ad30dbec832494d10564cc098765c1b35b2dfbcfa74384606828afc37afd4318-256.webp",
+    "size": [
+      256,
+      205
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3c1fd630a6db93a8342e38d29f5e86ffb5128e4476ec2e06160db099b47b3faf"
+  },
+  {
+    "character_id": "HAN_XIU",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23",
+    "output": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23-96.webp",
+    "size": [
+      93,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "3662b008e487566092b58fa4b1df64648f21a153e0947340f226119a2e3e039f"
+  },
+  {
+    "character_id": "HAN_XIU",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23",
+    "output": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23-160.webp",
+    "size": [
+      155,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "4a5bc4b91e726e0232eab470f8c5eafcd3ebbddbbe61d3700b99d128e1b4b87b"
+  },
+  {
+    "character_id": "HAN_XIU",
+    "source_authority": "ASSET-01",
+    "source_sha256": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23",
+    "output": "ac0266bb76b2854d13fe7f9a921872230d381d45ff4c2c45703bfc989688ff23-256.webp",
+    "size": [
+      248,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "fe17ad2f1f3f8956e70c605cb65e38f28ac45a536bf995b9fe58d34d4dfe12f0"
+  },
+  {
+    "character_id": "DANDAN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e",
+    "output": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e-96.webp",
+    "size": [
+      96,
+      52
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "be8bf5ebe467ca9997377c07beb69da6ba2230f0a0568edd44d753b1be8b770d"
+  },
+  {
+    "character_id": "DANDAN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e",
+    "output": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e-160.webp",
+    "size": [
+      160,
+      86
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "117a1c805be88ac01a5c0628742b3b68b0f44e9c02f5463a860e7a8592690be3"
+  },
+  {
+    "character_id": "DANDAN",
+    "source_authority": "ASSET-01",
+    "source_sha256": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e",
+    "output": "74b30792b280e2e7331a15c08c68950715d8a6d5794b77e84141d87baed3b27e-256.webp",
+    "size": [
+      256,
+      137
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "57134c64e37d5cc115080067bf088ddf639a513531894357f0468018b97cd062"
+  },
+  {
+    "character_id": "XIAO_V",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71",
+    "output": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71-96.webp",
+    "size": [
+      87,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "349520d3c4b0f78b5f807726cbcba4dfe401f39205c809278510f1933c65b477"
+  },
+  {
+    "character_id": "XIAO_V",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71",
+    "output": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71-160.webp",
+    "size": [
+      145,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "c2af8184928f4128cfed6eeda07d06b2218d23e167e7070a38a5f7cfe2984f95"
+  },
+  {
+    "character_id": "XIAO_V",
+    "source_authority": "ASSET-01",
+    "source_sha256": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71",
+    "output": "4d261b1d40f126099c49a8d41f79e20e0afbf4732ec8cb4401a8426e0ac90a71-256.webp",
+    "size": [
+      233,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "4b393220a3160eef8e1b5fe889ea0125fd14b24a33669d40d66c58ffc4bea854"
+  },
+  {
+    "character_id": "DOLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62",
+    "output": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62-96.webp",
+    "size": [
+      96,
+      90
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "09999f1f877d1a17c0bff68aa7ffb5683ed57c5719766c991c98dc3a8319c327"
+  },
+  {
+    "character_id": "DOLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62",
+    "output": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62-160.webp",
+    "size": [
+      160,
+      149
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "b8a9b5bb7aba85777429f663c188f99e676d569392e687e0a80dcb25884ecc38"
+  },
+  {
+    "character_id": "DOLA",
+    "source_authority": "ASSET-01",
+    "source_sha256": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62",
+    "output": "6f279f0a49209ff0114952943f35c578d66965a56e9afe96f3a0ddc214bb0f62-256.webp",
+    "size": [
+      256,
+      239
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "86b2f3cc8a40eb8b0a8065f1a80f13929fef5711d7a031c543b441177ce891cc"
+  },
+  {
+    "character_id": "GOOSE_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473",
+    "output": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473-96.webp",
+    "size": [
+      81,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2b4ae60b8ea9cb199b5cc3c311a5fa94403a280a787aef68bc88fc58e3bcf636"
+  },
+  {
+    "character_id": "GOOSE_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473",
+    "output": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473-160.webp",
+    "size": [
+      135,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f6adda0ac047035acc0d271d582430171d09cdc0632c9ebf6c2b703be3ba6815"
+  },
+  {
+    "character_id": "GOOSE_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473",
+    "output": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473-256.webp",
+    "size": [
+      211,
+      250
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "60bfda9a2592fa92a2b5b1389d6bde1b05f54fe5ceed595a9e3b0452fa832410"
+  },
+  {
+    "character_id": "SUPREME_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248",
+    "output": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248-96.webp",
+    "size": [
+      88,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "c8c582ac96c9b7911a52066156dc082843cdfa7a18d4a5d7d70e7dc4e439d6b3"
+  },
+  {
+    "character_id": "SUPREME_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248",
+    "output": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248-160.webp",
+    "size": [
+      146,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d9741df70e59ab51204fa4ddc1a0bd6da8fefd45d4d33327637423bb595bec0b"
+  },
+  {
+    "character_id": "SUPREME_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248",
+    "output": "768d11ff969971276fda854816df64bf49099c2803f634d426f5bee79a509248-256.webp",
+    "size": [
+      234,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "b7bf04015c536982f795b3f13c1e4b64e8b80bc1f5f9045cf1677103c338ea3d"
+  },
+  {
+    "character_id": "EARL_GENTLEMAN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b",
+    "output": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b-96.webp",
+    "size": [
+      69,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "8eb5ecedb9a50fb000205440001398a7d7d273fb985d71ea5f6936105d5b1ae3"
+  },
+  {
+    "character_id": "EARL_GENTLEMAN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b",
+    "output": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b-160.webp",
+    "size": [
+      115,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "31f0cd8d64f4002af592d6feac255abd70f3130a9aea35adf57bfa67d60132cc"
+  },
+  {
+    "character_id": "EARL_GENTLEMAN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b",
+    "output": "9e4647dd490d05ee8c03f7e5fd853b918a14f251da0249811fa9048ac39ed17b-256.webp",
+    "size": [
+      184,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "270da4491f511297a50537cd3660090766170b464b8da52d339e7ab23ec6c3aa"
+  },
+  {
+    "character_id": "VILLAGER_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663",
+    "output": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663-96.webp",
+    "size": [
+      88,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "2d3b2778ee9028462dcb9e6ba71ca5e4f9ecb919c6d757076172f6a21172b27e"
+  },
+  {
+    "character_id": "VILLAGER_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663",
+    "output": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663-160.webp",
+    "size": [
+      147,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d2494d29e2f019d24c054ce22e44cf383cb9e02fe942e31bf2018f5bb9abfd5e"
+  },
+  {
+    "character_id": "VILLAGER_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663",
+    "output": "80a166afa022efc8f12452f073f0c156cce232b3ae865743fc3d38a87ded1663-256.webp",
+    "size": [
+      235,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f16d1228fe23b4ba827adb19b4c0a3ba14980961d8775fa81b822faf0d63a532"
+  },
+  {
+    "character_id": "IMPERIAL_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f",
+    "output": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f-96.webp",
+    "size": [
+      84,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "fc48f2b1273fbbb2b6837fa3d6c38fd0bb0308a25588c23b01a946156478e942"
+  },
+  {
+    "character_id": "IMPERIAL_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f",
+    "output": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f-160.webp",
+    "size": [
+      140,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "cd9e67449727ed76cfe53a52ec521e4b91191a2c261c04c6b379d19759f85c8c"
+  },
+  {
+    "character_id": "IMPERIAL_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f",
+    "output": "90d98a897d4092e309af2e824cfa340d906f6c8661d828523a4d16923f33c10f-256.webp",
+    "size": [
+      223,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "a70c5d28bbda5abbe9ee9193ee9959c483ecaf6b010498d0c98bea7b913adae2"
+  },
+  {
+    "character_id": "KING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898",
+    "output": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898-96.webp",
+    "size": [
+      78,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "a79006c6bb7237b014ca4824630f85899ba7e2036f485763d3794070b193a9a3"
+  },
+  {
+    "character_id": "KING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898",
+    "output": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898-160.webp",
+    "size": [
+      130,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "df213ed1fb01bfa429fee04c3d4fce06306ba280a70b703783474ff971f6a707"
+  },
+  {
+    "character_id": "KING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898",
+    "output": "813bc8e84ad61a55f3246398d349c944b4b3b13974b3d19a065dde0321c75898-256.webp",
+    "size": [
+      208,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "1c83235859b67b2614b26e58a0c0ec9527f14ad793f17d1c1fe6491ce91cc9c0"
+  },
+  {
+    "character_id": "CREATOR_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd",
+    "output": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd-96.webp",
+    "size": [
+      70,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "bf9c836a9e9411f3a9fc1151f19ad11c2094aeadf0aa327747c49e56249c18c7"
+  },
+  {
+    "character_id": "CREATOR_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd",
+    "output": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd-160.webp",
+    "size": [
+      116,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "b04926ead46765ea37f416a1d1609305d8e2e7eac4b4a56e1c561dceff450315"
+  },
+  {
+    "character_id": "CREATOR_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd",
+    "output": "dd189f38f5c83233479a6a24f507b684abdb155ed7ca1724938960ea5c39e1dd-256.webp",
+    "size": [
+      185,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "59cc39f0553e4911a3568b1de9ae42b9c5a7c0c1c78784010d621836df22bccf"
+  },
+  {
+    "character_id": "KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100",
+    "output": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100-96.webp",
+    "size": [
+      74,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "75e2c39820411bad47b4e2e20658b3ea3e77f124e828d7ff5d5d7420a68d321f"
+  },
+  {
+    "character_id": "KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100",
+    "output": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100-160.webp",
+    "size": [
+      123,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "88f0e32b155d2c889e90c31270619f4f28d586c5db40743ebcf725571e7e73e2"
+  },
+  {
+    "character_id": "KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100",
+    "output": "c0252757b9fcd752c98eeb86a3a54c36bc3b7ca0aef42cb168c65be6603e7100-256.webp",
+    "size": [
+      196,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "c70ee7d4fa02b5bbe2e8238c76482f0ecc9699b853dd3c0efc62a414899c16be"
+  },
+  {
+    "character_id": "ARMORED_KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d",
+    "output": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d-96.webp",
+    "size": [
+      58,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d36c8e336425f0c6ac02e31624bfb6466db0a61f2b3c5b45dab19a27b08a06d9"
+  },
+  {
+    "character_id": "ARMORED_KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d",
+    "output": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d-160.webp",
+    "size": [
+      96,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "111b441c8bad54fc29f80fdc259d3879adb18399c37d446310e685f8b24a38af"
+  },
+  {
+    "character_id": "ARMORED_KNIGHT_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d",
+    "output": "32324ae47cef777d4b20a3acfe684b71758d6cae7e8488ac155d21b1173d0f0d-256.webp",
+    "size": [
+      154,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d2a1f3405d23b8f9b6f63ee3f71317573170db52f44f569d99e57b6fcc00c723"
+  },
+  {
+    "character_id": "KINDERGARTEN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324",
+    "output": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324-96.webp",
+    "size": [
+      75,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "ef473ff1287fff372b35de21c2bb59a9db694d8a6fdc29c23dbcc7d2aa7a33db"
+  },
+  {
+    "character_id": "KINDERGARTEN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324",
+    "output": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324-160.webp",
+    "size": [
+      125,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "1209f50c035b59d6fccb0abe59c3f98d7c403bdd7efc0295129a6a7ff9e52e0f"
+  },
+  {
+    "character_id": "KINDERGARTEN_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324",
+    "output": "5a592a137c06c20d4e7c079b09d214ff9b74643881656456e3abe766781aa324-256.webp",
+    "size": [
+      200,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "9716c77e8789e281591d91255644aa7d30a619d0a36f74a0372c66fa44f0059a"
+  },
+  {
+    "character_id": "MOTHER_PENGUIN_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78",
+    "output": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78-96.webp",
+    "size": [
+      69,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "5c3a81b747558a260cebcd3080a21ad1467183e1ea7472cb55c47e5d55b9f39a"
+  },
+  {
+    "character_id": "MOTHER_PENGUIN_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78",
+    "output": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78-160.webp",
+    "size": [
+      114,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "18c8431f5b6f9ba29965bded2bf1f8d6e612f972fdabefdc29a07d7ba1cfb287"
+  },
+  {
+    "character_id": "MOTHER_PENGUIN_EGG",
+    "source_authority": "ASSET-08",
+    "source_sha256": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78",
+    "output": "a8312736c10a36a06d96911aa5a746360b0d687bd153b904d2973ed2cc60fe78-256.webp",
+    "size": [
+      183,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "554ba94bfd3552abcfefe2d0912281e1d9af542977cd34fb6681095a82c550ef"
+  },
+  {
+    "character_id": "PENGUIN_PRINCESS",
+    "source_authority": "ASSET-08",
+    "source_sha256": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3",
+    "output": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3-96.webp",
+    "size": [
+      71,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "9ab27044bec8f0cd421db4cb005011ff1b4ea98d2c8870f894287cfd8fb6272b"
+  },
+  {
+    "character_id": "PENGUIN_PRINCESS",
+    "source_authority": "ASSET-08",
+    "source_sha256": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3",
+    "output": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3-160.webp",
+    "size": [
+      119,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "0e98ac8f82a26f92d0e4dca6f197d0840100741fbd2f8ca3321de183f2b01334"
+  },
+  {
+    "character_id": "PENGUIN_PRINCESS",
+    "source_authority": "ASSET-08",
+    "source_sha256": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3",
+    "output": "f5c5c163c11db756ed52354efe38a829411f1716c259719e70504774ac4c37f3-256.webp",
+    "size": [
+      191,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "f36d3efca74d237d666bd3fcef237e8a05a35807e4b4ffb02ecacedbfd46bee7"
+  },
+  {
+    "character_id": "HATCHING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3",
+    "output": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3-96.webp",
+    "size": [
+      85,
+      96
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "d7c58750efadd4c1af59a682a55f4b963c0aefa1f8b03aabd9d46a1c7f1365a8"
+  },
+  {
+    "character_id": "HATCHING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3",
+    "output": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3-160.webp",
+    "size": [
+      141,
+      160
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "73d8a675bdc0ae4d8cdc3c377075d4823c09abc249dfb2bd2ac210e872059d15"
+  },
+  {
+    "character_id": "HATCHING_PENGUIN",
+    "source_authority": "ASSET-08",
+    "source_sha256": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3",
+    "output": "4b17d9b1dfe51557d57c11f68457c84f1e96cab7c4e036ec35cee95a648acaf3-256.webp",
+    "size": [
+      225,
+      256
+    ],
+    "visibility": "REQUEST_AUTHORITY_GATED",
+    "version": 1,
+    "foot_anchor": [
+      0.5,
+      1
+    ],
+    "layer": "independent-character",
+    "operation": "alpha trim, proportional downscale, lossless WebP; no generation",
+    "sha256": "b46cd19f08c45a100b33e19c6907f83b50de9118a31c9b94b671fdfc8511b0b8"
+  }
+]

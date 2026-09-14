@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="none" stroke="#b8794c"/></marker></defs>
+<rect width="1280" height="820" fill="#f7f2e6"/>
+<g font-family="sans-serif" fill="#394b45"><text x="56" y="60" font-size="30" font-weight="bold">Renguin World · 河畔聚落 / 空間草圖 v1</text><text x="56" y="91" font-size="16">可施工的構圖規格 · 非 Sunburst 母版 · 2:1 等角投影 / 光源左上 / 角色獨立圖層</text></g>
+<g transform="translate(480 406)">
+<ellipse cx="0" cy="132" rx="354" ry="122" fill="#dcdcc9"/>
+<path d="M-360 0Q-315-43-224-95L-30-195Q0-214 28-200L228-101Q319-70 364-2L203 98Q135 141 20 190Q0 199-29 185L-246 87Z" fill="#bba181" transform="translate(0 29)"/>
+<path d="M-360 0Q-315-43-224-95L-30-195Q0-214 28-200L228-101Q319-70 364-2L203 98Q135 141 20 190Q0 199-29 185L-246 87Z" fill="#abc494" stroke="#718b66" stroke-width="3"/>
+<path d="M-299-26Q-217 29-163 46T-41 115L66 160" stroke="#e9dfb9" stroke-width="39" fill="none"/>
+<path d="M-299-26Q-217 29-163 46T-41 115L66 160" stroke="#8fc3ce" stroke-width="25" fill="none"/>
+<path d="M-144-72L142 72M123-67L-109 60" stroke="#e9d7b6" stroke-width="25" stroke-linecap="round"/>
+<ellipse rx="60" ry="30" fill="#f3e5c5" stroke="#b9a781" stroke-width="2"/>
+<g stroke="#816347" stroke-width="3"><path d="M-170 72l46-24 26 13-46 24Z" fill="#b68c62"/><path d="M-174 61l46-24m-24 38 46-24"/><path d="M-174 61v12m46-36v12m-24 26v12m46-36v12"/></g>
+<g fill="#edcfaa" stroke="#87644c" stroke-width="2"><path d="M-79-92l39-20 40 20v29l-40 20-39-20Z"/><path d="M-90-93l49-35L10-96l-50 24Z" fill="#b77559"/>
+<path d="M74-8l33-17 34 17v24l-34 17-33-17Z"/><path d="M66-9l41-32 43 29-43 21Z" fill="#b77559"/>
+<path d="M-41 71l31-16 34 16v23l-34 18-31-18Z"/><path d="M-49 70l39-31 42 30-42 21Z" fill="#b77559"/></g>
+<g fill="#688d66" stroke="#4f735c" stroke-width="2"><path d="M-210-67c-32-12-14-48 2-43 7-34 42-21 35-1 30 10 12 49-12 36Z"/><path d="M158-65c-28-8-18-43 2-42 7-26 38-20 39 6 25 10 8 40-12 35Z"/><path d="M230 12c-26-5-22-38-3-40 6-29 40-18 36 3 28 3 12 40-10 33Z"/></g>
+<g fill="#b8794c" stroke="#fff8e6" stroke-width="2"><circle cx="-91" cy="-8" r="7"/><circle cx="40" cy="-22" r="7"/><circle cx="43" cy="41" r="7"/><circle cx="-94" cy="76" r="7"/></g>
+<path d="M-87-8L-45 11L40 42M-77-28L25-43L76-15M-110 46L-91 64" fill="none" stroke="#b8794c" stroke-dasharray="6 5" stroke-width="2" marker-end="url(#arrow)"/>
+<g fill="none" stroke="#506e9b" stroke-width="2" stroke-dasharray="4 4"><ellipse cx="-40" cy="-82" rx="65" ry="47"/><ellipse cx="0" cy="4" rx="69" ry="36"/><ellipse cx="-125" cy="68" rx="48" ry="24"/></g>
+</g>
+<g font-family="sans-serif" font-size="17" fill="#394b45"><text x="397" y="254">Office 入口</text><text x="612" y="428">住宅</text><text x="470" y="453">廣場</text><text x="311" y="516">木橋</text><text x="225" y="445">河流與河岸步道</text><text x="99" y="339">分層樹冠</text></g>
+<g transform="translate(925 180)" font-family="sans-serif" fill="#394b45"><rect width="300" height="430" rx="20" fill="#fffcf4" stroke="#d5c7ab" stroke-dasharray="8 5"/><text x="24" y="42" font-size="22" font-weight="bold">資訊留白 · HTML</text><text x="24" y="86" font-size="17">時代 / 內容成長</text><text x="24" y="125" font-size="17">日夜 / 暫停動態</text><text x="24" y="164" font-size="17">最新作品 / 居民對話</text><text x="24" y="220" font-size="17">藍虛線：可點擊區</text><text x="24" y="259" font-size="17">橘虛線：居民動線</text><text x="24" y="298" font-size="17">圓點僅作草圖位置符號</text><text x="24" y="355" font-size="15">手機：資訊移至城市下方</text><text x="24" y="384" font-size="15">不將文字或角色烘焙進背景</text></g>
+<g font-family="sans-serif" fill="#65746b"><text x="56" y="737" font-size="16">圖層：天空 → 島體岩層 → 草皮 / 河道 / 步道 → 按深度排列建築植被 → 獨立角色 → HTML 熱區</text><text x="56" y="770" font-size="16">本輪只修構圖、植被與資訊遮擋；Sunburst 場景母版、分層點陣素材與 Multi-turn Editing 待 ENGINE_ACCESS_GATE 解除。</text></g></svg>

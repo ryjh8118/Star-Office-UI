@@ -17,7 +17,7 @@ body {
   min-height: 100vh;
   font: 15px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
   color: var(--rw-ink);
-  background: linear-gradient(180deg, #bfe1f3 0%, #e7f3ea 55%, #f6efe0 100%);
+  background: linear-gradient(180deg, #eee8d9 0%, #f8f4e9 70%, #e9efdf 100%);
 }
 button {
   font: inherit;
@@ -157,10 +157,10 @@ button {
 
 /* Sky and time of day */
 .rw-sky-top {
-  stop-color: #9fd3f0;
+  stop-color: #c8e0df;
 }
 .rw-sky-bottom {
-  stop-color: #e4f3f6;
+  stop-color: #f1edda;
 }
 .rw-stage[data-daypart="dusk"] .rw-sky-top {
   stop-color: #f4a58a;
@@ -348,10 +348,10 @@ button {
 }
 .rw-actor img {
   position: absolute;
-  left: calc(-12 * var(--u));
-  top: calc(-31 * var(--u));
-  width: calc(24 * var(--u));
-  height: calc(30 * var(--u));
+  left: calc(-17 * var(--u));
+  top: calc(-39 * var(--u));
+  width: calc(34 * var(--u));
+  height: calc(38 * var(--u));
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 calc(2 * var(--u)) 0 rgba(44, 35, 64, 0.2));
@@ -373,6 +373,42 @@ button {
   border-radius: 99px;
   background: #ffd35e;
   color: #7a4d12;
+}
+
+.rw-office-entry {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  padding: 5px 9px;
+  border: 1px solid #acb89b;
+  border-radius: 99px;
+  background: #fffaeb;
+  color: #425a47;
+  font: 600 11px/1.4 system-ui, sans-serif;
+  text-decoration: none;
+  pointer-events: auto;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+.rw-office-entry:focus-visible,
+button:focus-visible, a:focus-visible {
+  outline: 3px solid #688a89;
+  outline-offset: 3px;
+}
+.rw-token-tag { display: none; }
+.rw-stage-card { background: #fffcf3; box-shadow: 0 8px 26px #7067480c; }
+.rw-banner { font-size: 12px; padding: 7px 12px; }
+.rw-top { padding-top: 14px; padding-bottom: 18px; }
+.rw-brand { color: #425b4a; letter-spacing: 4px; }
+.rw-stage { border: 1px solid #d5dfce; }
+.rw-motion-static *, .rw-motion-static *::before, .rw-motion-static *::after {
+  animation-play-state: paused !important;
+}
+@media (max-width: 720px) {
+  .rw-top-tools .rw-chip-button, .rw-gossip-nav { min-height: 44px; }
+  .rw-office-entry { min-height: 44px; padding: 4px 7px; font-size: 10px; }
+  .rw-top { gap: 10px; }
 }
 .rw-actor.is-celebrating .rw-standee {
   animation: rw-hop 0.7s ease-in-out infinite alternate;
@@ -968,7 +1004,7 @@ details.rw-card > summary {
     letter-spacing: 2px;
   }
   .rw-top-tools .rw-chip-button {
-    min-height: 32px;
+    min-height: 44px;
     padding: 4px 10px;
   }
   .rw-stage-card {

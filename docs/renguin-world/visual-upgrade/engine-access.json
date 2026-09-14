@@ -1,0 +1,28 @@
+{
+  "requested_model": "gpt-image-2.5-sunburst",
+  "actual_model": null,
+  "status": "ENGINE_ACCESS_GATE",
+  "checked_at": "2026-09-15",
+  "available_tool": "image_gen.imagegen",
+  "formal_schema_fields": [
+    "prompt",
+    "referenced_image_paths",
+    "num_last_images_to_include"
+  ],
+  "model_selector": false,
+  "model_execution_identity_available": false,
+  "OPENAI_API_KEY_present_in_process_environment": false,
+  "image_quota": "Not exposed by available tools; Codex text limits are not image quota",
+  "documentation": "https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst",
+  "official_model_exists": true,
+  "account_access_confirmed": false,
+  "generation_calls": [],
+  "actual_input_images_sent": [],
+  "generated_outputs": [],
+  "reason_not_called": "Built-in tool cannot select or attest the requested model; user forbids substitution. No authorized model-selectable API credential found in the process environment. No extra spending authorized.",
+  "gate_resolution": "Provide an already-authorized image tool that selects and reports gpt-image-2.5-sunburst, with usable existing quota.",
+  "review": "SELF_REVIEW; no separate visual-model invocation performed",
+  "evidence": "Session tool discovery returned image_gen__imagegen; its provided formal schema has no model argument. Environment check returned no OPENAI/IMAGE credential variable names. Official model page fetched through web__run. No credential values were printed.",
+  "OPENAI_API_KEY_present_in_user_environment": false,
+  "OPENAI_API_KEY_present_in_machine_environment": false
+}

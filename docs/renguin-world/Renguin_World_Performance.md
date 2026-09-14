@@ -1,5 +1,11 @@
 # Renguin World — Performance
 
+The V1 numbers below are historical. The 2026-09-15 visual-upgrade branch has
+fresh three-run measurements, screenshots and limitations in
+[visual-upgrade/README.md](visual-upgrade/README.md). Character processing is now
+offline; the endpoint serves an authority-gated WebP derivative or the validated
+original. No full character roster or era asset set is preloaded by the page.
+
 ## When the world page is not open
 
 - The Office loads **no** world file: its only reference is a plain

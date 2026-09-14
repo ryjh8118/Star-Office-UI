@@ -1,0 +1,78 @@
+[
+  {
+    "id": "RENGUIN",
+    "source": "frontend/renguin-characters/director/renguin.png",
+    "visibility": "PUBLIC_EXISTING_ART",
+    "viewed": true,
+    "purpose": "identity / aspect ratio only",
+    "dimensions": [
+      385,
+      333
+    ],
+    "sha256": "2215b16411687298124df311d961df7ae94892d4c11159f5b44dfad0b1c1a3b9",
+    "generation_input": false,
+    "copied": false,
+    "immutable": true
+  },
+  {
+    "id": "ERIC",
+    "source": "frontend/renguin-characters/astra/eric.png",
+    "visibility": "PUBLIC_EXISTING_ART",
+    "viewed": true,
+    "purpose": "identity / outline / warm cream only",
+    "dimensions": [
+      500,
+      500
+    ],
+    "sha256": "5011e16dcceaf669f235a3de35e2b36e272594e361d77724a7b754f024304a46",
+    "generation_input": false,
+    "copied": false,
+    "immutable": true
+  },
+  {
+    "id": "GOOSE_EGG",
+    "source": "E:/Renguin_AISystem/Character_Bible/Member_Character_Library/avatars/GOOSE_EGG/reference_01.png",
+    "visibility": "PUBLIC_EXISTING_ART",
+    "viewed": true,
+    "purpose": "public world NPC identity, not a real member",
+    "dimensions": [
+      263,
+      298
+    ],
+    "sha256": "3bca5922aa93fb748566a71eae938539842e7c23b384dd0dd70d847b7ee9d473",
+    "generation_input": false,
+    "copied": false,
+    "immutable": true
+  },
+  {
+    "id": "OFFICE_MATERIAL",
+    "source": "frontend/office_bg_small.webp",
+    "visibility": "PUBLIC_EXISTING_ART",
+    "viewed": true,
+    "purpose": "warm wood and light only; pixel art is not the target style",
+    "dimensions": [
+      1280,
+      720
+    ],
+    "sha256": "69e82f3e1a3a798a4eae546619a9bd8890e0fd5b8dea6c86d6623cef1dff97ff",
+    "generation_input": false,
+    "copied": false,
+    "immutable": true
+  },
+  {
+    "id": "SKETCH",
+    "source": "docs/renguin-world/visual-upgrade/riverside-sketch.svg",
+    "visibility": "LOCAL_QA",
+    "purpose": "spatial plan; not generated master",
+    "sha256": "87e5df0adb342ee25b621726cc641dbc7bfedffd4c2a0ac2e31cc656e323393f",
+    "generation_input": false
+  },
+  {
+    "id": "BEFORE",
+    "source": "docs/renguin-world/visual-upgrade/before/1440-sim-20.png",
+    "visibility": "LOCAL_QA",
+    "purpose": "real website problem reference",
+    "sha256": "2692c11198d17d9b42a4dbef10bb25697faaea45f5df67868e94295212609c2c",
+    "generation_input": false
+  }
+]

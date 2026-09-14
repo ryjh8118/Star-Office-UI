@@ -1,0 +1,31 @@
+PASS  Office loads no world bundle or world API  []
+PASS  Office has no world renderer or NPC system
+PASS  Office offers a plain link to /world
+PASS  Office main-thread cost measured (baseline)  {"main_thread_ms_per_s":130.3,"layouts_per_s":3.2,"style_recalcs_per_s":102.6,"script_ms_per_s":15.9}
+PASS  World page loads its bundle only on the route  ["/world?sim=100&time=day","/static/world/world.css?v=c533e4990ab3","/static/world/world-scene.js?v=c533e4990ab3","/static/world/world-app.js?v=c533e4990ab3","/api/world/simulate?contents=100&idle=0&gap=0"]
+PASS  World reads state exactly once on open
+PASS  World renderer and residents initialised  {"running":true,"paused":false,"timers":1,"pendingRequests":0,"listeners":8,"walkers":28,"animationsPaused":false}
+PASS  World: zero console errors  []
+PASS  World main-thread cost with a full 100-content festival city  {"main_thread_ms_per_s":1.8,"layouts_per_s":0.2,"style_recalcs_per_s":0.2,"script_ms_per_s":0.1}
+PASS  World does not poll while open  []
+PASS  Hidden tab pauses animations and clears timers  {"running":true,"paused":true,"timers":0,"pendingRequests":0,"listeners":8,"walkers":28,"animationsPaused":true}
+PASS  Hidden world costs next to nothing  {"main_thread_ms_per_s":9.8,"layouts_per_s":0,"style_recalcs_per_s":0.33,"script_ms_per_s":0}
+PASS  Visible again resumes  {"running":true,"paused":false,"timers":1,"pendingRequests":0,"listeners":8,"walkers":28,"animationsPaused":false}
+PASS  Leaving stops timers, requests, listeners and drops the scene  {"running":false,"paused":false,"timers":0,"pendingRequests":0,"listeners":0,"walkers":0,"animationsPaused":false}
+PASS  World sim=0 renders as EMPTY_WORLD  {"state":"EMPTY_WORLD","era":"camp","svg":true,"hud":8}
+PASS  World sim=5 renders  {"state":"ACTIVE","era":"camp","svg":true,"hud":8}
+PASS  World sim=10 renders  {"state":"FESTIVAL","era":"tribe","svg":true,"hud":8}
+PASS  World sim=20 renders  {"state":"FESTIVAL","era":"riverside","svg":true,"hud":8}
+PASS  World sim=35 renders  {"state":"ACTIVE","era":"town","svg":true,"hud":8}
+PASS  World sim=50 renders  {"state":"FESTIVAL","era":"kingdom","svg":true,"hud":8}
+PASS  World sim=75 renders  {"state":"FESTIVAL","era":"modern","svg":true,"hud":8}
+PASS  World sim=100 renders  {"state":"ACTIVE","era":"starport","svg":true,"hud":8}
+PASS  World sim=50&idle=10 renders as QUIET  {"state":"QUIET","era":"kingdom","svg":true,"hud":8}
+PASS  World sim=50&idle=20 renders as DORMANT  {"state":"DORMANT","era":"kingdom","svg":true,"hud":8}
+PASS  World sim=50&idle=45 renders as DEEP_DORMANT  {"state":"DEEP_DORMANT","era":"kingdom","svg":true,"hud":8}
+PASS  World sim=50&idle=1&gap=20 renders as REVIVAL  {"state":"REVIVAL","era":"kingdom","svg":true,"hud":8}
+PASS  Phone viewport: no sideways scroll, scene fits, fewer residents  {"width":390,"scroll":390,"svg":354,"walkers":14}
+PASS  Desktop viewport: scene and HUD side by side  {"scroll":1440,"svg":837.734375,"hud":897.734375}
+PASS  Live world renders from real sources  {"era":"ERA_01","total":1,"score":4,"sources":["CONTENT_OS_LEDGER:OK","OFFICE_USER_MARKS:OK","WORLD_OVERRIDES:NONE","YOUTUBE_POPULARITY:GATED","ASSET-01_GENERAL_CANON_INDEX:OK","ASSET-08_MEMBER_CHARACTER_LIBRARY:OK","RENGUIN_WORLD_MEMBER_REGISTRY:OK"]}
+
+29/29 passed

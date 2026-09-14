@@ -1,5 +1,26 @@
 # Renguin World — Art Direction
 
+## 2026-09-15 visual construction checkpoint (not a full art PASS)
+
+The current branch replaces the visible tile grid and slab with a single soft
+shoreline and offset paper strata. Trees use layered canopies and irregular
+spacing; the bridge has planks and rails. Existing era materials, lot identities,
+growth thresholds and camera stay fixed. Campfire, city-wall and monorail were
+previously unreachable in the landmark renderer because their LOTS entries were
+missing; those display paths now honor the existing unlock list.
+
+Characters remain separate authoritative images with proportional sizing.
+Display placement avoids home silhouettes and separates actors; generic tokens
+are profession residents, never claimed to depict a real member. Duplicate SVG
+district labels are removed; HTML retains the information. The Office link sits
+in the sky margin, with a 44 px touch target on mobile. A manual motion pause is
+available alongside reduced-motion and hidden-tab handling.
+
+This is an ASTRA-authored SVG checkpoint, **not** Sunburst-generated art.
+The requested Sunburst master, layer extraction and multi-turn image editing
+remain behind ENGINE_ACCESS_GATE. See [evidence and continuation](visual-upgrade/README.md).
+The original V1 design record below is historical where this section supersedes it.
+
 ## One world, eight eras
 
 Every era is drawn by the same renderer (`frontend/world/world-scene.js`) with

@@ -1,0 +1,102 @@
+[
+  {
+    "file": "browser-bridge.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-ambience.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-contexts.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-environment.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-fireworks.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-recycler.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-scene.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-station.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-timeline.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-transitions.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "creator-yard.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "renguin-star-office-extension.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_truth.cjs",
+    "exit": 0
+  },
+  {
+    "file": "world-scene.test.cjs",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_activity.py",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_browser_activity.py",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_history.py",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_links.py",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_presentation.py",
+    "exit": 0
+  },
+  {
+    "file": "test_creator_workflow.py",
+    "exit": 0
+  },
+  {
+    "file": "test_office_doctor.py",
+    "exit": 0
+  },
+  {
+    "file": "test_preview_identity.py",
+    "exit": 0
+  },
+  {
+    "file": "test_recover_local_settings.py",
+    "exit": 0
+  },
+  {
+    "file": "test_world_engine.py",
+    "exit": 0
+  },
+  {
+    "file": "test_world_sources.py",
+    "exit": 0
+  }
+]

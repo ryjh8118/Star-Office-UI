@@ -47,7 +47,7 @@ test("every era uses the same camera, island and outline, and differs only in wh
   for (const variant of S.VARIANTS) {
     const { svg } = S.render(state(variant));
     boxes.add(svg.match(/viewBox="([^"]+)"/)[1]);
-    islands.add(svg.match(/<g class="rw-island">(.*?)<\/g>/)[1]);
+    islands.add(svg.match(/<g class="rw-island">([\s\S]*?)<\/g>/)[1]);
     // Inner lots carry the era's own roof; the outer ring may still show the previous era's.
     const counts = {};
     for (const m of svg.matchAll(/data-kind="(\w+)"/g)) counts[m[1]] = (counts[m[1]] || 0) + 1;
@@ -103,6 +103,17 @@ test("the space gate is hidden, then scaffolded, then lit", () => {
   assert.ok(!S.render(state("modern")).svg.includes('class="rw-gate'));
   assert.ok(S.render(state("future")).svg.includes('class="rw-gate is-preview"'));
   assert.ok(S.render(state("starport")).svg.includes('class="rw-gate is-active"'));
+});
+
+test("configured landmarks reach their renderer without early unlocks", () => {
+  assert.ok(S.render(state("camp")).svg.includes('class="rw-campfire"'));
+  const camp = S.render(state("camp")).svg;
+  assert.ok(!camp.includes('class="rw-bridge"') && !camp.includes('rw-fx-train'));
+  assert.ok(S.render(state("riverside")).svg.includes('class="rw-bridge"'));
+  assert.ok(S.render(state("kingdom")).svg.includes('stroke-dasharray="26 6"'));
+  assert.ok(S.render(state("future")).overlay.includes('rw-fx-train'));
+  const locked = state("riverside", { districts: [] });
+  assert.ok(!S.render(locked).overlay.includes('class="rw-office-entry"'));
 });
 
 test("text from data is escaped and characters render as the authority's image or a token", () => {

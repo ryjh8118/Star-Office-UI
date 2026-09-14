@@ -77,6 +77,7 @@
     state: null,
     gossip: 0,
     paused: false,
+    staticMotion: false,
     running: false,
     time: "auto",
     roster: null,
@@ -196,7 +197,8 @@
       }
       stage.querySelector(".rw-overlay").append(layer);
     }
-    if (W.paused) pauseScene();
+    stage.classList.toggle("rw-motion-static", W.staticMotion);
+    stage.classList.toggle("rw-paused", W.paused);
     stage.dataset.walkers = String(stats.walkers);
     return stats;
   }
@@ -279,7 +281,7 @@
     act.append(chip, node("p", state.activity.description, "rw-activity-text"));
     const facts = node("dl", undefined, "rw-facts");
     const fact = (k, v) => facts.append(node("dt", k), node("dd", v));
-    fact("距離上次發布", state.activity.days_since_publish === null ? "—" : `${state.activity.days_since_publish} 天`);
+    fact("距離最近內容紀錄", state.activity.days_since_publish === null ? "—" : `${state.activity.days_since_publish} 天`);
     fact("街上人潮", CROWD[state.activity.crowd_density] || state.activity.crowd_density);
     fact("城市燈光", `${state.activity.lights_level}%`);
     fact("居民", `${state.residents.visible} / ${state.residents.capacity}`);
@@ -308,7 +310,7 @@
       head.append(node("span", TYPE[f.content_type] || f.content_type, "rw-type"));
       if (f.is_new) head.append(node("span", "NEW", "rw-new"));
       item.append(head, node("h3", f.title));
-      item.append(node("p", `${f.status === "PUBLISHED" ? "上映" : "完成"} · ${date(f.date)}`, "rw-meta"));
+      item.append(node("p", `${f.status === "PUBLISHED" ? "上映紀錄" : "完成紀錄"} · ${date(f.date)}${f.date_basis === "COMPLETED_AT" ? "（完成日）" : ""}`, "rw-meta"));
       if (f.youtube_video_id && /^[A-Za-z0-9_-]{11}$/.test(f.youtube_video_id)) {
         const link = node("a", "在 YouTube 觀看", "rw-link");
         link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(f.youtube_video_id);
@@ -450,6 +452,7 @@
     host.replaceChildren(node("p", "讀取名冊…", "rw-note"));
     try {
       W.roster = await getJSON("/api/world/characters");
+      if (!W.running || !host.isConnected) return;
     } catch (error) {
       if (error.name === "AbortError") return;
       host.replaceChildren(node("p", "名冊暫時無法讀取。", "rw-note"));
@@ -549,6 +552,12 @@
       $("rw-time").textContent = "時段：" + TIME_LABEL[W.time];
       $("rw-stage").dataset.daypart = daypart();
     });
+    listen($("rw-motion"), "click", () => {
+      W.staticMotion = !W.staticMotion;
+      $("rw-stage").classList.toggle("rw-motion-static", W.staticMotion);
+      $("rw-motion").setAttribute("aria-pressed", String(W.staticMotion));
+      $("rw-motion").textContent = W.staticMotion ? "恢復動態" : "暫停動態";
+    });
     const query = window.matchMedia("(max-width: 720px)");
     listen(query, "change", () => W.state && renderScene(W.state));
     params();
@@ -566,6 +575,11 @@
     W.listeners = [];
     const stage = $("rw-stage");
     if (stage) stage.replaceChildren();
+    // Card-local listeners belong to these DOM subtrees. Drop them as well as
+    // the tracked global listeners, including when entering the back/forward cache.
+    for (const id of ["rw-hud", "rw-districts", "rw-footer"]) $(id)?.replaceChildren();
+    W.state = null;
+    W.roster = null;
   }
 
   window.RenguinWorld = {

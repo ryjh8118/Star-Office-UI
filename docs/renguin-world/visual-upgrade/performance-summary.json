@@ -1,0 +1,179 @@
+{
+  "browser": "Chrome/152.0.7977.83",
+  "DPR": 1,
+  "conditions": "localhost, no CPU/network throttling, 100 contents, original ACTIVE state; 28 desktop / 14 mobile",
+  "comparison": [
+    {
+      "width": 1440,
+      "cache": "cold",
+      "sample_count": 3,
+      "budget_ms_per_second": 6.183,
+      "mainMsPerSecond": {
+        "before": 1.183,
+        "after": 1.096
+      },
+      "worldReady": {
+        "before": 28.5,
+        "after": 29.1
+      },
+      "imageTransfer": {
+        "before": 126819,
+        "after": 103712
+      },
+      "heap": {
+        "before": 4158664,
+        "after": 4182536
+      },
+      "cpu_budget_pass": true,
+      "image_budget_pass": true
+    },
+    {
+      "width": 1440,
+      "cache": "warm",
+      "sample_count": 3,
+      "budget_ms_per_second": 5.998,
+      "mainMsPerSecond": {
+        "before": 0.998,
+        "after": 0.941
+      },
+      "worldReady": {
+        "before": 16.9,
+        "after": 17.7
+      },
+      "imageTransfer": {
+        "before": 126819,
+        "after": 103712
+      },
+      "heap": {
+        "before": 4139628,
+        "after": 4165852
+      },
+      "cpu_budget_pass": true,
+      "image_budget_pass": true
+    },
+    {
+      "width": 390,
+      "cache": "cold",
+      "sample_count": 3,
+      "budget_ms_per_second": 5.983,
+      "mainMsPerSecond": {
+        "before": 0.983,
+        "after": 0.976
+      },
+      "worldReady": {
+        "before": 21.6,
+        "after": 21.3
+      },
+      "imageTransfer": {
+        "before": 73925,
+        "after": 60604
+      },
+      "heap": {
+        "before": 4157212,
+        "after": 4185244
+      },
+      "cpu_budget_pass": true,
+      "image_budget_pass": true
+    },
+    {
+      "width": 390,
+      "cache": "warm",
+      "sample_count": 3,
+      "budget_ms_per_second": 5.953,
+      "mainMsPerSecond": {
+        "before": 0.953,
+        "after": 0.943
+      },
+      "worldReady": {
+        "before": 17.9,
+        "after": 17.6
+      },
+      "imageTransfer": {
+        "before": 73925,
+        "after": 60604
+      },
+      "heap": {
+        "before": 1214248,
+        "after": 1240660
+      },
+      "cpu_budget_pass": true,
+      "image_budget_pass": true
+    }
+  ],
+  "officeWorldRequests": [],
+  "scenarios": {
+    "count": 28,
+    "broken": 0,
+    "errors": 0,
+    "overflow": 0
+  },
+  "tracked_cleanup_zero": true,
+  "heap_after_gc": {
+    "before": [
+      1207164,
+      1206080,
+      1205836,
+      1205836,
+      1205884,
+      1206088,
+      1206088,
+      1206088,
+      1206104,
+      1206088
+    ],
+    "after": [
+      1249828,
+      1232876,
+      1232780,
+      1233092,
+      1232780,
+      1232780,
+      1233092,
+      1232780,
+      1232780,
+      1233080
+    ]
+  },
+  "hidden": {
+    "running": true,
+    "paused": true,
+    "timers": 0,
+    "pendingRequests": 0,
+    "listeners": 8,
+    "walkers": 28,
+    "animationsPaused": true
+  },
+  "reducedMotionAnimations": 0,
+  "long_tasks": {
+    "before": [],
+    "after": []
+  },
+  "limitations": [
+    "390px is emulation, not a physical phone",
+    "JS heap measured; GPU/compositor memory not directly measured",
+    "Cleanup counters exclude one intentional document-lifetime pageshow restore hook; no accumulated tracked resources",
+    "worldReady is scene DOM ready, not a lab-standard LCP/interactive metric"
+  ],
+  "festival": [
+    {
+      "width": 1440,
+      "samples": 3,
+      "before_ms_per_second": 1.092,
+      "after_ms_per_second": 1.069,
+      "bound": 6.092,
+      "pass": true,
+      "before_image_bytes": 126819,
+      "after_image_bytes": 103712
+    },
+    {
+      "width": 390,
+      "samples": 3,
+      "before_ms_per_second": 0.992,
+      "after_ms_per_second": 1.16,
+      "bound": 5.992,
+      "pass": true,
+      "before_image_bytes": 73925,
+      "after_image_bytes": 60604
+    }
+  ]
+}

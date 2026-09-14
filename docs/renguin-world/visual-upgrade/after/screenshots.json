@@ -1,0 +1,403 @@
+{
+  "label": "after",
+  "base": "http://127.0.0.1:19125",
+  "browser": "Chrome/152.0.7977.83",
+  "dpr": 1,
+  "date": "2026-09-14T21:04:06.857Z",
+  "samples": [],
+  "scenarios": [
+    {
+      "width": 1440,
+      "q": "sim=0",
+      "era": "camp",
+      "activity": "EMPTY_WORLD",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=5",
+      "era": "camp",
+      "activity": "ACTIVE",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=10",
+      "era": "tribe",
+      "activity": "FESTIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=20",
+      "era": "riverside",
+      "activity": "FESTIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=35",
+      "era": "town",
+      "activity": "ACTIVE",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=50",
+      "era": "kingdom",
+      "activity": "FESTIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=75",
+      "era": "modern",
+      "activity": "FESTIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=85",
+      "era": "future",
+      "activity": "ACTIVE",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=100",
+      "era": "starport",
+      "activity": "ACTIVE",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=20&time=night",
+      "era": "riverside",
+      "activity": "FESTIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=50&time=dusk&idle=10",
+      "era": "kingdom",
+      "activity": "QUIET",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=50&time=night&idle=20",
+      "era": "kingdom",
+      "activity": "DORMANT",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=50&idle=45",
+      "era": "kingdom",
+      "activity": "DEEP_DORMANT",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 1440,
+      "q": "sim=50&gap=20&idle=1",
+      "era": "kingdom",
+      "activity": "REVIVAL",
+      "scroll": 1425,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=0",
+      "era": "camp",
+      "activity": "EMPTY_WORLD",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=5",
+      "era": "camp",
+      "activity": "ACTIVE",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=10",
+      "era": "tribe",
+      "activity": "FESTIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=20",
+      "era": "riverside",
+      "activity": "FESTIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=35",
+      "era": "town",
+      "activity": "ACTIVE",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=50",
+      "era": "kingdom",
+      "activity": "FESTIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=75",
+      "era": "modern",
+      "activity": "FESTIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=85",
+      "era": "future",
+      "activity": "ACTIVE",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=100",
+      "era": "starport",
+      "activity": "ACTIVE",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=20&time=night",
+      "era": "riverside",
+      "activity": "FESTIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=50&time=dusk&idle=10",
+      "era": "kingdom",
+      "activity": "QUIET",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=50&time=night&idle=20",
+      "era": "kingdom",
+      "activity": "DORMANT",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=50&idle=45",
+      "era": "kingdom",
+      "activity": "DEEP_DORMANT",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "q": "sim=50&gap=20&idle=1",
+      "era": "kingdom",
+      "activity": "REVIVAL",
+      "scroll": 390,
+      "brokenImages": 0,
+      "actors": 1,
+      "errors": []
+    }
+  ],
+  "cleanup": [
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1247564
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227564
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227960
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227648
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227648
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227768
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227484
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1227484
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1228416
+    },
+    {
+      "running": false,
+      "paused": false,
+      "timers": 0,
+      "pendingRequests": 0,
+      "listeners": 0,
+      "walkers": 0,
+      "animationsPaused": false,
+      "heap": 1228116
+    }
+  ],
+  "officeWorldRequests": [],
+  "hidden": {
+    "running": true,
+    "paused": true,
+    "timers": 0,
+    "pendingRequests": 0,
+    "listeners": 8,
+    "walkers": 28,
+    "animationsPaused": true
+  },
+  "reducedMotion": 0
+}
