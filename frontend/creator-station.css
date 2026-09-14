@@ -1,0 +1,575 @@
+/* STAR OFFICE station. A cozy creator office inside a space-station module: the
+   galaxy behind it, a hull around it, and an atmosphere below it that the sky
+   islands rise out of. Everything is scoped to html.so-station, so if the layer
+   never loads the lodge keeps its own look. The map interior is never styled. */
+
+/* ------------------------------------------------------------------ galaxy */
+.so-galaxy {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1600px;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 55% at 18% 8%, #3a1f6e8c, #0000 62%),
+    radial-gradient(70% 45% at 86% 22%, #0f4a6e80, #0000 60%),
+    linear-gradient(180deg, #04050f 0, #080b24 520px, #0d1236 72%, #16235a 100%);
+  -webkit-mask: linear-gradient(180deg, #000 0 var(--fade-start, 1200px), #0000 100%);
+  mask: linear-gradient(180deg, #000 0 var(--fade-start, 1200px), #0000 100%);
+}
+.so-galaxy > *,
+.so-galaxy-limb > * {
+  position: absolute;
+}
+.so-galaxy-stars {
+  inset: 0;
+  background: var(--stars-a) 0 0 / 640px 640px repeat, var(--stars-b) 170px 90px / 1024px 1024px repeat;
+}
+.so-galaxy-nebula {
+  inset: 0;
+  background:
+    radial-gradient(38% 22% at 72% 12%, #ff7ad933, #0000 70%),
+    radial-gradient(44% 26% at 28% 34%, #7a5cff2e, #0000 72%),
+    radial-gradient(30% 18% at 88% 48%, #3fd6e826, #0000 70%),
+    radial-gradient(50% 16% at 40% 62%, #ffb45a14, #0000 70%);
+  mix-blend-mode: screen;
+}
+.so-planet {
+  border-radius: 50%;
+}
+.so-planet.is-moon {
+  top: 64px;
+  right: max(3vw, 24px);
+  width: clamp(38px, 4vw, 64px);
+  aspect-ratio: 1;
+  background: radial-gradient(circle at 35% 32%, #f4f1ff, #b9b6d6 42%, #58577c 78%, #2c2b49);
+  box-shadow: 0 0 26px #c9c3ff44;
+}
+.so-planet.is-giant {
+  top: 44%;
+  left: max(-60px, calc(3vw - 120px));
+  width: clamp(160px, 17vw, 300px);
+  aspect-ratio: 1;
+  background:
+    repeating-linear-gradient(-12deg, #0000 0 14px, #ffffff0c 14px 22px),
+    radial-gradient(circle at 62% 34%, #ffd9a8, #e0875a 38%, #7b3a5d 70%, #2a1537);
+  box-shadow: inset -30px -18px 60px #11061f, 0 0 60px #ff9a6a22;
+}
+.so-planet-ring {
+  position: absolute;
+  inset: 38% -34%;
+  border-radius: 50%;
+  border: 6px solid #ffe2b077;
+  border-top-color: #ffe2b022;
+  rotate: -14deg;
+}
+.so-twinkles {
+  inset: 0;
+}
+.so-twinkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px 1px #ffffffaa;
+  opacity: 0.4;
+}
+.so-twinkle::before,
+.so-twinkle::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: -5px;
+  width: 1px;
+  height: 13px;
+  background: linear-gradient(#0000, #fff, #0000);
+}
+.so-twinkle::after {
+  rotate: 90deg;
+}
+.so-galaxy.is-live .so-twinkle {
+  animation: so-twinkle var(--d, 4s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+@keyframes so-twinkle {
+  to {
+    opacity: 1;
+    scale: 1.5;
+  }
+}
+/* Where space turns into sky: the planet's bright edge, the air below it and
+   the high clouds the sky islands rise out of. */
+.so-galaxy-limb {
+  left: 0;
+  right: 0;
+  top: var(--limb-top, 1100px);
+  bottom: 0;
+}
+/* A wide, soft curve of light: the planet's edge seen from orbit. */
+.so-limb-arc {
+  left: -40%;
+  right: -40%;
+  top: 0;
+  height: 700px;
+  border-radius: 50% 50% 0 0 / 260px 260px 0 0;
+  background: linear-gradient(180deg, #8fd3ff59 0, #5aa8ff40 10px, #2d6fd02e 70px, #1d4fa000 320px);
+  box-shadow: 0 -30px 70px -10px #6fc2ff4d;
+}
+/* The air takes the colour of the sky below it, whatever the hour. */
+.so-limb-air {
+  --air: #7fb8ff;
+  left: 0;
+  right: 0;
+  top: 30px;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    #0000,
+    color-mix(in oklab, var(--air) 30%, #0000) 22%,
+    color-mix(in oklab, var(--air) 72%, #0000) 48%,
+    var(--air) 70%
+  );
+}
+html[data-env-time="MORNING"] .so-limb-air {
+  --air: #ffd9b8;
+}
+html[data-env-time="DAY"] .so-limb-air {
+  --air: #9fd2ff;
+}
+html[data-env-time="AFTERNOON"] .so-limb-air {
+  --air: #ffd09a;
+}
+html[data-env-time="SUNSET"] .so-limb-air {
+  --air: #c77aa8;
+}
+html[data-env-time="NIGHT"] .so-limb-air {
+  --air: #22306a;
+}
+.so-limb-clouds {
+  left: 0;
+  right: 0;
+  bottom: 80px;
+  height: 240px;
+}
+.so-limb-cloud {
+  position: absolute;
+  bottom: calc(var(--i) * 9px);
+  left: calc(var(--i) * 15% - 14%);
+  width: 34%;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--cloud-time, #ffffff) 70%, #ffffff00), #ffffff00);
+  opacity: 0.55;
+}
+
+/* -------------------------------------------------------------------- hull */
+.so-hull {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.so-hull > * {
+  position: absolute;
+}
+.so-hull-plate {
+  top: 0;
+  left: var(--plate-left);
+  width: var(--plate-width);
+  height: var(--plate-height);
+  border-radius: 26px;
+  background:
+    repeating-linear-gradient(90deg, #0000 0 118px, #0000004d 118px 120px, #ffffff12 120px 121px),
+    repeating-linear-gradient(0deg, #0000 0 88px, #00000038 88px 90px),
+    radial-gradient(circle at 10px 10px, #a8b3d6 0 1.6px, #0000 2.2px) 0 0 / 60px 60px,
+    linear-gradient(180deg, #4b5476, #30375a 38%, #232948);
+  box-shadow:
+    inset 0 2px 0 #ffffff2e,
+    inset 0 -3px 0 #00000055,
+    0 0 0 2px #0a0d1c,
+    0 0 0 4px #ffb45a2a,
+    0 24px 60px #01020dcc;
+}
+.so-hull-light {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7fffc4;
+  box-shadow: 0 0 10px 2px #7fffc4aa;
+}
+.so-hull-light.is-tl {
+  top: 5px;
+  left: 16px;
+}
+.so-hull-light.is-tr {
+  top: 5px;
+  right: 16px;
+  background: #ff7a8a;
+  box-shadow: 0 0 10px 2px #ff7a8aaa;
+}
+.so-hull-light.is-bl {
+  bottom: 5px;
+  left: 16px;
+  background: #ffd27a;
+  box-shadow: 0 0 10px 2px #ffd27aaa;
+}
+.so-hull-light.is-br {
+  bottom: 5px;
+  right: 16px;
+}
+.so-hull.is-live .so-hull-light {
+  animation: so-blink 3.2s steps(1) infinite;
+}
+.so-hull.is-live .so-hull-light.is-tr,
+.so-hull.is-live .so-hull-light.is-bl {
+  animation-delay: -1.6s;
+}
+@keyframes so-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.so-hull-stencil {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0 12px;
+  font: 700 10px/14px ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.3em;
+  color: #c7d0ef99;
+  white-space: nowrap;
+}
+.so-hull-wing {
+  display: none;
+  top: calc(var(--wing-y) - 70px);
+  width: var(--wing);
+  height: 140px;
+}
+.so-hull[data-wings="true"] .so-hull-wing {
+  display: block;
+}
+.so-hull-wing.is-left {
+  left: calc(var(--plate-left) - var(--wing));
+}
+.so-hull-wing.is-right {
+  left: calc(var(--plate-left) + var(--plate-width));
+}
+.so-wing-strut {
+  top: 64px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(180deg, #6d779c, #3b4264);
+}
+.so-hull-wing.is-left .so-wing-strut {
+  left: 30%;
+}
+.so-hull-wing.is-right .so-wing-strut {
+  right: 30%;
+}
+.so-wing-panel {
+  top: 0;
+  width: 70%;
+  height: 140px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, #0000 0 34px, #bcd6ff2e 34px 36px),
+    repeating-linear-gradient(0deg, #0000 0 44px, #bcd6ff2e 44px 46px),
+    linear-gradient(135deg, #2f63b8, #143572 60%, #1d4a92);
+  border: 2px solid #8fb5ff55;
+  box-shadow: 0 0 30px #3f7fff22;
+}
+.so-hull-wing.is-left .so-wing-panel {
+  left: 0;
+}
+.so-hull-wing.is-right .so-wing-panel {
+  right: 0;
+}
+.so-wing-strut,
+.so-wing-panel,
+.so-belly-keel,
+.so-thruster {
+  position: absolute;
+}
+/* The underside of the module: a tapered keel and three soft engine glows. */
+.so-hull-belly {
+  left: calc(var(--plate-left) + var(--plate-width) * 0.12);
+  width: calc(var(--plate-width) * 0.76);
+  top: var(--plate-height);
+  height: 150px;
+}
+.so-belly-keel {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 70px;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  background:
+    repeating-linear-gradient(90deg, #0000 0 90px, #00000040 90px 92px),
+    linear-gradient(180deg, #2a3152, #161a31);
+}
+.so-thruster {
+  top: 60px;
+  left: calc(26% + var(--i) * 24% - 22px);
+  width: 44px;
+  height: 18px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(180deg, #4a5374, #1f243d);
+}
+.so-thruster::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 30px;
+  height: 64px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(50% 60% at 50% 20%, #ffffff, #9fe3ff 30%, #4f8dffaa 55%, #0000 80%);
+  opacity: 0.85;
+}
+.so-hull.is-live .so-thruster::after {
+  animation: so-thrust 1.6s ease-in-out calc(var(--i) * -0.5s) infinite alternate;
+}
+@keyframes so-thrust {
+  to {
+    scale: 0.86 1.12;
+    opacity: 0.65;
+  }
+}
+
+/* --------------------------------------------- the office inside the module */
+html.so-station body {
+  background-color: #04050f;
+}
+/* The lodge band becomes the module's top deck, its windows round viewports
+   onto the galaxy; the plaque and every button keep their warm light. */
+html.so-station .co-map-header[data-zone="home"] {
+  --zone-frame: #262c44;
+  border-color: #262c44;
+  box-shadow:
+    0 0 0 1px #0a0d1a,
+    0 0 0 3px #ffb45a2e;
+}
+html.so-station .co-map-header[data-zone="home"] .co-zone-scene > * {
+  display: none;
+}
+html.so-station .co-map-header[data-zone="home"] .co-zone-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='196' height='150'%3E%3Crect x='33' y='9' width='126' height='90' rx='36' fill='none' stroke='%23778' stroke-width='5'/%3E%3Crect x='36.5' y='12.5' width='119' height='83' rx='33' fill='none' stroke='%23cdd6f5' stroke-opacity='.35' stroke-width='1.5'/%3E%3Cg fill='%23a8b3d6'%3E%3Ccircle cx='96' cy='5' r='2'/%3E%3Ccircle cx='96' cy='103' r='2'/%3E%3Ccircle cx='28' cy='54' r='2'/%3E%3Ccircle cx='164' cy='54' r='2'/%3E%3C/g%3E%3C/svg%3E") 0 0 / var(--tile) 150px repeat-x,
+    radial-gradient(60% 120% at 50% 130%, #ffb45a38, #0000 70%),
+    repeating-linear-gradient(90deg, #0000 0 97px, #00000030 97px 98px, #ffffff0d 98px 99px),
+    linear-gradient(180deg, #4b5476, #363d5f 55%, #2a3050);
+  -webkit-mask:
+    linear-gradient(#000 0 0),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='196' height='150'%3E%3Crect x='40' y='16' width='112' height='76' rx='30'/%3E%3C/svg%3E") 0 0 / var(--tile) 150px repeat-x;
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='196' height='150'%3E%3Crect x='40' y='16' width='112' height='76' rx='30'/%3E%3C/svg%3E") 0 0 / var(--tile) 150px repeat-x;
+  mask-composite: exclude;
+}
+/* A warm strip of cabin light closes the deck instead of a timber beam. */
+html.so-station .co-map-header[data-zone="home"] .co-zone-scene::after {
+  height: 10px;
+  background:
+    linear-gradient(180deg, #ffd79a 0 2px, #ffb45a66 2px 4px, #0000 4px),
+    repeating-linear-gradient(90deg, #0000 0 88px, #00000040 88px 90px),
+    #262c44;
+  box-shadow: 0 -6px 18px #ffb45a33;
+}
+html.so-station .co-map-header.so-arrived {
+  animation: so-arrived 1.5s ease-out;
+}
+@keyframes so-arrived {
+  0% {
+    box-shadow: 0 0 0 1px #0a0d1a, 0 0 0 3px #ffd79a, 0 0 60px #ffd79a;
+  }
+}
+@media (max-width: 700px) {
+  html.so-station .co-map-header[data-zone="home"] .co-zone-scene::before {
+    background-size: var(--tile) 124px, auto, auto, auto;
+    -webkit-mask-size: auto, var(--tile) 124px;
+    mask-size: auto, var(--tile) 124px;
+  }
+}
+html.so-station #game-container {
+  border-color: #262c44 !important;
+}
+html.so-station .co-section#office-members {
+  border-color: #262c44 !important;
+  box-shadow:
+    0 0 0 1px #0a0d1a,
+    inset 0 3px 0 #ffb45a55,
+    0 22px 44px #01020d99 !important;
+}
+/* The sky stage is exactly as wide as the screen; a crystal's glow past its
+   edge must not widen a phone's page and shrink everything to fit. */
+html.so-station .cw-stage {
+  overflow-x: clip;
+}
+@media (max-width: 700px) {
+  /* A room's tools wait below their place, not past the screen's right edge. */
+  html.so-station .co-stage:not(.is-on-stage) > .co-section-header > .co-zone-tools,
+  html.so-station .co-stage:not(.is-on-stage) > .co-section-header > .co-zone-toggle {
+    translate: 0 16px;
+  }
+}
+/* The mother island's rock becomes the module's underside, drawn by the hull;
+   below it the station descends through the air to the sky islands. */
+html.so-station .co-isle-under[data-zone="home"] {
+  display: none;
+}
+html.so-station #office-members {
+  margin-bottom: 340px !important;
+}
+html.so-station body.co-home-collapsed .co-map-header[data-zone="home"] {
+  margin-bottom: 300px;
+}
+@media (max-width: 700px) {
+  html.so-station #office-members {
+    margin-bottom: 250px !important;
+  }
+}
+
+/* ------------------------------------------------------------------- entry */
+.so-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  overflow: hidden;
+  background: #03040c;
+  color: #f4efe2;
+  cursor: pointer;
+  contain: strict;
+}
+.so-intro > * {
+  position: absolute;
+}
+.so-intro-space {
+  inset: 0;
+  background:
+    radial-gradient(60% 40% at 24% 26%, #4a2a8a66, #0000 70%),
+    radial-gradient(50% 40% at 80% 70%, #0f5a7a55, #0000 70%),
+    radial-gradient(40% 30% at 70% 18%, #ff7ad92e, #0000 70%),
+    radial-gradient(120% 90% at 50% 45%, #141840, #05060f 70%);
+}
+.so-intro-stars {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.so-intro-scene {
+  left: 50%;
+  top: 50%;
+  width: min(94vw, 150vh);
+  aspect-ratio: 10 / 7;
+  transform-origin: 50% 53.1%;
+  transform: translate(-50%, -50%) scale(0.16);
+  will-change: transform;
+}
+.so-station-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 40px #6f8cff22);
+}
+.so-art-door {
+  transition: none;
+}
+.so-art-status {
+  fill: #ff6b7a;
+}
+.so-intro.is-open .so-art-status {
+  fill: #7fffc4;
+}
+.so-intro-flash {
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(60% 60% at 50% 53%, #fff6dc, #ffd08a 40%, #ff9f5a55 70%, #0000);
+  pointer-events: none;
+}
+.so-intro-caption {
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font: 600 clamp(13px, 1.6vw, 18px)/1.4 ArkPixel, system-ui, sans-serif;
+  letter-spacing: 0.42em;
+  color: #f4efe2;
+  text-shadow: 0 0 18px #9d8cff;
+  opacity: 0;
+  translate: 0 8px;
+  transition: opacity 0.4s ease, translate 0.4s ease;
+}
+.so-intro-caption.is-universe {
+  top: 18%;
+}
+.so-intro-caption.is-welcome {
+  bottom: 14%;
+  color: #ffd79a;
+  text-shadow: 0 0 18px #ffb45a;
+}
+.so-intro-caption.is-shown {
+  opacity: 1;
+  translate: 0 0;
+}
+.so-intro-skip {
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #ffffff44;
+  background: #0b0f2acc;
+  color: #f4efe2;
+  font: 600 14px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.so-intro-skip:focus-visible {
+  outline: 3px solid #ffd79a;
+  outline-offset: 3px;
+}
+.so-intro[data-mode="reduced"] .so-intro-stars {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .so-galaxy.is-live .so-twinkle,
+  .so-hull.is-live .so-hull-light,
+  .so-hull.is-live .so-thruster::after,
+  html.so-station .co-map-header.so-arrived {
+    animation: none;
+  }
+  .so-intro-caption {
+    transition: none;
+  }
+}
+@media (max-width: 700px) {
+  .so-planet.is-giant {
+    top: 58%;
+    width: 130px;
+    left: -70px;
+  }
+  .so-hull-plate {
+    border-radius: 16px;
+  }
+  .so-hull-stencil {
+    display: none;
+  }
+  .so-thruster {
+    width: 30px;
+    left: calc(26% + var(--i) * 24% - 15px);
+  }
+}

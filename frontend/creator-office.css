@@ -1773,3 +1773,276 @@ body.co-copying-short #short-videos.is-copy-target > .co-zone-fold {
   border-color: #3fa9bb;
   color: #0f3e47;
 }
+
+/* ------------------------------------------------ the stardust recycler */
+/* Carrying a card wakes a small black hole at the bottom of the screen. It
+   pulls harder as the card nears and swallows it only on release in its core. */
+body.co-card-dragging {
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grabbing;
+}
+.co-project {
+  -webkit-touch-callout: none;
+}
+.co-project.is-pressing {
+  outline: 3px solid #b78bff00;
+  outline-offset: 6px;
+  animation: co-press-ring var(--press-ms, 420ms) linear forwards;
+}
+@keyframes co-press-ring {
+  to {
+    outline-color: #b78bffcc;
+    scale: 0.985;
+  }
+}
+.co-project.is-trash-armed {
+  filter: grayscale(0.65) brightness(0.8);
+}
+.co-drag-ghost {
+  scale: calc(1 - var(--pull, 0) * 0.42);
+  transition: rotate 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, scale 0.12s linear, opacity 0.2s ease;
+}
+.co-drag-ghost.is-trash {
+  rotate: 10deg;
+  border-color: #c9a8ff;
+  background: #1c1446f2;
+  color: #f4edff;
+  box-shadow: 0 0 0 4px #b78bff55, 0 12px 28px #05031a99;
+}
+.co-drag-ghost.is-trash small {
+  color: #ffd6f4;
+  font-weight: 700;
+}
+.co-drag-ghost.is-swallowed {
+  transition:
+    translate 0.46s cubic-bezier(0.55, 0, 0.9, 0.45),
+    scale 0.46s cubic-bezier(0.55, 0, 0.9, 0.45),
+    rotate 0.46s ease-in,
+    opacity 0.46s ease-in;
+  scale: 0.04;
+  rotate: 300deg;
+  opacity: 0;
+}
+.co-trash {
+  --pull: 0;
+  --hole: clamp(88px, 11vw, 124px);
+  position: fixed;
+  z-index: 9998;
+  left: 50%;
+  bottom: calc(var(--lift, 0px) + max(12px, env(safe-area-inset-bottom)));
+  translate: -50% 0;
+  pointer-events: none;
+}
+.co-trash-body {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  translate: 0 58%;
+  opacity: 0.8;
+  transition: translate 0.34s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+}
+@starting-style {
+  .co-trash-body {
+    translate: 0 110%;
+    opacity: 0;
+  }
+}
+.co-trash.is-awake .co-trash-body {
+  translate: 0 0;
+  opacity: 1;
+}
+.co-trash-hole {
+  position: relative;
+  width: var(--hole);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  scale: calc(1 + var(--pull) * 0.24);
+  background:
+    radial-gradient(circle, #000 0 30%, #12072b 44%, #2b1560cc 58%, #1a0f4400 72%);
+  box-shadow:
+    0 0 0 1px #c9a8ff44,
+    0 0 calc(16px + var(--pull) * 36px) calc(var(--pull) * 8px) #8f5bffaa;
+  transition: scale 0.12s linear, box-shadow 0.12s linear;
+}
+.co-trash-disk {
+  position: absolute;
+  inset: -16%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ffd27a00, #ffd27ae6 18%, #ff8ad8c0 34%, #7fd0ff99 52%, #b78bff00 66%, #ffd27a80 84%, #ffd27a00);
+  -webkit-mask: radial-gradient(circle, #0000 0 38%, #000 47% 58%, #0000 70%);
+  mask: radial-gradient(circle, #0000 0 38%, #000 47% 58%, #0000 70%);
+  opacity: calc(0.55 + var(--pull) * 0.45);
+  animation: co-trash-spin 2.6s linear infinite;
+}
+.co-trash-core {
+  position: absolute;
+  inset: 31%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 58%, #25104f);
+  box-shadow: 0 0 0 2px #ffffff1f, inset 0 0 14px #6f3dff;
+  transition: box-shadow 0.15s ease;
+}
+.co-trash-mote {
+  position: absolute;
+  left: calc(50% - 2px);
+  top: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff8e0;
+  box-shadow: 0 0 6px #ffd27a;
+  opacity: 0;
+  animation: co-trash-orbit 2.4s cubic-bezier(0.4, 0, 0.8, 1) infinite;
+  animation-delay: calc(var(--i) * -0.3s);
+}
+@keyframes co-trash-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes co-trash-orbit {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(calc(var(--hole) * 0.78)) scale(1.2);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 45deg + 320deg)) translateX(calc(var(--hole) * 0.1)) scale(0.2);
+  }
+}
+.co-trash-label {
+  display: grid;
+  justify-items: center;
+  padding: 3px 14px 4px;
+  border-radius: 999px;
+  background: #0b0f2aeb;
+  border: 1px solid #b78bff66;
+  box-shadow: 0 8px 20px #02031499;
+  color: #efe6ff;
+  font: 12px/1.35 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.co-trash-label strong {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.co-trash-label small {
+  font-size: 11px;
+  color: #c9bdf0;
+}
+.co-trash.is-armed .co-trash-hole {
+  box-shadow:
+    0 0 0 2px #ff8ad8,
+    0 0 60px 14px #ff5fc8b0;
+}
+.co-trash.is-armed .co-trash-core {
+  box-shadow: 0 0 0 3px #ffd6f4, inset 0 0 18px #ff5fc8;
+}
+.co-trash.is-armed .co-trash-disk {
+  animation-duration: 0.9s;
+}
+.co-trash.is-armed .co-trash-label {
+  background: #3a0f3feb;
+  border-color: #ff8ad8;
+}
+.co-trash.is-armed .co-trash-label small {
+  color: #fff;
+  font-weight: 700;
+}
+.co-trash.is-closing {
+  transition: opacity 0.3s ease 0.28s;
+  opacity: 0;
+}
+.co-trash.is-closing .co-trash-hole {
+  animation: co-trash-gulp 0.5s ease-in forwards;
+}
+@keyframes co-trash-gulp {
+  40% {
+    scale: 1.32;
+    box-shadow: 0 0 0 3px #fff, 0 0 90px 30px #ffd27ad0;
+  }
+  100% {
+    scale: 0.2;
+  }
+}
+@media (max-width: 900px) {
+  /* The copy pad rides above the recycler instead of covering it. */
+  .co-short-drop {
+    bottom: calc(18px + clamp(88px, 11vw, 124px) + 64px);
+  }
+}
+.co-project-sort .co-trash-button {
+  min-width: 34px;
+  padding-inline: 8px;
+}
+/* 已移除專案｜復原 */
+.co-toast.co-undo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 9px 10px 11px 18px;
+  border: 1px solid #b78bff99;
+  background: linear-gradient(180deg, #171c45f5, #0d1130f5);
+  color: #eef1ff;
+  box-shadow: 0 14px 34px #02031499;
+}
+.co-undo-sep {
+  color: #8a93c8;
+}
+.co-toast.co-undo .co-undo-button {
+  min-height: 34px;
+  padding: 5px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffd27a;
+  color: #1b1440;
+  font: 700 14px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.co-toast.co-undo .co-undo-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.co-undo-fuse {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ffd27a, #b78bff);
+  transform-origin: left;
+  animation: co-undo-fuse linear forwards;
+}
+@keyframes co-undo-fuse {
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-trash-body,
+  .co-trash-hole,
+  .co-drag-ghost {
+    transition: none;
+  }
+  .co-trash-disk,
+  .co-trash-mote,
+  .co-project.is-pressing {
+    animation: none;
+  }
+  .co-trash-mote {
+    opacity: 0.7;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(calc(var(--hole) * 0.62));
+  }
+  .co-project.is-pressing {
+    outline-color: #b78bffcc;
+  }
+  .co-undo-fuse {
+    animation: none;
+    opacity: 0.5;
+  }
+}

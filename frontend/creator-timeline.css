@@ -1,0 +1,471 @@
+/* 系統年表 · two routes of a growing universe, drawn on the night island.
+   Nothing here animates in a loop; a node only glows while it is open. */
+.tl {
+  --tl-ink: #eef1ff;
+  --tl-soft: #b4c0ec;
+  --tl-dim: #8290c4;
+  --tl-panel: #0d1433cc;
+  --tl-edge: #5667a866;
+  color: var(--tl-ink);
+  font: 15px/1.6 system-ui, sans-serif;
+}
+.tl-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  margin-bottom: 18px;
+}
+.tl-lede {
+  flex: 1 1 320px;
+  margin: 0;
+  color: var(--tl-soft);
+  font-size: 14px;
+}
+.tl-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #060b24cc;
+  border: 1px solid var(--tl-edge);
+}
+#creator-office .tl-switch-button {
+  min-height: 34px;
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tl-soft);
+  font: 600 13px/1.2 system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: none;
+}
+#creator-office .tl-switch-button[aria-pressed="true"] {
+  background: linear-gradient(180deg, #2c3a86, #1b2563);
+  color: #fff;
+  box-shadow: inset 0 1px 0 #ffffff30, 0 0 0 1px #8fd3e855;
+}
+.tl-status {
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px dashed var(--tl-edge);
+  color: var(--tl-soft);
+  text-align: center;
+}
+.tl-tracks {
+  display: grid;
+  gap: 22px;
+}
+.tl-tracks[data-view="both"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.tl-track {
+  --route: #ffd27a;
+  --route-glow: #ffd27a55;
+  min-width: 0;
+  padding: 16px 16px 10px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 60% at 0% 0%, color-mix(in oklab, var(--route) 12%, #0000), #0000 60%),
+    var(--tl-panel);
+  border: 1px solid var(--tl-edge);
+  box-shadow: inset 0 1px 0 #ffffff14;
+}
+.tl-track[data-track="content_system"] {
+  --route: #8fd3e8;
+  --route-glow: #8fd3e855;
+}
+.tl-track-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #ffffff14;
+}
+.tl-track-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 21px;
+  background: color-mix(in oklab, var(--route) 22%, #0b1233);
+  box-shadow: 0 0 18px var(--route-glow);
+}
+.tl-track-titles {
+  min-width: 0;
+  flex: 1;
+}
+#creator-office .tl-track-titles h3 {
+  margin: 0;
+  color: var(--tl-ink);
+  font: 700 18px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+.tl-track-titles p {
+  margin: 0;
+  color: var(--tl-dim);
+  font-size: 12px;
+}
+.tl-track-count {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--route);
+  border: 1px solid color-mix(in oklab, var(--route) 45%, #0000);
+}
+
+/* The route: one glowing line, month stations, milestone nodes on it. */
+.tl-route {
+  position: relative;
+  margin: 0;
+  padding: 4px 0 4px;
+  list-style: none;
+}
+.tl-route::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 14px;
+  bottom: 24px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--route) 30%, #0000), var(--route) 12%, var(--route) 88%, #ffffff);
+  box-shadow: 0 0 10px var(--route-glow);
+}
+.tl-station {
+  position: relative;
+  padding: 14px 0 6px 40px;
+}
+.tl-station-label {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font: 700 12px/1.8 ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  color: #0b1233;
+  background: var(--route);
+  box-shadow: 0 0 14px var(--route-glow);
+}
+.tl-station::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 19px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  rotate: 45deg;
+  background: #0b1233;
+  border: 2px solid var(--route);
+}
+.tl-station[data-station="pending"] .tl-station-label {
+  background: transparent;
+  color: var(--tl-soft);
+  border: 1px dashed var(--tl-soft);
+}
+.tl-node,
+.tl-now {
+  position: relative;
+}
+#creator-office .tl-node-button,
+.tl-now {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px 8px 40px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  box-shadow: none;
+}
+#creator-office .tl-node-button {
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+#creator-office .tl-node-button:hover,
+.tl-node.is-open > .tl-node-button {
+  background: #ffffff0d !important;
+}
+.tl-dot {
+  position: absolute;
+  left: 10px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0b1233;
+  border: 2px solid var(--route);
+}
+.tl-node[data-importance="3"] .tl-dot {
+  left: 7px;
+  top: 11px;
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle, #fff 0 22%, var(--route) 28%);
+  box-shadow: 0 0 12px var(--route-glow), 0 0 0 4px color-mix(in oklab, var(--route) 18%, #0000);
+}
+.tl-node[data-importance="1"] .tl-dot {
+  left: 12px;
+  top: 16px;
+  width: 8px;
+  height: 8px;
+}
+.tl-node.is-open .tl-dot {
+  box-shadow: 0 0 18px var(--route), 0 0 0 5px color-mix(in oklab, var(--route) 26%, #0000);
+}
+.tl-date {
+  padding-top: 1px;
+  color: var(--route);
+  font: 700 13px/1.6 ui-monospace, "Cascadia Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+.tl-text {
+  display: grid;
+  min-width: 0;
+}
+.tl-title {
+  color: var(--tl-ink);
+  font-weight: 700;
+  line-height: 1.45;
+}
+.tl-node[data-importance="3"] .tl-title {
+  font-size: 16px;
+}
+.tl-summary {
+  color: var(--tl-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.tl-uncertain {
+  align-self: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: #ffe3a3;
+  border: 1px dashed #ffe3a399;
+}
+.tl-node[data-confidence="PARTIAL"] .tl-date {
+  color: var(--tl-soft);
+}
+/* 現在 · where the route is today. */
+.tl-now {
+  margin-top: 6px;
+}
+.tl-now .tl-dot {
+  left: 6px;
+  top: 10px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: radial-gradient(circle, #fff 0 30%, #ffffff00 34%), conic-gradient(from 0deg, var(--route), #fff, var(--route));
+  box-shadow: 0 0 0 4px #ffffff22, 0 0 22px #ffffffaa;
+}
+.tl-now .tl-title {
+  color: #fff;
+  letter-spacing: 0.1em;
+}
+.tl-now .tl-date {
+  color: #fff;
+}
+
+/* Detail: plain language first, the evidence last and quieter. */
+.tl-detail {
+  margin: 2px 6px 12px 40px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #060b24e6;
+  border: 1px solid color-mix(in oklab, var(--route) 30%, #0000);
+}
+.tl-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+}
+.tl-facts dt {
+  color: var(--route);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+.tl-facts dd {
+  margin: 0;
+  color: var(--tl-ink);
+  font-size: 14px;
+}
+.tl-label {
+  color: var(--tl-dim);
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.tl-systems {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+.tl-chip {
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--tl-ink);
+  background: #ffffff12;
+  border: 1px solid #ffffff22;
+}
+.tl-proof {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #ffffff22;
+}
+.tl-proof p {
+  margin: 0;
+}
+.tl-proof-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.tl-confidence {
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.9;
+  color: #0b1233;
+  background: #9ee6b5;
+}
+.tl-proof[data-confidence="HIGH"] .tl-confidence {
+  background: #ffe3a3;
+}
+.tl-proof[data-confidence="PARTIAL"] .tl-confidence {
+  background: transparent;
+  color: #ffe3a3;
+  border: 1px dashed #ffe3a3;
+}
+.tl-proof-date {
+  color: var(--tl-soft);
+  font: 600 12px/1 ui-monospace, "Cascadia Mono", monospace;
+}
+.tl-proof-note {
+  margin-top: 4px !important;
+  color: var(--tl-dim);
+  font-size: 12px;
+}
+.tl-proof-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  margin-top: 6px !important;
+}
+.tl-proof-kind {
+  color: var(--tl-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.tl-proof-ref code {
+  overflow-wrap: anywhere;
+  color: #d9e1ff;
+  font: 12px/1.5 ui-monospace, "Cascadia Mono", monospace;
+}
+
+/* 工作紀錄 stays reachable inside the timeline's island. */
+.tl-archive {
+  margin-top: 26px;
+}
+#creator-office .tl-archive > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--tl-ink, #eef1ff);
+  background: #060b24cc;
+  border: 1px solid #5667a866;
+  font: 700 15px/1.4 system-ui, sans-serif;
+  list-style: none;
+}
+#creator-office .tl-archive > summary::-webkit-details-marker {
+  display: none;
+}
+#creator-office .tl-archive > summary::after {
+  content: "展開";
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b4c0ec;
+}
+#creator-office .tl-archive[open] > summary::after {
+  content: "收合";
+}
+.tl-archive-note {
+  color: #b4c0ec;
+  font-size: 12px;
+  font-weight: 500;
+}
+.tl-archive > .co-history {
+  margin-top: 12px;
+}
+
+:is(#creator-office) .tl-node-button:focus-visible,
+:is(#creator-office) .tl-switch-button:focus-visible,
+:is(#creator-office) .tl-archive > summary:focus-visible {
+  outline: 3px solid #ffd27a;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .tl-tracks[data-view="both"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #creator-office .tl-switch-button[data-view="both"] {
+    display: none;
+  }
+  .tl-track {
+    padding: 12px 8px 6px;
+  }
+  #creator-office .tl-node-button,
+  .tl-now {
+    grid-template-columns: 46px minmax(0, 1fr);
+    padding-right: 6px;
+  }
+  .tl-uncertain {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 4px;
+  }
+  .tl-detail {
+    margin-left: 10px;
+    margin-right: 0;
+  }
+  .tl-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #creator-office .tl-node-button {
+    transition: none;
+  }
+}

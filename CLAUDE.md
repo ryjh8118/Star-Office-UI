@@ -97,7 +97,9 @@ in a real browser.
 
 `UI_FILTERED != DATA_LOST`, but a real project the user cannot reach from any
 surface *is* lost. Every canonical record must be reachable: a primary card, the
-工作紀錄 list, 測試與系統紀錄, or 已移除的專案 if the user removed it themselves.
+工作紀錄 list (the drawer inside 系統年表), 測試與系統紀錄, or 已移除的專案 if the
+user removed it themselves. 系統年表 itself is product history from
+`frontend/creator-milestones.json`, never a project record.
 Reconcile the counts before claiming a pass.
 
 ## Startup

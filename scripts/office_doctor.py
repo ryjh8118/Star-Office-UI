@@ -171,7 +171,7 @@ def verdict(report):
     if total and usable < total:
         lines.append(f'Content OS 有 {total} 筆紀錄，但只有 {usable} 筆會變成卡片。'
                      '卡片清單只收 classification=REGISTERED 且 project_type 是 '
-                     'YOUTUBE/VIDEO_PROJECT 的，其餘會落到下方的「工作紀錄」區，'
+                     'YOUTUBE/VIDEO_PROJECT 的，其餘會落到下方「系統年表」裡的「工作紀錄」，'
                      '不會出現在「正在製作」。')
 
     if has_data and reachable and usable == total:
