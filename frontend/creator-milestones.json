@@ -225,6 +225,21 @@
       "confidence": "VERIFIED"
     },
     {
+      "id": "so-galaxy-station",
+      "category": "star_office",
+      "date": "2026-09-14",
+      "title": "銀河太空站、魔法垃圾桶與系統年表",
+      "summary": "辦公室搬進銀河裡的太空站，專案拖進星塵回收艙就能移除，還能回頭看整套系統怎麼長大。",
+      "what": "第一次進入會飛越銀河、穿過太空站艙門；太空站下方穿過大氣層與雲層接到空島。專案卡片拖到畫面底部的星塵回收艙放開才會移除，7 秒內可以復原。工作紀錄升級成系統年表，分成星辦里程碑與內容里程碑。",
+      "why": "STAR OFFICE 從一間辦公室，變成一個有來處、會持續發展的創作者宇宙。",
+      "systems": ["STAR OFFICE", "Content OS"],
+      "importance": 3,
+      "source": "git",
+      "source_ref": "Enter a galaxy station, drop projects into a stardust recycler, and read the system's history",
+      "commit_sha": "7b1f3e3",
+      "confidence": "VERIFIED"
+    },
+    {
       "id": "cs-first-version-record",
       "category": "content_system",
       "date": "2026-07-26",
