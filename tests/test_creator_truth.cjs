@@ -248,11 +248,29 @@ assert.deepEqual(
   ["b", "d", "e", "c", "a"],
 );
 assert.deepEqual(ids(C.arrange(rows, () => "", byName)), ["a", "b", "c", "d", "e"]);
-assert.equal(C.PIN_LIMIT, 3);
-assert.equal(C.featuredCount(0), 2);
-assert.equal(C.featuredCount(1), 2);
-assert.equal(C.featuredCount(3), 3, "every pin stays in view");
-assert.equal(C.featuredCount(7), 3);
+// Each island shows six crystals at a time on its ACTIVE DECK; the rest wait,
+// folded, on the PROJECT DECK. Ten pins are allowed, so pins beyond six lead the
+// PROJECT DECK in pin order rather than pushing anyone off the desk.
+assert.equal(C.PIN_LIMIT, 10);
+assert.equal(C.DECK_HERO, 6);
+const many = Array.from({ length: 23 }, (_, i) => ({ project_id: "p" + i }));
+const [hero, rest] = C.deckSplit(many);
+assert.deepEqual(ids(hero), ids(many.slice(0, 6)));
+assert.deepEqual(ids(rest), ids(many.slice(6)));
+assert.deepEqual([...C.deckSplit(many.slice(0, 4))[1]], [], "a small island has no lower deck");
+assert.deepEqual([...C.deckSplit(many.slice(0, 6))[1]], [], "exactly six still fit on the ACTIVE DECK");
+assert.equal([...hero, ...rest].length, many.length, "nobody is dropped between the decks");
+const pinned = Object.fromEntries(many.slice(0, 10).map((p, i) => [p.project_id, "2026-09-14T00:00:0" + i]));
+const [pinHero, pinRest] = C.deckSplit(C.arrange([...many].reverse(), (p) => pinned[p.project_id] || "", () => 0));
+assert.deepEqual(ids(pinHero), ids(many.slice(0, 6)), "the first six pins stand on the ACTIVE DECK");
+assert.deepEqual(ids(pinRest).slice(0, 4), ids(many.slice(6, 10)), "the other four pins lead the PROJECT DECK");
+
+// 任務雲: four columns in a fixed order, and the same filing rule as the store.
+assert.deepEqual([...C.TODO_COLUMNS].map((c) => c.label), ["REPO", "企劃", "STAR OFFICE", "其他"]);
+const filing = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures/todo-categories.json"), "utf8"));
+assert.ok(filing.length >= 12);
+for (const { item, key, category } of filing)
+  assert.equal(C.todoCategory(item, key || ""), category, JSON.stringify(item));
 
 // 最近完成 opens newest first. Once the user arranges the shelf their order holds,
 // and anything finished since leads it, newest first.
@@ -286,8 +304,8 @@ assert.equal(C.memberIdentity("UNKNOWN").asset, null);
 console.log(
   JSON.stringify({
     result: "PASS",
-    checks: 68,
+    checks: 75 + filing.length,
     scope:
-      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order, completed shelf order, short-video steps and member identity",
+      "Creator historical state, never observed, native activity, lease distinction, display tiers, completed-project bucketing, pin order, island decks, task-cloud filing, completed shelf order, short-video steps and member identity",
   }),
 );

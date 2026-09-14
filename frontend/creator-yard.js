@@ -1,8 +1,9 @@
-/* Every house stands on a small sky island, and the house's resident plays on
-   it: kicks a ball, swings from the tree, flies a kite, chases a butterfly,
-   dances, naps in the shade, and jumps for joy when poked.
+/* Beside each sky island's title platform floats a small resting islet, and a
+   resident who lands there plays on it for a while: kicks a ball, swings from
+   the tree, flies a kite, chases a butterfly, dances, naps in the shade, and
+   jumps for joy when poked, before flying off again.
    Decoration only: it reads no work state, writes nothing, and never clones a
-   resident. A house without one keeps an island with only the butterflies. */
+   resident. An islet without a visitor keeps only its butterflies. */
 ((scope) => {
   "use strict";
   const PLAYS = ["ball", "swing", "kite", "butterfly", "dance", "hop", "nap", "wave"];
@@ -25,7 +26,7 @@
   // The swing hangs from the end of the branch, which reaches toward the middle.
   const swingX = (seed) => treeX(seed) + (treeX(seed) < 50 ? 10 : -10);
   // What a resident does next, from where it stands and what it just played.
-  // Pure: every house keeps its own rhythm, and neighbours never move in lockstep.
+  // Pure: every resident keeps its own rhythm, and neighbours never move in lockstep.
   function plan(seed, step, x, fixed = false, last = null) {
     const pool = fixed ? PERCHED : PLAYS;
     const before = pool.indexOf(last);
@@ -83,7 +84,7 @@
     );
   }
 
-  function start(yard, actor, seed, fixed) {
+  function start(yard, actor, seed, fixed, delay) {
     let step = Math.floor(random(seed, 7) * 5),
       last = null,
       x = fixed ? 55 : Math.round(30 + random(seed, 3) * 40);
@@ -92,8 +93,10 @@
     yard.dataset.play = "stand";
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const tick = () => {
-      // A house rebuilt by a live update takes a new island; this one retires.
+      // An islet taken out of the page retires its schedule.
       if (!yard.isConnected) return;
+      // A visitor that has flown off takes its schedule with it.
+      if (!actor.isConnected) return;
       if (document.hidden || !yard.classList.contains("is-on-screen")) {
         setTimeout(tick, 1500);
         return;
@@ -104,7 +107,7 @@
       perform(yard, actor, next);
       setTimeout(tick, next.duration);
     };
-    setTimeout(tick, 400 + random(seed, 11) * 2400);
+    setTimeout(tick, delay ?? 400 + random(seed, 11) * 2400);
   }
 
   function poke(actor) {
@@ -164,7 +167,12 @@
     );
     for (let i = 0; i < 2; i++) el("co-yard-flutter", isle).style.setProperty("--i", i);
     if (!character) return yard;
+    resident(yard, isle, character, seed);
+    return yard;
+  }
+  function resident(yard, isle, character, seed, delay) {
     yard.classList.add("has-resident");
+    yard.dataset.resident = character.name;
     const actor = el("co-yard-actor" + (character.fixed ? " is-perched" : ""), isle);
     actor.dataset.character = character.name;
     // Every resident stands about as tall as the next, however its art is cropped.
@@ -188,9 +196,27 @@
     el("co-yard-emote", actor, "span");
     el("co-yard-shadow", actor, "span");
     actor.addEventListener("click", () => poke(actor));
-    start(yard, actor, seed, !!character.fixed);
-    return yard;
+    start(yard, actor, seed, !!character.fixed, delay);
+    return actor;
+  }
+  // A resting place with no one on it can take a visitor, who later flies off
+  // again. The island itself stays put; only the visitor comes and goes, and it
+  // starts to play only once it has landed.
+  function visit(yard, character, seed, landing = 0) {
+    const isle = yard?.querySelector(".co-yard-isle");
+    if (!isle || !character || yard.querySelector(".co-yard-actor")) return null;
+    return resident(yard, isle, character, seed, landing || undefined);
+  }
+  function leave(yard) {
+    const actor = yard?.querySelector(".co-yard-actor");
+    if (!actor) return;
+    clearTimeout(timers.get(yard));
+    clearTimeout(timers.get(actor));
+    actor.remove();
+    yard.classList.remove("has-resident");
+    yard.dataset.resident = "";
+    yard.dataset.play = "stand";
   }
 
-  Object.assign(api, { build });
+  Object.assign(api, { build, visit, leave });
 })(typeof window === "undefined" ? globalThis : window);

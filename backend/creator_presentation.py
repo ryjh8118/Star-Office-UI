@@ -17,9 +17,17 @@ bp = Blueprint('creator', __name__)
 LIMIT = 5 * 1024 * 1024
 # A pin places a project at the head of 正在製作. Leaving that section (removed,
 # finished, or gone from the source) releases the slot, so the limit always
-# counts exactly the pins the user can see.
-PIN_LIMIT = 3
+# counts exactly the pins the user can see. Ten pins fill the island's active deck.
+PIN_LIMIT = 10
 PIN_LIMIT_TEXT = f'最多可置頂 {PIN_LIMIT} 個專案'
+# 任務雲 files every todo under one of four columns. A todo written before the
+# columns existed has no category: it is filed once by this fixed rule, and one
+# the rule cannot place goes to 其他. Nothing is dropped. The same rule, word for
+# word, lives in creator-office.js so a todo lands in the same column either way.
+TODO_CATEGORIES = ('REPO', 'PROJECT', 'OFFICE', 'OTHER')
+TODO_OFFICE_WORDS = re.compile(r'star\s*office|辦公室|(?<![A-Za-z0-9])office(?![A-Za-z0-9])', re.I)
+TODO_REPO_WORDS = re.compile(r'(?<![A-Za-z0-9])(?:repos?|repository|git|github|gitlab|commits?|branch|pull request)(?![A-Za-z0-9])|儲存庫|程式碼|原始碼', re.I)
+TODO_PROJECT_WORDS = re.compile(r'企劃|短影音|長片|影片|影音|剪輯|後製|上映|拍攝|腳本|字幕|(?<![A-Za-z0-9])(?:youtube|yt)(?![A-Za-z0-9])', re.I)
 ENV_TIMES = {'AUTO', 'MORNING', 'DAY', 'AFTERNOON', 'SUNSET', 'NIGHT'}
 ENV_WEATHER = {'CLEAR', 'CLOUDY', 'OVERCAST', 'RAIN', 'HEAVY_RAIN', 'THUNDERSTORM', 'SNOW', 'HEAVY_SNOW', 'FOG', 'WINDY'}
 ENV_RAINBOW_WEATHER = {'CLEAR', 'CLOUDY', 'RAIN'}
@@ -92,6 +100,23 @@ def release_pins(data, present=None):
         if meta.get('pinned_at') and (not pinnable(meta) or (present is not None and pid not in present)):
             meta.pop('pinned_at')
 
+def todo_category(item, key=''):
+    """The column a todo belongs in: its own choice, else the fixed filing rule."""
+    if item.get('category') in TODO_CATEGORIES:
+        return item['category']
+    if str(key or item.get('id') or '').startswith('ai:') or item.get('project_id'):
+        return 'PROJECT'
+    text = f"{item.get('title') or ''} {item.get('notes') or ''}"
+    for category, words in (('OFFICE', TODO_OFFICE_WORDS), ('REPO', TODO_REPO_WORDS), ('PROJECT', TODO_PROJECT_WORDS)):
+        if words.search(text):
+            return category
+    return 'OTHER'
+
+def file_todos(data):
+    for key, item in data['inbox'].items():
+        if item.get('category') not in TODO_CATEGORIES:
+            item['category'] = todo_category(item, key)
+
 def body():
     value = request.get_json()
     if not isinstance(value, dict):
@@ -137,6 +162,7 @@ def presentation():
         assign(cards, data['projects'])
         # Only a successful read can prove a project is gone; SYNC_ERROR returns above.
         release_pins(data, {p['project_id'] for p in cards})
+        file_todos(data)
     return change(update)
 
 @bp.post('/api/creator/workflow')
@@ -291,12 +317,14 @@ def inbox():
     key = value.get('id') or 'user:' + uuid4().hex
     if not isinstance(key, str) or len(key) > 600 or not key.startswith(('user:', 'ai:')):
         abort(400)
-    allowed = {'title','project_id','notes','date','priority','state'}
+    allowed = {'title','project_id','notes','date','priority','state','category'}
     patch = {k:v for k,v in value.items() if k in allowed}
     for k, v in patch.items():
         if not isinstance(v, str) or len(v) > (4000 if k == 'notes' else 240):
             abort(400)
     if 'title' in patch and not patch['title'].strip():
+        abort(400)
+    if 'category' in patch and patch['category'] not in TODO_CATEGORIES:
         abort(400)
     if patch.get('project_id'):
         project_id(patch['project_id'])
@@ -318,6 +346,7 @@ def inbox():
             data['inbox'][key] = item
             data['order'].append(key)
         item.update(patch, updated_at=now())
+        item['category'] = todo_category(item, key)
         if patch.get('state') == 'done':
             item['completed_at'] = now()
     return change(update)

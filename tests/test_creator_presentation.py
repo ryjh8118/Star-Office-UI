@@ -85,6 +85,53 @@ class PresentationTests(unittest.TestCase):
         reload=self.client.get('/api/creator/presentation').json
         self.assertEqual(reload['order'],[ai,key]);self.assertEqual(reload['inbox'][ai]['title'],'今晚先修前 8 分鐘')
         self.assertEqual(reload['inbox'][key]['state'],'later')
+    def test_todo_categories_are_chosen_kept_and_validated(self):
+        for category in cp.TODO_CATEGORIES:
+            created=self.post('inbox',{'title':'寫下 '+category,'category':category})
+            self.assertEqual(created.status_code,200)
+        items={i['title']:i for i in self.client.get('/api/creator/presentation').json['inbox'].values()}
+        self.assertEqual({t:i['category'] for t,i in items.items()},{'寫下 '+c:c for c in cp.TODO_CATEGORIES})
+        # Ticking, unticking, renaming and reordering never move a todo to another column.
+        key=items['寫下 REPO']['id']
+        self.post('inbox',{'id':key,'state':'done'})
+        self.post('inbox',{'id':key,'state':'today','title':'改名成辦公室的事'})
+        self.assertEqual(self.client.get('/api/creator/presentation').json['inbox'][key]['category'],'REPO')
+        moved=self.post('inbox',{'id':key,'category':'OTHER'}).json['inbox'][key]
+        self.assertEqual(moved['category'],'OTHER')
+        for bad in ['repo','PLANNING','',None,3]:
+            self.assertEqual(self.post('inbox',{'title':'x','category':bad}).status_code,400,bad)
+        self.assertEqual(len(self.client.get('/api/creator/presentation').json['inbox']),4)
+    def test_legacy_todos_are_filed_once_without_loss(self):
+        legacy={
+            'user:a':{'id':'user:a','title':'新的短影音','state':'today','created_at':'2026-09-12T18:43:54+00:00'},
+            'user:b':{'id':'user:b','title':'acceptance test - removable','state':'ignored'},
+            'user:c':{'id':'user:c','title':'修 Star Office 的待辦雲','state':'today'},
+            'user:d':{'id':'user:d','title':'push the branch to GitHub','state':'done','completed_at':'2026-09-10T00:00:00+00:00'},
+            'user:e':{'id':'user:e','title':'買文具','state':'today','notes':'週末'},
+            'user:f':{'id':'user:f','title':'看一下','project_id':'CANONICAL-1','state':'later'},
+            'ai:CANONICAL-1:GATE:x':{'id':'ai:CANONICAL-1:GATE:x','title':'確認','state':'done'},
+        }
+        with self.app.app_context():
+            with cp.connect() as db:
+                data=json.loads(db.execute('SELECT value FROM metadata WHERE id=1').fetchone()[0])
+                data['inbox']=json.loads(json.dumps(legacy));data['order']=list(legacy)
+                db.execute('UPDATE metadata SET value=? WHERE id=1',(json.dumps(data,ensure_ascii=False),))
+        first=self.client.get('/api/creator/presentation').json
+        expected={'user:a':'PROJECT','user:b':'OTHER','user:c':'OFFICE','user:d':'REPO','user:e':'OTHER','user:f':'PROJECT','ai:CANONICAL-1:GATE:x':'PROJECT'}
+        self.assertEqual({k:v['category'] for k,v in first['inbox'].items()},expected)
+        # Everything else about every todo is exactly as it was, and the order holds.
+        for key,item in legacy.items():
+            self.assertEqual({k:v for k,v in first['inbox'][key].items() if k!='category'},item)
+        self.assertEqual(first['order'],list(legacy))
+        # Filing happens once: a second read writes nothing.
+        second=self.client.get('/api/creator/presentation').json
+        self.assertEqual(second['revision'],first['revision'])
+        self.assertEqual(second['inbox'],first['inbox'])
+    def test_the_filing_rule_matches_the_page(self):
+        cases=json.loads((Path(__file__).parent/'fixtures'/'todo-categories.json').read_text(encoding='utf-8'))
+        self.assertGreaterEqual(len(cases),12)
+        for case in cases:
+            self.assertEqual(cp.todo_category(case['item'],case.get('key','')),case['category'],case)
     def test_validation_cross_origin_unknown_fields(self):
         self.assertEqual(self.client.post('/api/creator/done',json={'project_id':'CANONICAL-1','done':True},headers={'Origin':'https://outside.example'}).status_code,403)
         for body in [{'title':''},{'title':'x','date':'bad'},{'title':'x','priority':'urgent'},{'title':'x','state':'EXECUTOR_COMPLETED'},{'title':'x','project_id':'display-name'}]:
@@ -117,7 +164,7 @@ class PinAndEnvironmentTests(unittest.TestCase):
         self.app.config['USER_PRESENTATION_ROOT']=self.temp.name
         self.app.register_blueprint(cp.bp)
         self.client=self.app.test_client()
-        self.projects=[{'project_id':f'P{i}','project_name':f'Project {i}','classification':'REGISTERED','project_type':'VIDEO_PROJECT'} for i in range(1,6)]
+        self.projects=[{'project_id':f'P{i}','project_name':f'Project {i}','classification':'REGISTERED','project_type':'VIDEO_PROJECT'} for i in range(1,cp.PIN_LIMIT+3)]
         self.projection={'projection':{'projects':self.projects}}
         self.mock=patch.object(renguin_boundary,'projects',side_effect=lambda *_:self.projection)
         self.mock.start()
@@ -133,32 +180,37 @@ class PinAndEnvironmentTests(unittest.TestCase):
         return [pid for pid,_ in sorted(((pid,m['pinned_at']) for pid,m in data['projects'].items() if m.get('pinned_at')),key=lambda x:(x[1],x[0]))]
     def pin(self,pid,value=True):
         return self.post('pin',{'project_id':pid,'pinned':value})
-    def test_limit_of_three_refuses_the_fourth_without_side_effects(self):
+    def test_limit_of_ten_refuses_the_eleventh_without_side_effects(self):
+        self.assertEqual(cp.PIN_LIMIT,10)
         self.assertEqual(self.pins(),[])
-        for count,pid in enumerate(['P1','P2','P3'],1):
+        full=[f'P{i}' for i in range(1,cp.PIN_LIMIT+1)]
+        for count,pid in enumerate(full,1):
             self.assertEqual(self.pin(pid).status_code,200)
-            self.assertEqual(self.pins(),['P1','P2','P3'][:count])
+            self.assertEqual(self.pins(),sorted(full[:count],key=full.index))
         before=self.client.get('/api/creator/presentation').json
-        refused=self.pin('P4')
+        refused=self.pin(f'P{cp.PIN_LIMIT+1}')
         self.assertEqual(refused.status_code,409)
-        self.assertEqual(refused.json['error'],'最多可置頂 3 個專案')
+        self.assertEqual(refused.json['error'],'最多可置頂 10 個專案')
         self.assertEqual(refused.json['code'],'PIN_LIMIT')
+        self.assertEqual(refused.json['limit'],10)
         after=self.client.get('/api/creator/presentation').json
         self.assertEqual(after['revision'],before['revision'])
-        self.assertEqual(self.pins(after),['P1','P2','P3'])
+        self.assertEqual(self.pins(after),full)
         # Pinning again is idempotent: no duplicate, no new slot, no revision churn.
         self.assertEqual(self.pin('P1').json['revision'],before['revision'])
     def test_unpin_repin_order_is_deterministic(self):
-        for pid in ['P1','P2','P3']:
+        full=[f'P{i}' for i in range(1,cp.PIN_LIMIT+1)]
+        for pid in full:
             self.pin(pid)
+        spare=f'P{cp.PIN_LIMIT+1}'
         self.assertEqual(self.pin('P2',False).status_code,200)
-        self.assertEqual(self.pins(),['P1','P3'])
-        self.assertEqual(self.pin('P4').status_code,200)
+        self.assertEqual(self.pins(),[p for p in full if p!='P2'])
+        self.assertEqual(self.pin(spare).status_code,200)
         self.assertEqual(self.pin('P2').status_code,409)
-        self.assertEqual(self.pins(),['P1','P3','P4'])
+        self.assertEqual(self.pins(),[p for p in full if p!='P2']+[spare])
         self.pin('P1',False);self.pin('P1')
-        self.assertEqual(self.pins(),['P3','P4','P1'])
-        self.assertEqual(self.pin('P5',False).status_code,200) # unpinning an unpinned project is harmless
+        self.assertEqual(self.pins(),[p for p in full if p not in ('P1','P2')]+[spare,'P1'])
+        self.assertEqual(self.pin(f'P{cp.PIN_LIMIT+2}',False).status_code,200) # unpinning an unpinned project is harmless
     def test_pins_survive_reload_restart_rename_and_workflow_updates(self):
         for pid in ['P1','P2']:
             self.pin(pid)
