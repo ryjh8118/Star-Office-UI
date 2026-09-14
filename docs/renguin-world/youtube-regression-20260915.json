@@ -1,0 +1,22 @@
+[
+  {
+    "test": "tests/test_world_engine.py",
+    "exit_code": 0,
+    "output": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.234s\n\nOK\n"
+  },
+  {
+    "test": "tests/test_world_sources.py",
+    "exit_code": 0,
+    "output": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.238s\n\nOK\n"
+  },
+  {
+    "test": "tests/test_world_youtube_sync.py",
+    "exit_code": 0,
+    "output": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.021s\n\nOK\n"
+  },
+  {
+    "test": "tests/world-scene.test.cjs",
+    "exit_code": 0,
+    "output": "\u2714 every era uses the same camera, island and outline, and differs only in what stands on it (10.2897ms)\n\u2714 the city SVG never animates; walkers, characters and effects live in the overlay (0.9497ms)\n\u2714 resident density follows the preset and the render cap, tighter on phones (2.2778ms)\n\u2714 growth only adds buildings; quiet only dims them (6.8683ms)\n\u2714 the space gate is hidden, then scaffolded, then lit (2.0917ms)\n\u2714 configured landmarks reach their renderer without early unlocks (2.3514ms)\n\u2714 text from data is escaped and characters render as the authority's image or a token (0.6793ms)\n\u2714 an empty world still renders: the lot, the campfire and nothing pretending to be content (0.3492ms)\n\u2714 the Office never loads the world: only a link points at /world (2.3986ms)\n\u2139 tests 9\n\u2139 suites 0\n\u2139 pass 9\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 84.5886\n"
+  }
+]

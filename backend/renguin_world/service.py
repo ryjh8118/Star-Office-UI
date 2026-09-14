@@ -70,6 +70,41 @@ def build_live(presentation_root, frontend_dir, *, now=None):
                               sources=sources, source='LIVE')
 
 
+def sync_youtube(presentation_root):
+    """Sync all eligible mapped contents, independently of featured-card limits.
+
+    No cached world is built on failure. No publish dates, classifications or
+    growth inputs are rewritten by this statistics operation.
+    """
+    runtime = runtime_root(presentation_root)
+    raw, sources = content_adapter.collect(presentation_root)
+    overrides, report = load_overrides(runtime)
+    if report['status'] == 'ERROR' or any(s['status'] in ('ERROR', 'SYNC_ERROR') for s in sources):
+        return {'status': 'GATED', 'reason': 'CONTENT_SOURCE_OR_OVERRIDES_INVALID', 'synced': 0}
+    merged, _ = engine.apply_overrides(raw, overrides)
+    config = engine.load_config()
+    now = datetime.now(timezone.utc)
+    eligible = []
+    for item in merged:
+        content = engine.normalize_content(item, config)
+        if content is None or content['status'] not in config['rules']['growth']['counted_statuses']:
+            continue
+        stamp = engine.content_date(content)
+        if stamp and stamp > now:
+            continue
+        eligible.append(content)
+    ids = [c['youtube_video_id'] for c in eligible]
+    unmapped = sum(not isinstance(v, str) or not youtube_adapter.VIDEO_ID.fullmatch(v) for v in ids)
+    result = youtube_adapter.sync(runtime, ids)
+    if result['status'] == 'OK':
+        # Make the next World request rebuild from the new snapshot, even
+        # inside the ordinary TTL. This touches only its disposable cache.
+        (runtime / 'cache' / 'world_state.json').unlink(missing_ok=True)
+        if unmapped:
+            result = {**result, 'status': 'PARTIAL', 'reason': 'UNMAPPED_CONTENTS', 'snapshot_saved': True}
+    return {**result, 'eligible_contents': len(eligible), 'unmapped_contents': unmapped}
+
+
 def live_state(presentation_root, frontend_dir, *, refresh=False):
     runtime = runtime_root(presentation_root)
     cache = runtime / 'cache' / 'world_state.json'

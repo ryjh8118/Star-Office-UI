@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 import sys
 
-from . import engine, service, youtube_adapter
+from . import content_adapter, engine, service
 
 ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = ROOT / 'frontend'
@@ -21,7 +21,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog='python -m renguin_world')
     parser.add_argument('command', choices=['build', 'roadmap', 'simulate', 'characters', 'youtube-sync'])
     parser.add_argument('count', nargs='?', type=int, default=100)
-    parser.add_argument('--presentation-root', default=str(ROOT / '.user-presentation'))
+    parser.add_argument('--presentation-root', default=content_adapter.presentation_root_from_env(str(ROOT / '.user-presentation')))
     parser.add_argument('--audience', choices=['public', 'local'], default='public')
     parser.add_argument('--idle', type=int, default=0)
     parser.add_argument('--gap', type=int, default=0)
@@ -46,12 +46,10 @@ def main(argv=None):
         registry = service.registry(FRONTEND)
         output = {**registry, 'sources': [{k: v for k, v in s.items() if k != 'path'} for s in registry['sources']]}
     else:
-        state = service.live_state(args.presentation_root, FRONTEND)
-        ids = [c.get('youtube_video_id') for c in state.get('featured_contents', [])]
-        output = youtube_adapter.sync(service.runtime_root(args.presentation_root), ids)
+        output = service.sync_youtube(args.presentation_root)
     json.dump(output, sys.stdout, ensure_ascii=False, indent=1)
     print()
-    return 0
+    return 0 if args.command != 'youtube-sync' or output['status'] == 'OK' else 1
 
 
 if __name__ == '__main__':

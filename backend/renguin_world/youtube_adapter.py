@@ -52,17 +52,36 @@ def sync(runtime_root, video_ids, *, api_key=None, fetch=_fetch, now=None):
     api_key = api_key or os.environ.get('YOUTUBE_API_KEY')
     if not api_key:
         return {'status': 'GATED', 'reason': 'YOUTUBE_API_KEY_NOT_CONFIGURED', 'synced': 0}
-    ids = sorted({v for v in video_ids if isinstance(v, str) and VIDEO_ID.match(v)})
+    ids = sorted({v for v in video_ids if isinstance(v, str) and VIDEO_ID.fullmatch(v)})
+    if not ids:
+        return {'status': 'GATED', 'reason': 'NO_VERIFIED_VIDEO_IDS', 'synced': 0, 'requested': 0}
     videos = {}
     for start in range(0, len(ids), 50):
         batch = ids[start:start + 50]
         query = urllib.parse.urlencode({'part': 'statistics,snippet', 'id': ','.join(batch), 'key': api_key})
-        data = fetch(ENDPOINT + '?' + query)
-        for item in data.get('items') or []:
-            stats = item.get('statistics') or {}
-            if item.get('id') in batch and str(stats.get('viewCount', '')).isdigit():
+        try:
+            data = fetch(ENDPOINT + '?' + query)
+            if not isinstance(data, dict) or 'error' in data or not isinstance(data.get('items'), list):
+                raise ValueError('INVALID_YOUTUBE_RESPONSE')
+            for item in data['items']:
+                stats = item.get('statistics') or {}
+                published = (item.get('snippet') or {}).get('publishedAt')
+                if item.get('id') not in batch or not str(stats.get('viewCount', '')).isascii() or not str(stats.get('viewCount', '')).isdigit():
+                    continue
+                stamp = datetime.fromisoformat(str(published).replace('Z', '+00:00'))
+                if stamp.tzinfo is None:
+                    raise ValueError('PUBLISH_DATE_WITHOUT_TIMEZONE')
                 videos[item['id']] = {'view_count': int(stats['viewCount']),
-                                      'published_at': (item.get('snippet') or {}).get('publishedAt')}
+                                      'published_at': stamp.astimezone(timezone.utc).isoformat()}
+        except Exception:
+            # urllib / injected clients may put the complete credential-bearing
+            # URL in exception messages. Never log or propagate those messages.
+            # Keep the previous snapshot intact if any batch fails.
+            return {'status': 'ERROR', 'reason': 'YOUTUBE_REQUEST_OR_RESPONSE_FAILED',
+                    'synced': 0, 'requested': len(ids)}
+    if len(videos) != len(ids):
+        return {'status': 'PARTIAL', 'reason': 'VIDEOS_MISSING_OR_WITHOUT_STATISTICS',
+                'synced': 0, 'received': len(videos), 'requested': len(ids)}
     stamp = (now or datetime.now(timezone.utc)).isoformat()
     path = Path(runtime_root)
     path.mkdir(parents=True, exist_ok=True)
