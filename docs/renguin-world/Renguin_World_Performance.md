@@ -36,13 +36,18 @@
 `window.RenguinWorld.debug()` reports running, paused, timers, pending requests,
 listeners and walkers for QA.
 
-## Measured (headless Chrome, 1440 × 900, Preview, 2026-09-15)
+## Measured (headless Chrome, 1440 × 900, 2026-09-15)
 
-| Page | Main-thread ms / s | Layouts / s | Style recalcs / s |
-| --- | --- | --- | --- |
-| Star Office home (baseline, unchanged) | 219.6 | 3.0 | 120 |
-| Renguin World, 100 contents, FESTIVAL, 28 walkers | **3.4** | 0.2 | 0.2 |
-| Renguin World, tab hidden | 12.2 (sampling noise; no layouts) | 0 | 0.33 |
+| Page | Preview main-thread ms / s | Production main-thread ms / s | Layouts / s | Style recalcs / s |
+| --- | --- | --- | --- | --- |
+| Star Office home (loads nothing of the world) | 219.6 | 223.1 | 3–8 | 120 |
+| Renguin World, 100 contents, FESTIVAL, 28 walkers | **3.4** | **2.4** | 0.2 | 0.2 |
+| Renguin World, tab hidden | 12.2 | 9.9 | 0 | 0.33 |
+
+The Office figure is the Office's own animation cost and is unchanged by the
+world. Hidden-tab figures are sampling noise from the probe itself: no layouts,
+no timers. Live world build in Production: 149 ms, then served from the
+10-minute cache.
 
 Timers after hide: 0. After leave: timers 0, requests 0, listeners 0, walkers 0.
 Phone (390 px): 14 walkers, no sideways scroll.
