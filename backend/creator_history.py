@@ -36,3 +36,8 @@ def history():
         return jsonify({'events':rows,'source':source,'historical':True})
     except (OSError, ValueError, ImportError, RuntimeError) as error:
         return jsonify({'events':[], 'error':type(error).__name__}), 503
+
+# Renguin World rides on this blueprint so the app shell stays untouched. Its
+# module imports only Flask; the world itself loads when /world is requested.
+from renguin_world.routes import bp as renguin_world_bp
+bp.register_blueprint(renguin_world_bp)

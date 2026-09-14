@@ -1,0 +1,13 @@
+{
+  "schema": "RENGUIN_WORLD_TAG_RULES_V1",
+  "note": "Title keywords only. Inferred tags are marked INFERRED and any override replaces them.",
+  "rules": {
+    "travel": ["新加坡", "馬來西亞", "日本", "泰國", "香港", "澳門", "韓國", "越南", "峇里", "曼谷", "東京", "大阪", "首爾", "高雄", "台南", "花蓮", "墾丁", "航空", "機場", "出國", "旅行", "旅遊", "vlog", "飯店", "酒店", "家訪"],
+    "entertainment": ["表演", "唱", "猜歌", "金曲", "挑戰賽", "gogoboy", "綜藝", "遊戲", "演唱會", "slap", "saligia"],
+    "nightlife": ["夜店", "酒吧", "派對", "夜市", "gogoboy", "saligia"],
+    "lifestyle": ["做菜", "開箱", "做臉", "日常", "生活", "美食", "穿搭", "保養", "蓮蓬頭", "香蕉", "開水"],
+    "career": ["工作", "職場", "上班", "面試", "創業", "剪片", "剪輯", "合作", "宣傳", "業配"],
+    "fitness": ["健身", "運動", "重訓", "跑步", "瑜珈", "游泳", "減脂", "增肌"],
+    "story": ["故事", "過去", "暈船", "人生", "沒說過", "bug"]
+  }
+}

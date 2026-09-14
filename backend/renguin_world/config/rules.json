@@ -1,0 +1,67 @@
+{
+  "schema": "RENGUIN_WORLD_RULES_V1",
+  "content_types": ["long", "short", "member", "special"],
+  "growth": {
+    "points": { "short": 1, "member": 2, "long": 4, "special": 6 },
+    "flagship_points": 6,
+    "series_complete_bonus": 3,
+    "runtime_bonus": { "min_seconds": 1200, "points": 1, "types": ["long", "special"] },
+    "counted_statuses": ["PUBLISHED", "COMPLETED"]
+  },
+  "popularity": {
+    "tiers": [
+      { "id": "VIEW_TIER_0", "min_views": 0, "label": "< 1K" },
+      { "id": "VIEW_TIER_1", "min_views": 1000, "label": "1K–9.9K" },
+      { "id": "VIEW_TIER_2", "min_views": 10000, "label": "10K–49.9K" },
+      { "id": "VIEW_TIER_3", "min_views": 50000, "label": "50K–99.9K" },
+      { "id": "VIEW_TIER_4", "min_views": 100000, "label": "100K–499.9K" },
+      { "id": "VIEW_TIER_5", "min_views": 500000, "label": "500K+" }
+    ],
+    "recent_days": 30,
+    "crowd_bump_from_tier": 3,
+    "hype_from_tier": 4,
+    "hype_window_days": 7,
+    "lights_bonus_per_tier": 2
+  },
+  "activity": {
+    "thresholds": [
+      { "state": "ACTIVE", "max_days": 3 },
+      { "state": "NORMAL", "max_days": 7 },
+      { "state": "QUIET", "max_days": 14 },
+      { "state": "DORMANT", "max_days": 30 },
+      { "state": "DEEP_DORMANT", "max_days": null }
+    ],
+    "revival": { "gap_days_min": 8, "window_days": 3 },
+    "festival": { "burst_contents": 5, "burst_window_days": 3, "era_unlock_window_days": 3 },
+    "effects": {
+      "EMPTY_WORLD": { "crowd": "EMPTY", "lights": 10, "shops_open": 0, "construction": "WAITING", "grass": 1, "events": ["AWAITING_FIRST_CONTENT"] },
+      "ACTIVE": { "crowd": "BUSY", "lights": 88, "shops_open": 1.0, "construction": "ACTIVE", "grass": 0, "events": [] },
+      "NORMAL": { "crowd": "NORMAL", "lights": 74, "shops_open": 0.85, "construction": "ACTIVE", "grass": 0, "events": [] },
+      "QUIET": { "crowd": "QUIET", "lights": 52, "shops_open": 0.6, "construction": "SLOW", "grass": 1, "events": ["CITY_QUIET"] },
+      "DORMANT": { "crowd": "QUIET", "lights": 32, "shops_open": 0.4, "construction": "PAUSED", "grass": 2, "events": ["CITY_DORMANT", "SHOPS_DIMMED", "CONSTRUCTION_PAUSED"] },
+      "DEEP_DORMANT": { "crowd": "EMPTY", "lights": 20, "shops_open": 0.25, "construction": "PAUSED", "grass": 3, "events": ["CITY_DORMANT", "SHOPS_DIMMED", "CONSTRUCTION_PAUSED", "TALL_GRASS"] },
+      "REVIVAL": { "crowd": "BUSY", "lights": 100, "shops_open": 1.0, "construction": "RESTARTED", "grass": 1, "events": ["LIGHTS_ON", "RESIDENTS_RETURN", "CONSTRUCTION_RESTARTED", "NEW_POSTER", "CONFETTI", "SMALL_FIREWORKS"] },
+      "FESTIVAL": { "crowd": "FESTIVAL", "lights": 100, "shops_open": 1.0, "construction": "ACTIVE", "grass": 0, "events": ["FESTIVAL_BANNERS", "FIREWORKS", "FEATURED_POSTER"] }
+    },
+    "descriptions": {
+      "EMPTY_WORLD": "空地還在等第一支片。",
+      "ACTIVE": "城市很熱鬧，新片剛上架。",
+      "NORMAL": "日常運轉中，街上人來人往。",
+      "QUIET": "城市變安靜了，大家在等新片。",
+      "DORMANT": "城市在打盹：幾間店熄燈，工地先停工。",
+      "DEEP_DORMANT": "草長高了一點，但每一棟建築都還在。",
+      "REVIVAL": "城市醒來了！燈重新亮起，居民回到街上。",
+      "FESTIVAL": "城市慶典中，廣場掛滿彩旗。"
+    }
+  },
+  "crowd": {
+    "order": ["EMPTY", "QUIET", "NORMAL", "BUSY", "FESTIVAL"],
+    "resident_factor": { "EMPTY": 0, "QUIET": 0.3, "NORMAL": 0.6, "BUSY": 0.85, "FESTIVAL": 1 },
+    "render_cap": { "desktop": 28, "mobile": 14 }
+  },
+  "districts": { "recent_days": 30, "busy_from_recent": 3 },
+  "featured": { "limit": 3 },
+  "recent_growth": { "limit": 6 },
+  "characters": { "guest_limit": 6 },
+  "gossip": { "limit": 12 }
+}

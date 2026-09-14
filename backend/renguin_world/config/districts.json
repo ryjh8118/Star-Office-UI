@@ -1,0 +1,62 @@
+{
+  "schema": "RENGUIN_WORLD_DISTRICT_REGISTRY_V1",
+  "districts": [
+    {
+      "id": "MAIN_CITY",
+      "name": "主城區",
+      "unlock": { "min_era": "ERA_01" },
+      "tags": ["short", "lifestyle", "fitness"],
+      "hotspots": { "PLAZA": ["short"], "MARKET": ["lifestyle"], "GYM": ["fitness"] },
+      "summary": "廣場、市集和健身角落，短影音越多人越多。"
+    },
+    {
+      "id": "CREATOR_DISTRICT",
+      "name": "創作者街區",
+      "unlock": { "min_era": "ERA_02" },
+      "tags": ["long", "career", "story"],
+      "hotspots": { "STUDIO": ["long"], "OFFICES": ["career"] },
+      "summary": "Star Office 的燈就在這條街上。"
+    },
+    {
+      "id": "TRAVEL_DISTRICT",
+      "name": "旅行港區",
+      "unlock": { "min_era": "ERA_03", "or_tag_count": { "travel": 3 } },
+      "tags": ["travel"],
+      "hotspots": { "HARBOR": ["travel"], "HOTEL": ["travel"] },
+      "summary": "企鵝每出國一次，碼頭就多一艘船。"
+    },
+    {
+      "id": "VIDEO_HALL",
+      "name": "影片大廳",
+      "unlock": { "min_era": "ERA_04" },
+      "tags": ["special", "long"],
+      "hotspots": { "PREMIERE": ["special"] },
+      "summary": "旗艦長片在這裡首映。"
+    },
+    {
+      "id": "MEMBER_DISTRICT",
+      "name": "鵝寶會員區",
+      "unlock": { "min_era": "ERA_04", "or_type_count": { "member": 3 } },
+      "tags": ["member"],
+      "hotspots": { "HATCHERY": ["member"] },
+      "summary": "鵝寶們住的地方，會員影片越多越熱鬧。"
+    },
+    {
+      "id": "ENTERTAINMENT_DISTRICT",
+      "name": "娛樂夜市區",
+      "unlock": { "min_era": "ERA_05" },
+      "tags": ["entertainment", "nightlife"],
+      "hotspots": { "STAGE": ["entertainment"], "NIGHT_MARKET": ["nightlife"] },
+      "summary": "表演、夜市和晚上才開的店。"
+    },
+    {
+      "id": "FUTURE_GATE",
+      "name": "星港之門",
+      "unlock": { "min_era": "ERA_08" },
+      "preview": { "min_era": "ERA_07", "min_progress": 0.6 },
+      "tags": ["special"],
+      "hotspots": { "GATE": ["special"] },
+      "summary": "100 支片之後，城市的下一站。"
+    }
+  ]
+}
