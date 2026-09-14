@@ -1,29 +1,6 @@
-/* The sky island each house stands on, where its resident plays. Sizes are in
-   cqw of the card, so the island scales with it. Decorative only. */
-.co-project.has-yard {
-  container-type: inline-size;
-}
-/* The house stays whole, roof to foundation. Its lower wall keeps a strip clear
-   for the yard: the tree and the resident stand in front of it, and the grass
-   tucks under the foundation's edge. */
-.co-project.has-yard > .co-project-body {
-  padding-bottom: calc(22px + var(--yard-rise));
-}
-.co-project.has-yard {
-  --yard-rise: 17.5cqw;
-}
-.co-project > .co-yard {
-  z-index: 1;
-  margin-top: calc(var(--yard-rise) * -1);
-}
-.co-project > .co-yard .co-yard-grass {
-  left: 0.5%;
-  right: 0.5%;
-}
-.co-project > .co-yard .co-yard-rock {
-  left: 7%;
-  right: 7%;
-}
+/* The resting islet beside each sky island's title platform, where the
+   island's residents land, swing and play for a while before flying off again.
+   Sizes are in cqw of the islet's container, so it scales with it. Decorative only. */
 .co-yard {
   --yard-ground: 18cqw; /* where feet meet the grass */
   --yard-grass: #86c46f;
@@ -44,24 +21,28 @@
   overflow-x: clip;
   pointer-events: none;
 }
+/* 晨光水晶工坊: bright meadow, sky-blue and gold flowers. */
 [data-zone="work"] .co-yard {
-  --yard-grass: #8fc19b;
-  --yard-grass-dark: #5b8f6f;
-  --yard-grass-light: #d3ebd8;
-  --yard-canopy: #2f6f55;
-  --yard-canopy-light: #4f9474;
-  --yard-flower: #9fd3ff;
-  --yard-flower-eye: #ffffff;
-  --yard-snow: #f4fbff;
+  --yard-grass: #8fd46f;
+  --yard-grass-dark: #4f9a52;
+  --yard-grass-light: #c9f59a;
+  --yard-canopy: #3f9a5a;
+  --yard-canopy-light: #6fd07c;
+  --yard-flower: #86e6ff;
+  --yard-flower-eye: #ffe08a;
 }
+/* 紫電光軌塔: violet turf with cyan and magenta blooms. */
 [data-zone="short"] .co-yard {
-  --yard-grass: #6fd06a;
-  --yard-grass-dark: #37934a;
-  --yard-grass-light: #b3f294;
-  --yard-canopy: #1f9a62;
-  --yard-canopy-light: #52c984;
-  --yard-flower: #ff5f8f;
-  --yard-flower-eye: #ffd23f;
+  --yard-grass: #8f7ae6;
+  --yard-grass-dark: #5a45b8;
+  --yard-grass-light: #c7b8ff;
+  --yard-soil: #3a2a8e;
+  --yard-rock: #3a2a7e;
+  --yard-rock-dark: #1a1450;
+  --yard-canopy: #6a55c8;
+  --yard-canopy-light: #9f8cf0;
+  --yard-flower: #ff7ae6;
+  --yard-flower-eye: #6ff0ff;
 }
 [data-zone="result"] .co-yard {
   --yard-grass: #e2c77f;
@@ -75,14 +56,18 @@
   --yard-flower: #ff7aa8;
   --yard-flower-eye: #fff3c4;
 }
+/* 月夜星河: moonlit lawn, silver trees, pale lantern flowers. */
 [data-zone="short-result"] .co-yard {
-  --yard-grass: #a4d48b;
-  --yard-grass-dark: #6aa35c;
-  --yard-grass-light: #daf2bd;
-  --yard-canopy: #71904a;
-  --yard-canopy-light: #a5bf6a;
-  --yard-flower: #a78bfa;
-  --yard-flower-eye: #fff6a8;
+  --yard-grass: #7f9ed6;
+  --yard-grass-dark: #4a66a4;
+  --yard-grass-light: #b9cdf2;
+  --yard-soil: #34407c;
+  --yard-rock: #2c3670;
+  --yard-rock-dark: #121840;
+  --yard-canopy: #9fb3e6;
+  --yard-canopy-light: #dfe8ff;
+  --yard-flower: #fff2b8;
+  --yard-flower-eye: #ffb65c;
 }
 
 /* ------------------------------------------------------------------ the rock */

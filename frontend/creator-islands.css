@@ -1,41 +1,7 @@
-/* Sky islands. The lodge is the mother island at the top; every section below it
-   is an island of its own region, floating in the shared sky. Decorative only.
-   Scenery tiles at fixed pixel sizes and repeats; nothing is stretched to fit. */
-
-/* ------------------------------------------------------------ the archipelago */
-/* 代辦事項 spans the sky; long form and short videos float side by side beneath
-   it, first at work and then finished; the work history closes the chain. */
-#creator-office {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: clamp(24px, 3.4vw, 64px);
-  align-items: start;
-}
-#creator-office > * {
-  grid-column: 1 / -1;
-  min-width: 0;
-}
-#creator-office > .co-isle-half {
-  grid-column: auto;
-}
-/* Islands never line up exactly; the right-hand one floats a little lower. */
-#creator-office > .co-isle-half.is-right {
-  margin-top: 96px;
-}
-.co-isle-half .co-grid {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-}
-.co-isle-half.is-right.co-stage.is-on-stage {
-  transition-delay: 0.1s;
-}
-@media (max-width: 1000px) {
-  #creator-office > .co-isle-half {
-    grid-column: 1 / -1;
-  }
-  #creator-office > .co-isle-half.is-right {
-    margin-top: 34px;
-  }
-}
+/* Sky islands. Above the work history lies the sky world of four islands, each
+   holding one shelf of work; below it every remaining section is a room of its
+   own region floating in the shared sky. Decorative only. Scenery tiles at fixed
+   pixel sizes and repeats; nothing is stretched to fit. */
 
 /* ------------------------------------------------------------------ palettes */
 .co-zone,
@@ -340,146 +306,2474 @@ body.co-home-collapsed .co-map-header[data-zone="home"] {
   margin-bottom: 40px;
 }
 
-/* ---------------------------------------------------------------- the checklist */
-.co-todo-add {
+/* ============================================================ the sky world */
+/* One sky, four islands, a camera that flies between them. The stage is one
+   screen tall; the task cloud and the dock are fixed to it, the world moves
+   behind them, and the landed island's deck scrolls between the two. */
+#creator-office {
+  display: block;
+}
+.cw-stage {
+  --u: 1;
+  --dock-h: 92px;
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 30px calc(50% - 50vw);
+  isolation: isolate;
+  color: #1c2146;
+  font: 15px/1.6 system-ui, sans-serif;
+}
+/* The sky stays on the screen while the floor scrolls over it; its top and
+   bottom melt into the page, so the world has no edge to see. It sticks inside
+   a track as tall as the stage, so it can never hang past the stage's end. */
+.cw-sky-track {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+.cw-sky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cw-view {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask: linear-gradient(180deg, #0000, #000 90px, #000 calc(100% - 90px), #0000);
+}
+.cw-backdrop {
+  position: absolute;
+  inset: -14% -10%;
+}
+.cw-tint,
+.cw-horizon,
+.cw-stardust {
+  position: absolute;
+  inset: 0;
+}
+.cw-tint {
+  opacity: 0;
+}
+/* Each island lights the sky around itself in its own colours. */
+.cw-tint[data-island="work"] {
+  background:
+    radial-gradient(90% 60% at 50% 96%, #ffd98a66, #0000 62%),
+    radial-gradient(70% 55% at 62% 26%, #8fdcff4d, #0000 70%),
+    linear-gradient(180deg, #3f8fd61f, #ffe0a01a);
+}
+.cw-tint[data-island="result"] {
+  background:
+    radial-gradient(95% 60% at 50% 92%, #ff9a6a80, #0000 62%),
+    radial-gradient(70% 50% at 40% 24%, #ffcf7a4d, #0000 70%),
+    linear-gradient(180deg, #5b2d6a4d, #ff8a5c33);
+}
+.cw-tint[data-island="short"] {
+  background:
+    radial-gradient(90% 60% at 50% 96%, #9d7bff73, #0000 64%),
+    radial-gradient(70% 55% at 70% 25%, #57a8ff4d, #0000 70%),
+    linear-gradient(180deg, #2a1d7a4d, #6a3fd026);
+}
+.cw-tint[data-island="short-result"] {
+  background:
+    radial-gradient(55% 45% at 72% 18%, #dfe8ff38, #0000 70%),
+    linear-gradient(180deg, #030824d9, #111c52b3 55%, #2c3c8a80);
+}
+.cw-horizon {
+  top: 45%;
+  background: linear-gradient(180deg, #0000, color-mix(in oklab, var(--cloud-time, #ffffff) 36%, #0000));
+}
+.cw-stardust {
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 18%, #ffffffd0 60%, #0000),
+    radial-gradient(1.2px 1.2px at 34% 64%, #ffffffa0 60%, #0000),
+    radial-gradient(1.6px 1.6px at 58% 32%, #fff6d8c0 60%, #0000),
+    radial-gradient(1.2px 1.2px at 81% 12%, #d8e6ffb0 60%, #0000),
+    radial-gradient(1.4px 1.4px at 92% 58%, #ffffff90 60%, #0000);
+  background-size: 420px 300px;
+  opacity: calc(0.25 + var(--env-stars, 0) * 0.5);
+}
+html[data-env-time="NIGHT"] .cw-stardust,
+.cw-stage[data-island="short-result"] .cw-stardust {
+  opacity: 0.85;
+}
+.cw-world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+.cw-world > * {
+  position: absolute;
+  visibility: hidden;
+}
+.cw-stage.is-flying .cw-world > * {
+  will-change: transform, opacity;
+}
+.cw-dust {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.cw-stage.is-flying .cw-dust {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------- islands */
+.cw-isle[data-island="work"] {
+  --isle-glow: #ffe6a0;
+  --isle-beam: #bdf3ff;
+  --beam-x: 44.2%;
+}
+.cw-isle[data-island="result"] {
+  --isle-glow: #ffc27a;
+  --isle-beam: #ffe7a0;
+  --beam-x: 50%;
+}
+.cw-isle[data-island="short"] {
+  --isle-glow: #c7a6ff;
+  --isle-beam: #e6d8ff;
+  --beam-x: 47.5%;
+}
+.cw-isle[data-island="short-result"] {
+  --isle-glow: #a8c0ff;
+  --isle-beam: #f4f8ff;
+  --beam-x: 52.8%;
+}
+.cw-isle-float,
+.cw-isle-art,
+.cw-isle-life {
+  position: absolute;
+  inset: 0;
+}
+.cw-isle-art {
+  background: center / contain no-repeat;
+}
+.cw-stage.is-live .cw-isle-float {
+  animation: cw-bob 9s ease-in-out infinite alternate;
+}
+.cw-isle[data-island="result"] .cw-isle-float {
+  animation-delay: -3s;
+}
+.cw-isle[data-island="short"] .cw-isle-float {
+  animation-delay: -6s;
+}
+.cw-isle-aura {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: -34%;
+  bottom: 24%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--isle-glow) 62%, #0000), #0000);
+  opacity: 0.55;
+}
+/* The pillar of light an island raises when the camera comes for it. */
+.cw-isle-beam {
+  position: absolute;
+  left: calc(var(--beam-x) - 7%);
+  width: 14%;
+  bottom: 64%;
+  height: 170%;
+  border-radius: 50% 50% 0 0 / 8% 8% 0 0;
+  background:
+    linear-gradient(90deg, #0000, color-mix(in oklab, var(--isle-beam) 85%, #fff) 50%, #0000) 50% 0 / 34% 100% no-repeat,
+    linear-gradient(0deg, color-mix(in oklab, var(--isle-beam) 70%, #0000), #0000 85%);
+  opacity: 0.12;
+}
+/* The outline in the mist: a glow behind the dark shape of the island. */
+.cw-isle-mist {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: -6%;
+  bottom: 6%;
+  background: radial-gradient(closest-side, #ffffffe0, #ffffff80 46%, color-mix(in oklab, var(--isle-glow) 40%, #0000) 66%, #0000);
+  opacity: 0;
+}
+.cw-isle-ripple {
+  position: absolute;
+  left: 50%;
+  top: 33%;
+  width: 78%;
+  height: 16%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: calc(3px * var(--u)) solid color-mix(in oklab, var(--isle-beam) 90%, #fff);
+  box-shadow:
+    0 0 calc(26px * var(--u)) var(--isle-beam),
+    inset 0 0 calc(26px * var(--u)) var(--isle-beam);
+  opacity: 0;
+  pointer-events: none;
+}
+.cw-isle.is-landing .cw-isle-ripple {
+  animation: cw-ripple 1.2s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.cw-isle.is-departing .cw-isle-ripple {
+  animation: cw-charge 0.55s ease-out both;
+}
+/* A little life on every island: sparkles and falling water at the workshop,
+   motes rising from the temple, light streaks past the tower, lanterns under
+   the moon. It moves only on the island the camera is at. */
+.cw-life {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+}
+.cw-isle:not(.is-home) .cw-life,
+.cw-stage:not(.is-live) .cw-life,
+.cw-stage.is-hidden-tab .cw-life {
+  animation-play-state: paused !important;
+}
+.cw-isle[data-island="work"] .cw-life {
+  width: 1.8%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 26%, #aef0ff 44%, #0000 70%);
+  animation: cw-twinkle 3.4s ease-in-out calc(var(--i) * -0.8s) infinite;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(1) {
+  left: 43.2%;
+  top: 4.2%;
+  width: 2.6%;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(2) {
+  left: 78.4%;
+  top: 26%;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(3) {
+  left: 11.6%;
+  top: 29.5%;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(4) {
+  left: 59.6%;
+  top: 18.6%;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(n + 5) {
+  left: 24.6%;
+  top: 37.6%;
+  width: 4.4%;
+  height: 31%;
+  aspect-ratio: auto;
+  border-radius: 40%;
+  opacity: 0.75;
+  background: linear-gradient(180deg, #0000, #ffffffc0 40%, #0000 62%) 0 0 / 100% 38% repeat-y;
+  animation: cw-pour 1.5s linear infinite;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(6) {
+  left: 25.4%;
+  width: 2%;
+  animation-duration: 1.05s;
+}
+.cw-isle[data-island="result"] .cw-life {
+  left: calc(40% + var(--i) * 3.8%);
+  top: 24%;
+  width: 1.1%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffbe6 0 30%, #ffc85a 52%, #0000 72%);
+  animation: cw-mote 7.5s ease-in calc(var(--i) * -1.25s) infinite;
+}
+.cw-isle[data-island="short"] .cw-life {
+  left: calc(6% + var(--i) * 14%);
+  top: calc(5% + var(--i) * 2.6%);
+  width: 10%;
+  height: 0.45%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #0000, #b8f8ff, #ff9ef0, #0000);
+  animation: cw-streak 5.6s cubic-bezier(0.6, 0, 0.3, 1) calc(var(--i) * -0.95s) infinite;
+}
+.cw-isle[data-island="short-result"] .cw-life {
+  left: calc(36% + var(--i) * 6.4%);
+  top: calc(18% + var(--i) * 1.4%);
+  width: 1.3%;
+  height: 1.9%;
+  border-radius: 40% 40% 32% 32%;
+  background: radial-gradient(circle at 50% 62%, #fff2c0 0 24%, #ffb24a 56%, #ff7a2a00 78%);
+  box-shadow: 0 0 calc(12px * var(--u)) #ffb24a99;
+  animation: cw-lantern 17s ease-in-out calc(var(--i) * -2.9s) infinite;
+}
+
+/* ------------------------------------------------------ clouds and far things */
+/* Clouds keep the sky's colour of the hour but stay light enough to read as
+   clouds against it, moonlit at night and white by day. */
+.cw-puff {
+  --c: color-mix(in oklab, var(--cloud-time, #ffffff) 42%, #e6ecff);
+  background:
+    radial-gradient(closest-side, var(--c) 34%, #0000) 3% 64% / 38% 60% no-repeat,
+    radial-gradient(closest-side, var(--c) 40%, #0000) 25% 42% / 40% 80% no-repeat,
+    radial-gradient(closest-side, var(--c) 44%, #0000) 52% 30% / 44% 90% no-repeat,
+    radial-gradient(closest-side, var(--c) 40%, #0000) 77% 46% / 40% 76% no-repeat,
+    radial-gradient(closest-side, var(--c) 34%, #0000) 98% 64% / 34% 56% no-repeat,
+    radial-gradient(closest-side, color-mix(in oklab, var(--c) 84%, #6d7fa8) 30%, #0000) 50% 94% / 100% 42% no-repeat;
+}
+.cw-puff.is-sea {
+  --c: color-mix(in oklab, var(--cloud-time, #ffffff) 38%, #dde5fb);
+}
+.cw-puff.is-transit {
+  --c: color-mix(in oklab, var(--cloud-time, #ffffff) 30%, #f1f4ff);
+}
+.cw-islet {
+  background: center / contain no-repeat;
+}
+.cw-moon {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 36%, #fffef4 0 30%, #eef1ff 46%, #c9d4f4 64%, #0000 66%),
+    radial-gradient(closest-side, #d8e2ff70, #0000);
+}
+
+/* ------------------------------------------------------------- residents */
+.cw-flyer-mirror,
+.cw-flyer-path {
+  position: absolute;
+  inset: 0;
+}
+.cw-flyer-mirror {
+  transition: opacity 0.9s ease;
+}
+.cw-flyer[data-dir="left"] .cw-flyer-mirror {
+  scale: -1 1;
+}
+.cw-flyer.is-resting .cw-flyer-mirror {
+  opacity: 0;
+}
+.cw-flyer-rig {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(128px * var(--u));
+  height: calc(136px * var(--u));
+  margin: calc(-68px * var(--u)) 0 0 calc(-64px * var(--u));
+}
+.cw-flyer-sprite {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 30%;
+  height: 70%;
+  translate: -50% 0;
+  overflow: hidden;
+  filter: drop-shadow(0 calc(4px * var(--u)) calc(3px * var(--u)) #0a0f2a55);
+}
+.cw-flyer-sprite img {
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+  user-select: none;
+}
+.cw-ride {
+  position: absolute;
+  pointer-events: none;
+  background: center / contain no-repeat;
+}
+.cw-flyer-rig > .cw-ride {
+  left: -26%;
+  right: -26%;
+  bottom: 4%;
+  height: 42%;
+}
+/* Rides face right; a resident flying left is mirrored with its ride. */
+.cw-ride[data-ride="broom"] {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 70'><path d='M58 38L214 30' stroke='%238a5a2e' stroke-width='8' stroke-linecap='round'/><path d='M60 30L8 12L16 36L4 60L60 46Z' fill='%23f0c068'/><path d='M58 34L12 22M58 38H8M58 42L12 54' stroke='%23b8802e' stroke-width='3'/><rect x='54' y='27' width='12' height='22' rx='4' fill='%236b3f1e'/><circle cx='212' cy='30' r='6' fill='%23aeeeff'/></svg>");
+}
+.cw-ride[data-ride="broom"]::after {
+  content: "";
+  position: absolute;
+  right: 94%;
+  top: 34%;
+  width: 70%;
+  height: 34%;
+  background: radial-gradient(circle, #fff6c8 0 22%, #9eeaff 36%, #0000 46%) 0 50% / 16% 100% repeat-x;
+  mask: linear-gradient(90deg, #0000, #000);
+  opacity: 0.85;
+}
+.cw-ride[data-ride="bird"] {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 110'><defs><radialGradient id='g' cx='.6' cy='.45' r='.6'><stop offset='0' stop-color='%23fffbe6'/><stop offset='.5' stop-color='%23ffd57a'/><stop offset='1' stop-color='%23f08a3c'/></radialGradient></defs><path d='M10 62C40 50 60 70 30 92C60 88 82 80 98 70Z' fill='%23ffc062' opacity='.85'/><ellipse cx='130' cy='68' rx='62' ry='26' fill='url(%23g)'/><circle cx='196' cy='50' r='18' fill='url(%23g)'/><path d='M212 47L236 54L212 59Z' fill='%23ff9a3c'/><circle cx='201' cy='46' r='3.5' fill='%233a2410'/><path d='M180 34C188 18 196 22 198 32' stroke='%23fff2b8' stroke-width='4' fill='none'/></svg>");
+  filter: drop-shadow(0 0 calc(10px * var(--u)) #ffd57a99);
+}
+.cw-ride[data-ride="bird"]::before {
+  content: "";
+  position: absolute;
+  left: 34%;
+  bottom: 52%;
+  width: 40%;
+  height: 90%;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><path d='M110 76C80 70 40 60 6 8C40 22 70 30 96 44C104 56 110 66 110 76Z' fill='%23fff1bf'/><path d='M100 70C76 62 48 50 24 20' stroke='%23ffc062' stroke-width='3' fill='none'/></svg>") center / contain no-repeat;
+  transform-origin: 80% 100%;
+}
+.cw-ride[data-ride="board"] {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 60'><defs><linearGradient id='b' x1='0' x2='1'><stop offset='0' stop-color='%236ff0ff'/><stop offset='.5' stop-color='%23b58cff'/><stop offset='1' stop-color='%23ff7ae6'/></linearGradient></defs><rect x='20' y='20' width='200' height='18' rx='9' fill='%231a1450'/><rect x='20' y='20' width='200' height='18' rx='9' fill='none' stroke='url(%23b)' stroke-width='4'/><rect x='44' y='40' width='150' height='6' rx='3' fill='url(%23b)' opacity='.8'/><circle cx='210' cy='29' r='4' fill='%23fff'/></svg>");
+}
+.cw-ride[data-ride="board"]::after {
+  content: "";
+  position: absolute;
+  right: 88%;
+  top: 36%;
+  width: 110%;
+  height: 34%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #0000, #6ff0ff80 55%, #ff7ae6c0);
+}
+.cw-ride[data-ride="cloud"] {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 90'><g fill='%23eef3ff'><circle cx='60' cy='52' r='30'/><circle cx='100' cy='40' r='36'/><circle cx='146' cy='50' r='30'/><circle cx='180' cy='60' r='20'/><circle cx='34' cy='62' r='20'/><rect x='30' y='52' width='166' height='30' rx='15'/></g><rect x='30' y='70' width='166' height='12' rx='6' fill='%23c9d6ff'/><g fill='%23fff6c8'><path d='M70 30l4 8 8 1-6 5 2 8-8-4-8 4 2-8-6-5 8-1z'/><path d='M150 24l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z'/></g></svg>");
+  filter: drop-shadow(0 0 calc(8px * var(--u)) #c9d6ffaa);
+}
+/* Slow loops: brooms wander, birds glide in wide arcs, boards streak past now
+   and then, star clouds drift. Nothing hurries. */
+.cw-stage.is-live .cw-flyer[data-ride="broom"] .cw-flyer-path {
+  animation: cw-fly-broom 38s ease-in-out calc(var(--slot) * -13s) infinite alternate;
+}
+.cw-stage.is-live .cw-flyer[data-ride="bird"] .cw-flyer-path {
+  animation: cw-fly-bird 46s ease-in-out calc(var(--slot) * -15s) infinite alternate;
+}
+.cw-stage.is-live .cw-flyer[data-ride="board"] .cw-flyer-path {
+  animation: cw-fly-board 26s linear calc(var(--slot) * -9s) infinite;
+}
+.cw-stage.is-live .cw-flyer[data-ride="cloud"] .cw-flyer-path {
+  animation: cw-fly-cloud 50s ease-in-out calc(var(--slot) * -17s) infinite alternate;
+}
+.cw-stage.is-live .cw-flyer:is([data-ride="broom"], [data-ride="bird"], [data-ride="cloud"]) .cw-flyer-rig {
+  animation:
+    cw-face 76s linear calc(var(--slot) * -13s) infinite,
+    cw-hover 4.6s ease-in-out calc(var(--slot) * -1.5s) infinite;
+}
+.cw-stage.is-live .cw-flyer[data-ride="bird"] .cw-flyer-rig {
+  animation-duration: 92s, 5.4s;
+  animation-delay: calc(var(--slot) * -15s), calc(var(--slot) * -1.5s);
+}
+.cw-stage.is-live .cw-flyer[data-ride="cloud"] .cw-flyer-rig {
+  animation-duration: 100s, 7s;
+  animation-delay: calc(var(--slot) * -17s), calc(var(--slot) * -2s);
+}
+.cw-stage.is-live .cw-ride[data-ride="bird"]::before {
+  animation: cw-flap 1.8s ease-in-out infinite alternate;
+}
+.cw-stage:not(.is-live) .cw-flyer *,
+.cw-stage.is-hidden-tab .cw-flyer * {
+  animation-play-state: paused !important;
+}
+
+/* --------------------------------------------------------------- task cloud */
+.cw-hud {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: clamp(18px, 3.2vh, 36px) 0 8px;
+}
+.cw-cloud {
+  position: relative;
+  isolation: isolate;
+  max-width: 1600px;
+  margin: 0 auto 30px;
+  padding: 14px 20px 16px;
+  border-radius: 46px 52px 44px 50px / 34px 38px 44px 40px;
+  color: #1d2350;
+  background:
+    radial-gradient(1.6px 1.6px at 18% 22%, #ffffff 60%, #0000),
+    radial-gradient(1.4px 1.4px at 64% 12%, #ffffff 60%, #0000),
+    radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #f5f7ff 40%, #e7edfd 100%);
+  box-shadow:
+    0 0 0 1px #ffffffd0 inset,
+    0 -10px 36px -12px #ffffff inset,
+    0 0 42px -8px #c9d6ffb0;
+  /* The shadow follows the billows too, not just the panel's box. */
+  filter: drop-shadow(0 20px 22px #07103b59);
+}
+/* Billows along the top and underside make the panel a cloud. They keep to the
+   straight run between the rounded corners and thin out before reaching them,
+   so no billow hangs in the air past a corner and nothing ends in a cut. */
+.cw-cloud::before,
+.cw-cloud::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 64px;
+  right: 64px;
+  pointer-events: none;
+  mask: linear-gradient(90deg, #0000, #000 130px, #000 calc(100% - 130px), #0000);
+}
+.cw-cloud::before {
+  top: -22px;
+  height: 56px;
+  background:
+    radial-gradient(closest-side, #ffffff 86%, #0000) 0 100% / 96px 56px repeat-x,
+    radial-gradient(closest-side, #f7f9ff 86%, #0000) 48px 80% / 132px 50px repeat-x;
+}
+.cw-cloud::after {
+  bottom: -20px;
+  height: 50px;
+  background:
+    radial-gradient(closest-side, #e7edfd 86%, #0000) 30px 0 / 110px 50px repeat-x,
+    radial-gradient(closest-side, #dfe6fb 86%, #0000) 0 30% / 150px 44px repeat-x;
+}
+.cw-cloud-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 6px 10px;
+}
+.cw-cloud-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
-  padding: 8px 8px 8px 10px;
-  border-radius: 14px;
-  background: #fffaf6;
-  border: 2px dashed color-mix(in oklab, var(--zone-accent) 70%, #fff);
+  margin: 0;
+  font: 700 20px/1.2 ArkPixel, system-ui, sans-serif;
+  letter-spacing: 0.1em;
+  color: #232a62 !important;
+  text-shadow: 0 1px 0 #fff;
 }
-.co-todo-add:focus-within {
-  border-style: solid;
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--zone-accent) 22%, #0000);
+.cw-cloud-title::before {
+  display: none !important;
 }
-.co-todo-plus {
-  flex: none;
+.cw-cloud-glyph {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  font: 700 18px/1 system-ui, sans-serif;
+  font: 700 16px/1 system-ui, sans-serif;
   color: #fff;
-  background: var(--zone-accent);
+  background: radial-gradient(circle at 34% 28%, #ffffff, #b9c8ff 42%, #6a7de0);
+  box-shadow: 0 0 18px #9fb0ff;
 }
-#creator-office .co-todo-add input {
+.cw-cloud-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font: 600 12px/1.5 system-ui, sans-serif;
+}
+.cw-cloud-summary span {
+  padding: 2px 10px;
+  border-radius: 20px;
+  color: #2c3576;
+  background: #e3e9ff;
+  border: 1px solid #c3cdf5;
+}
+#creator-office .cw-cloud-archive {
+  margin-left: auto;
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px !important;
+  color: #3b4478;
+  border-color: #c3cdf5;
+  background: #ffffffb0;
+}
+.cw-cloud-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.cw-cloud-col {
+  --col: #6a7de0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 9px 9px 8px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--col) 13%, #ffffff), #ffffffd0 70%);
+  border: 1px solid color-mix(in oklab, var(--col) 32%, #ffffff);
+  box-shadow: 0 1px 0 #ffffff inset;
+}
+.cw-cloud-col[data-category="REPO"] {
+  --col: #1f9fc4;
+}
+.cw-cloud-col[data-category="PROJECT"] {
+  --col: #d9921f;
+}
+.cw-cloud-col[data-category="OFFICE"] {
+  --col: #8a5ee6;
+}
+.cw-cloud-col[data-category="OTHER"] {
+  --col: #6f7fa3;
+}
+.cw-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 2px 7px;
+}
+.cw-col-gem {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 28px;
+  clip-path: polygon(50% 0, 100% 36%, 80% 100%, 20% 100%, 0 36%);
+  font: 700 12px/1 system-ui, sans-serif;
+  color: #fff;
+  background: linear-gradient(140deg, #ffffff, color-mix(in oklab, var(--col) 55%, #fff) 34%, var(--col) 70%);
+}
+.cw-col-head h3 {
+  margin: 0;
+  min-width: 0;
+  font: 800 13px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--col) 50%, #141a3e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cw-col-count {
+  margin-left: auto;
+  min-width: 26px;
+  padding: 0 8px;
+  border-radius: 20px;
+  text-align: center;
+  font: 700 12px/1.7 system-ui, sans-serif;
+  color: #fff;
+  background: var(--col);
+}
+.cw-cloud .co-todo-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 7px;
+  padding: 3px 3px 3px 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1.5px dashed color-mix(in oklab, var(--col) 55%, #ffffff);
+}
+.cw-cloud .co-todo-add:focus-within {
+  border-style: solid;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--col) 24%, #0000);
+}
+#creator-office .cw-cloud .co-todo-add input {
   flex: 1;
   min-width: 0;
-  padding: 8px 4px;
+  padding: 5px 0;
   border: 0;
   outline: 0;
   background: transparent;
-  font: 16px/1.4 system-ui, sans-serif;
-  color: #3f2f21;
+  font: 14px/1.4 system-ui, sans-serif;
+  color: #1d2350;
 }
-.co-todo-items {
-  display: grid;
-  gap: 8px;
-  margin: 0;
+#creator-office .cw-cloud .cw-todo-plus {
+  flex: none;
+  min-height: 32px;
+  min-width: 34px;
   padding: 0;
-  list-style: none;
+  border-radius: 11px;
+  font-size: 18px !important;
+  line-height: 1;
+  color: #fff;
+  background: var(--col);
+  border: 1px solid color-mix(in oklab, var(--col) 70%, #000);
+  border-bottom-width: 3px;
 }
-.co-todo {
+.cw-cloud .co-todo-items {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  margin: 0;
+  padding: 0 3px 2px 0;
+  list-style: none;
+  max-height: clamp(62px, 17vh, 240px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.cw-cloud .co-todo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px 8px 4px;
+  gap: 2px;
+  padding: 3px 3px 3px 0;
   border-radius: 12px;
-  background: #fffaf2;
-  border: 1px solid #e2cdb8;
-  border-bottom-width: 3px;
-  color: #3f2f21;
+  color: #1d2350;
+  background: #ffffffee;
+  border: 1px solid #dde3f5;
+  border-bottom-width: 2px;
 }
-.co-todo.is-dragging {
+.cw-cloud .co-todo.is-dragging {
   opacity: 0.45;
 }
-.co-todo-check {
+#creator-office .cw-cloud .co-grip {
+  flex: none;
+  padding: 2px 3px;
+  font-size: 15px;
+  color: #9aa6c8;
+}
+.cw-cloud .co-todo-check {
   flex: 1;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 7px;
   min-width: 0;
   cursor: pointer;
 }
-.co-todo-check input {
+.cw-cloud .co-todo-check input {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   margin: 2px 0 0;
-  accent-color: var(--zone-accent);
+  accent-color: var(--col);
   cursor: pointer;
 }
-.co-todo-text {
+.cw-cloud .co-todo-text {
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
-.co-todo-title {
-  font: 600 16px/1.45 system-ui, sans-serif;
-  overflow-wrap: anywhere;
-  transition: color 0.2s ease;
-}
-.co-todo-meta,
-.co-todo-notes {
-  font-size: 12px;
-  color: #8a6f5c;
+.cw-cloud .co-todo-title {
+  font: 600 14px/1.4 system-ui, sans-serif;
   overflow-wrap: anywhere;
 }
-.co-todo-notes {
-  white-space: pre-wrap;
+.cw-cloud .co-todo-meta,
+.cw-cloud .co-todo-notes {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #6a7396;
+  overflow-wrap: anywhere;
 }
-.co-todo.is-done {
-  background: #f1efe6;
+.cw-cloud .co-todo.is-done {
+  background: #eef1fa;
 }
-.co-todo.is-done .co-todo-title {
-  color: #8f8272;
+.cw-cloud .co-todo.is-done .co-todo-title {
+  color: #8a90a8;
   text-decoration: line-through;
-  text-decoration-color: color-mix(in oklab, var(--zone-accent) 70%, #000);
+  text-decoration-color: var(--col);
 }
-.co-todo-actions {
+.cw-cloud .co-todo-actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
+  flex: none;
+  gap: 1px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
 }
-#creator-office .co-todo-actions .co-button {
-  min-height: 32px;
-  padding: 4px 10px;
-  font-size: 12px !important;
+.cw-cloud .co-todo:is(:hover, :focus-within) .co-todo-actions {
+  opacity: 1;
 }
-.co-todo .co-grip {
-  font-size: 20px;
-  padding: 4px 6px;
+#creator-office .cw-cloud .co-todo-actions .co-button {
+  min-height: 28px;
+  min-width: 28px;
+  padding: 0 5px;
+  font-size: 13px !important;
+  border-radius: 8px;
+  color: #4a5486;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
 }
-.co-todo-archive {
-  margin-top: 14px;
-  color: #6f5a47;
+#creator-office .cw-cloud .co-todo-actions .co-button:hover {
+  background: #eef1ff;
+  border-color: #cfd7f5;
 }
-.co-todo-archive p {
+.cw-col-empty {
+  padding: 7px;
+  border: 1px dashed color-mix(in oklab, var(--col) 30%, #d4dbef);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #8a93b4;
+}
+
+/* --------------------------------------------------------------------- dock */
+.cw-dock {
+  position: sticky;
+  z-index: 7;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  margin: calc(-1 * var(--dock-h) - 26px) auto 26px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: min(780px, calc(100% - 140px));
+  padding: 9px 14px 14px;
+  border-radius: 30px;
+  background:
+    radial-gradient(80% 120% at 50% 0%, #2a3a8a66, #0000 70%),
+    linear-gradient(180deg, #0f1644ee, #070a26f5);
+  border: 1px solid #ffffff38;
+  box-shadow:
+    0 20px 50px -14px #01031ad0,
+    inset 0 1px 0 #ffffff3a;
+}
+#creator-office .cw-dock-up {
+  position: absolute;
+  right: calc(100% + 10px);
+  bottom: 10px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  font: 22px/1 system-ui, sans-serif;
+  color: #3b4478;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #e3e9ff 60%, #c3cdf5);
+  border: 1px solid #ffffffd0;
+  box-shadow: 0 10px 24px -8px #01031ad0;
+  transition:
+    opacity 0.3s ease,
+    translate 0.3s ease;
+}
+.cw-stage:not(.is-below-cloud) .cw-dock-up {
+  opacity: 0;
+  translate: 0 8px;
+  pointer-events: none;
+}
+.cw-dock-track {
+  position: absolute;
+  left: 12.5%;
+  right: 12.5%;
+  bottom: 7px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ffcf5a99, #ff9f6b99 33%, #a98bff99 66%, #9fb8ff99);
+  pointer-events: none;
+}
+.cw-dock-ship {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--at, 0) / 3 * 100%);
+  width: 10px;
+  height: 10px;
+  translate: -50% -50%;
+  rotate: 45deg;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow:
+    0 0 10px #ffffff,
+    0 0 22px #9fe8ff;
+}
+#creator-office .cw-beacon {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px 4px 9px;
+  border: 0;
+  border-radius: 18px;
+  color: #cfd6ff;
+  background: transparent;
+  cursor: pointer;
+}
+#creator-office .cw-beacon:hover {
+  background: #ffffff12;
+  filter: none;
+}
+#creator-office .cw-beacon:focus-visible {
+  outline: 2px solid #fff4c0;
+  outline-offset: 1px;
+}
+.cw-beacon[data-island="work"] {
+  --gem: #ffcf5a;
+}
+.cw-beacon[data-island="result"] {
+  --gem: #ff9f6b;
+}
+.cw-beacon[data-island="short"] {
+  --gem: #a98bff;
+}
+.cw-beacon[data-island="short-result"] {
+  --gem: #9fb8ff;
+}
+.cw-gem {
+  position: relative;
+  width: 30px;
+  height: 38px;
+}
+.cw-gem::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--gem) 75%, #0000), #0000);
+  opacity: 0.3;
+  transition:
+    opacity 0.3s ease,
+    scale 0.3s ease;
+}
+.cw-gem-core {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0, 100% 36%, 78% 100%, 22% 100%, 0 36%);
+  background: linear-gradient(140deg, #ffffff 0%, color-mix(in oklab, var(--gem) 50%, #fff) 30%, var(--gem) 62%, color-mix(in oklab, var(--gem) 55%, #000) 100%);
+}
+.cw-gem-core::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #0000 48%, #ffffff70 50%, #0000 52%),
+    linear-gradient(180deg, #0000 34%, #ffffff50 36%, #0000 38%);
+}
+.cw-beacon-text {
+  display: grid;
+  justify-items: center;
+  line-height: 1.2;
+  min-width: 0;
+}
+.cw-beacon-text strong {
+  font: 700 13px/1.25 system-ui, sans-serif;
+  color: #eef1ff;
+  white-space: nowrap;
+}
+.cw-beacon-count {
+  font: 600 11px/1.3 system-ui, sans-serif;
+  color: #aab3dd;
+}
+.cw-beacon[aria-current="page"] .cw-gem::before {
+  opacity: 1;
+  scale: 1.3;
+}
+.cw-beacon[aria-current="page"] strong {
+  color: #ffffff;
+  text-shadow: 0 0 12px var(--gem);
+}
+.cw-beacon[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 26%;
+  right: 26%;
+  bottom: 1px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--gem);
+  box-shadow: 0 0 10px var(--gem);
+}
+.cw-stage.is-live .cw-beacon[aria-current="page"] .cw-gem-core {
+  animation: cw-gem-glow 2.8s ease-in-out infinite;
+}
+.cw-beacon[data-state="target"] .cw-gem::before {
+  opacity: 1;
+  animation: cw-energy 0.5s ease-in-out infinite alternate;
+}
+.cw-beacon[data-state="target"] strong {
+  color: #fff;
+}
+.cw-beacon.is-pulsing .cw-gem {
+  animation: cw-pulse 0.5s ease;
+}
+#creator-office .cw-beacon.is-copy-target {
+  background: #16ad9e55;
+  box-shadow: 0 0 0 2px #7ff0dc;
+}
+.cw-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------- decks */
+.cw-floor {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0 clamp(12px, 2.4vw, 48px) calc(var(--dock-h) + 60px);
+}
+.cw-deck {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: clamp(20px, 5vh, 64px);
+  transform-origin: 50% 0;
+}
+.cw-deck[hidden] {
+  display: none !important;
+}
+.cw-island-deck[data-zone="work"] {
+  --deck-a: #1a4f8f;
+  --deck-b: #b88a2e;
+  --deck-glow: #ffd36b;
+}
+.cw-island-deck[data-zone="result"] {
+  --deck-a: #572c6c;
+  --deck-b: #d9804a;
+  --deck-glow: #ffb86b;
+}
+.cw-island-deck[data-zone="short"] {
+  --deck-a: #2a2280;
+  --deck-b: #7a40d0;
+  --deck-glow: #b58cff;
+}
+.cw-island-deck[data-zone="short-result"] {
+  --deck-a: #0b1440;
+  --deck-b: #2b3f88;
+  --deck-glow: #a9c0ff;
+}
+/* The title platform, with its resting islet beside it. */
+.cw-deck-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px 22px;
+  margin: 0 0 clamp(26px, 5vh, 56px);
+}
+.cw-platform {
+  position: relative;
+  min-width: 0;
+  padding-bottom: 30px;
+}
+.cw-plaque {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  padding: 14px 26px 16px 18px;
+  border-radius: 22px 22px 16px 16px;
+  color: #f5f7ff;
+  background:
+    radial-gradient(90% 120% at 0% 0%, #ffffff30, #0000 60%),
+    linear-gradient(155deg, var(--deck-a), var(--deck-b));
+  border: 1px solid #ffffff5c;
+  box-shadow:
+    0 22px 44px -14px #050a2ac0,
+    inset 0 1px 0 #ffffff66,
+    0 0 0 4px color-mix(in oklab, var(--deck-glow) 32%, #0000),
+    0 0 40px -10px var(--deck-glow);
+}
+#creator-office .cw-plaque h2 {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 6px 0;
+  gap: 12px;
+  margin: 0;
+  font: 700 clamp(22px, 2.3vw, 32px)/1.2 ArkPixel, system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  text-shadow:
+    0 2px 0 #00000040,
+    0 0 20px var(--deck-glow);
+}
+#creator-office .cw-plaque h2::before {
+  display: none;
+}
+.cw-plaque-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font: 700 18px/1 system-ui, sans-serif;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 30% 25%, #ffffff90, #0000 55%),
+    var(--deck-glow);
+  box-shadow: 0 0 20px var(--deck-glow);
+}
+.cw-isle-name {
+  margin: 0;
+  font: 600 12px/1.4 system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  color: #e4e9ff;
+}
+.cw-plaque .co-zone-summary {
+  margin-top: 4px;
+}
+.cw-plaque .co-zone-summary span {
+  color: #ffffff;
+  background: #ffffff1f;
+  border-color: #ffffff4d;
+}
+.cw-platform-rock {
+  position: absolute;
+  left: 5%;
+  right: 9%;
+  bottom: 0;
+  height: 48px;
+  clip-path: polygon(0 0, 100% 0, 93% 36%, 72% 64%, 54% 100%, 36% 70%, 14% 46%);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--deck-glow) 55%, #c8b69a) 0 16%, #75627e 42%, #2b2750 100%);
+}
+.cw-platform-rock::before {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0000, var(--deck-glow), #0000);
+}
+.cw-deck-tools {
+  align-self: center;
+}
+.cw-rest-slot {
+  position: relative;
+  align-self: stretch;
+  min-height: 118px;
+}
+.cw-rest {
+  position: absolute;
+  right: 6%;
+  bottom: -4px;
+  width: clamp(210px, 22vw, 320px);
+  container-type: inline-size;
+  pointer-events: none;
+}
+/* A trail of light hops from the platform to the resting islet. */
+.cw-rest::before {
+  content: "";
+  position: absolute;
+  right: 94%;
+  bottom: 18%;
+  width: clamp(40px, 9vw, 180px);
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--deck-glow) 0 7px, #0000 7px 14px);
+  opacity: 0.6;
+}
+.cw-rest .co-yard {
+  margin-top: 0;
+}
+.cw-rest .co-yard-actor {
+  pointer-events: auto;
+}
+.cw-rest-props {
+  position: absolute;
+  inset: 0;
+  background: var(--rest-props, none) 0 0 / 100% auto no-repeat;
+  pointer-events: none;
+}
+.cw-rest[data-island="work"] {
+  --rest-props: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300'><rect x='826' y='80' width='10' height='100' fill='%236b4a33'/><circle cx='831' cy='70' r='36' fill='%2386e6ff' opacity='.28'/><path d='M831 40L852 72L831 96L810 72Z' fill='%2386e6ff'/><path d='M831 40V96L810 72Z' fill='%23fff' opacity='.5'/><rect x='600' y='142' width='130' height='12' rx='4' fill='%23c9a46e'/><rect x='612' y='154' width='10' height='26' fill='%238a6a55'/><rect x='708' y='154' width='10' height='26' fill='%238a6a55'/><rect x='626' y='126' width='34' height='16' rx='3' fill='%23ffd97a'/><circle cx='700' cy='134' r='8' fill='%2386e6ff'/><rect x='752' y='156' width='30' height='8' rx='3' fill='%23c9a46e'/><rect x='762' y='164' width='8' height='16' fill='%238a6a55'/></svg>");
+}
+.cw-rest[data-island="result"] {
+  --rest-props: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300'><path d='M640 94Q710 40 780 94Z' fill='%23f4bd52'/><rect x='648' y='92' width='124' height='8' fill='%23e6a93e'/><rect x='656' y='100' width='8' height='78' fill='%23ffe7a0'/><rect x='706' y='100' width='8' height='78' fill='%23ffe7a0'/><rect x='756' y='100' width='8' height='78' fill='%23ffe7a0'/><rect x='644' y='176' width='132' height='6' fill='%23d9a45a'/><circle cx='710' cy='42' r='7' fill='%23fff4c0'/><rect x='820' y='152' width='70' height='8' rx='3' fill='%23a8703e'/><rect x='826' y='160' width='6' height='20' fill='%238a5a36'/><rect x='878' y='160' width='6' height='20' fill='%238a5a36'/><rect x='820' y='136' width='70' height='6' rx='3' fill='%23a8703e'/></svg>");
+}
+.cw-rest[data-island="short"] {
+  --rest-props: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300'><circle cx='844' cy='66' r='32' fill='%23ff7ae6' opacity='.25'/><rect x='840' y='70' width='8' height='110' fill='%233a2a9e'/><circle cx='844' cy='66' r='12' fill='%23ff9ef0'/><ellipse cx='690' cy='146' rx='54' ry='10' fill='%236a55c8'/><rect x='686' y='150' width='8' height='30' fill='%233a2a9e'/><rect x='664' y='118' width='40' height='26' rx='3' fill='%231a1450'/><path d='M664 118l40-10 2 8-40 10z' fill='%23e9e2ff'/><rect x='560' y='150' width='64' height='8' rx='4' fill='%236ff0ff'/><rect x='568' y='158' width='48' height='4' rx='2' fill='%23b58cff'/></svg>");
+}
+.cw-rest[data-island="short-result"] {
+  --rest-props: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300'><rect x='840' y='80' width='8' height='100' fill='%233a4470'/><path d='M844 82q-30 0-30 20' stroke='%233a4470' stroke-width='5' fill='none'/><circle cx='815' cy='112' r='28' fill='%23ffb65c' opacity='.3'/><rect x='806' y='100' width='18' height='24' rx='6' fill='%23ffb65c'/><rect x='640' y='150' width='100' height='10' rx='4' fill='%238a97c4'/><rect x='652' y='160' width='8' height='20' fill='%235a6494'/><rect x='720' y='160' width='8' height='20' fill='%235a6494'/><circle cx='676' cy='144' r='8' fill='%23e6eeff'/><circle cx='704' cy='144' r='6' fill='%23ffcf7a'/><ellipse cx='610' cy='176' rx='22' ry='8' fill='%23a78bfa'/><ellipse cx='770' cy='176' rx='22' ry='8' fill='%239fb8ff'/><path d='M560 60a26 26 0 1 0 22 40a20 20 0 1 1-22-40z' fill='%23fff6d0'/></svg>");
+}
+/* A visitor glides down onto the islet on its island's ride, and later lifts
+   off the same way. The ride shows only while in the air. */
+.co-yard-actor > .co-yard-rig > .cw-ride {
+  left: -34%;
+  right: -34%;
+  bottom: -18%;
+  height: 46%;
+  opacity: 0;
+}
+.co-yard-actor.cw-arriving .co-yard-rig {
+  animation: cw-land 2.4s cubic-bezier(0.22, 0.7, 0.24, 1) both;
+}
+.co-yard-actor.cw-arriving .cw-ride {
+  animation: cw-ride-off 2.4s ease both;
+}
+.co-yard-actor.cw-leaving .co-yard-rig {
+  animation: cw-takeoff 2.1s cubic-bezier(0.55, 0, 0.8, 0.35) both;
+}
+.co-yard-actor.cw-leaving .cw-ride {
+  animation: cw-ride-on 2.1s ease both;
+}
+
+/* ------------------------------------------------------------- ACTIVE DECK */
+.cw-deck-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  font: 800 12px/1 system-ui, sans-serif;
+  letter-spacing: 0.26em;
+  color: #fff8dc;
+  text-shadow:
+    0 0 12px var(--deck-glow),
+    0 1px 0 #00000080;
+}
+.cw-deck-label::before {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  rotate: 45deg;
+  background: var(--deck-glow);
+  box-shadow: 0 0 12px var(--deck-glow);
+}
+.cw-deck-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--deck-glow), #0000);
+}
+/* A project is a crystal of its island's colour: the cover set in its cut face,
+   shards rising behind it, and its panel hanging from the base. Every size is
+   in cqw of the card, so a larger crystal is the same crystal, never a
+   stretched one. The six on the ACTIVE DECK stand larger and lit from behind.
+   The palettes are pale, lit from within and edged in the island's own colour,
+   so a crystal belongs to the sky around it rather than sitting on it as a
+   dark plate. */
+.cw-island-deck[data-zone="work"] {
+  --gem-hi: #ffffff;
+  --gem-lo: #d4f4ff;
+  --gem-mid: #86d3f2;
+  --gem-deep: #3f8fd0;
+  --gem-edge: #2d5f97;
+  --gem-core: #ffd66b;
+  --gem-glow: #a8ecff;
+  --gem-ink: #172a5c;
+  --face-1: #f4fdff;
+  --face-2: #c4ecfd;
+  --face-3: #74c0ea;
+}
+.cw-island-deck[data-zone="result"] {
+  --gem-hi: #fffdf4;
+  --gem-lo: #ffe8b6;
+  --gem-mid: #f3c26a;
+  --gem-deep: #c07d2c;
+  --gem-edge: #7d4a17;
+  --gem-core: #fff1b0;
+  --gem-glow: #ffcf85;
+  --gem-ink: #472a0f;
+  --face-1: #fffaf0;
+  --face-2: #ffe5ae;
+  --face-3: #efb35d;
+}
+.cw-island-deck[data-zone="short"] {
+  --gem-hi: #fdfbff;
+  --gem-lo: #e3d8ff;
+  --gem-mid: #b49cfa;
+  --gem-deep: #6a4cd0;
+  --gem-edge: #3e2b8f;
+  --gem-core: #a6f6ff;
+  --gem-glow: #c7b0ff;
+  --gem-ink: #26195c;
+  --face-1: #faf7ff;
+  --face-2: #ddd1ff;
+  --face-3: #9f86f2;
+}
+.cw-island-deck[data-zone="short-result"] {
+  --gem-hi: #fbfcff;
+  --gem-lo: #dbe5fb;
+  --gem-mid: #a7bbeb;
+  --gem-deep: #5870b0;
+  --gem-edge: #2a3b70;
+  --gem-core: #fff0bd;
+  --gem-glow: #b9ccff;
+  --gem-ink: #16244f;
+  --face-1: #f5f8ff;
+  --face-2: #d0dbf6;
+  --face-3: #8199d8;
+}
+.cw-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(30px, 3.4vw, 52px) clamp(18px, 2vw, 32px);
+}
+@media (max-width: 1000px) {
+  .cw-hero-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .cw-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.cw-island-deck .co-project {
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  scroll-margin-top: 16px;
+}
+
+/* ------------------------------------------------------------------ crystal */
+.co-crystal {
+  --cut: 6cqw;
+  --base: 2cqw;
+  position: relative;
+  z-index: 1;
+  padding-top: 14cqw;
+  /* The crystal's own silhouette casts the shadow, shards and all. */
+  filter: drop-shadow(0 1.2cqw 2.2cqw color-mix(in oklab, var(--gem-edge) 42%, #0000));
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: 50% 100%;
+}
+.co-crystal-aura {
+  position: absolute;
+  z-index: -2;
+  left: -9%;
+  right: -9%;
+  top: -4cqw;
+  bottom: -10cqw;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--gem-glow) 62%, #0000), #0000);
+  opacity: 0.5;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.cw-hero-grid > .co-project:first-child .co-crystal-aura {
+  opacity: 0.8;
+}
+.co-project[data-live="running"] .co-crystal-aura {
+  opacity: 1;
+}
+.co-project[data-live="running"] .co-crystal.is-on-screen .co-crystal-aura {
+  animation: co-crystal-breathe 5.5s ease-in-out infinite;
+}
+/* A cluster of shards grows from behind the face; their feet are hidden by it. */
+.co-crystal-crown {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 18cqw;
+  pointer-events: none;
+}
+.co-shard {
+  position: absolute;
+  bottom: 0;
+  clip-path: polygon(50% 0, 100% 22%, 100% 100%, 0 100%, 0 22%);
+  background:
+    linear-gradient(180deg, #ffffffb0, #ffffff00 30%, #0000 58%, color-mix(in oklab, var(--gem-deep) 45%, #0000)),
+    linear-gradient(90deg, var(--gem-hi) 0 45%, var(--gem-lo) 45% 53%, var(--gem-mid) 53%);
+  transform-origin: 50% 100%;
+}
+.co-shard:nth-child(1) {
+  left: 5%;
+  width: 6cqw;
+  height: 8cqw;
+  rotate: -26deg;
+}
+.co-shard:nth-child(2) {
+  left: 12.5%;
+  width: 8.5cqw;
+  height: 11.5cqw;
+  rotate: -14deg;
+}
+.co-shard:nth-child(3) {
+  left: 23%;
+  width: 8cqw;
+  height: 15cqw;
+  rotate: -5deg;
+}
+.co-shard:nth-child(4) {
+  left: calc(50% - 7.5cqw);
+  width: 15cqw;
+  height: 18cqw;
+}
+.co-shard:nth-child(5) {
+  right: 23%;
+  width: 8.5cqw;
+  height: 14cqw;
+  rotate: 6deg;
+}
+.co-shard:nth-child(6) {
+  right: 12.5%;
+  width: 8cqw;
+  height: 10.5cqw;
+  rotate: 15deg;
+}
+.co-shard:nth-child(7) {
+  right: 5%;
+  width: 6cqw;
+  height: 7cqw;
+  rotate: 27deg;
+}
+/* A small gem set in the top of the face, lit by the island's light: steady,
+   and warm and breathing only while someone verifiably works on the project. */
+.co-crystal-core {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 14cqw;
+  width: 9cqw;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--gem-core) 80%, #fff) 0 14%, color-mix(in oklab, var(--gem-core) 55%, #0000) 34%, #0000 70%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+.co-crystal-core::after {
+  content: "";
+  position: absolute;
+  inset: 30% 36%;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: linear-gradient(135deg, #ffffff 0 30%, var(--gem-core) 55%, color-mix(in oklab, var(--gem-core) 60%, #b27a1c));
+}
+.co-project[data-live="running"] .co-crystal-core {
+  opacity: 1;
+}
+.co-project[data-live="running"] .co-crystal.is-on-screen .co-crystal-core {
+  animation: co-crystal-core 4.2s ease-in-out infinite;
+}
+/* Outline, cut rim and the bright table the cover sits in. The top corners are
+   cut deep like a gem; the base is cut shallow where the panel hangs, so the
+   two meet along one straight edge. */
+.co-crystal-edge {
+  position: relative;
+  padding: 0.5cqw;
+  clip-path: polygon(
+    var(--cut) 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% calc(100% - var(--base)),
+    calc(100% - var(--base)) 100%,
+    var(--base) 100%,
+    0 calc(100% - var(--base)),
+    0 var(--cut)
+  );
+  background: linear-gradient(160deg, #ffffff, var(--gem-mid) 42%, var(--gem-edge));
+}
+.co-crystal-gem {
+  --in: calc(var(--cut) - 0.2cqw);
+  --in-base: calc(var(--base) - 0.2cqw);
+  position: relative;
+  overflow: hidden;
+  padding: 3.6cqw;
+  clip-path: polygon(
+    var(--in) 0,
+    calc(100% - var(--in)) 0,
+    100% var(--in),
+    100% calc(100% - var(--in-base)),
+    calc(100% - var(--in-base)) 100%,
+    var(--in-base) 100%,
+    0 calc(100% - var(--in-base)),
+    0 var(--in)
+  );
+  /* Four cut faces meeting under the cover, each lit by one light from the
+     upper left. The stops fall on the diagonals to the face's corners. */
+  background:
+    linear-gradient(140deg, #ffffff8c, #ffffff00 42%, #0000 62%, color-mix(in oklab, var(--gem-edge) 28%, #0000)),
+    conic-gradient(
+      from -59deg at 50% 50%,
+      color-mix(in oklab, var(--gem-hi) 60%, var(--gem-lo)) 0 118deg,
+      var(--gem-mid) 0 180deg,
+      color-mix(in oklab, var(--gem-mid) 50%, var(--gem-deep)) 0 298deg,
+      var(--gem-lo) 0 360deg
+    );
+}
+/* Ridges where the faces meet: bright along the top, shaded along the base. */
+.co-crystal-gem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from -59deg at 50% 50%,
+    #ffffffd0 0 0.7deg,
+    #0000 0 117.3deg,
+    #ffffffb0 0 118.7deg,
+    #0000 0 179.3deg,
+    color-mix(in oklab, var(--gem-edge) 40%, #0000) 0 180.7deg,
+    #0000 0 297.3deg,
+    #ffffff70 0 298.7deg,
+    #0000 0 359.3deg,
+    #ffffffd0 0
+  );
+}
+.co-crystal-face {
+  --face: 2.8cqw;
+  position: relative;
+  padding: 0.55cqw;
+  clip-path: polygon(
+    var(--face) 0,
+    calc(100% - var(--face)) 0,
+    100% var(--face),
+    100% calc(100% - var(--face)),
+    calc(100% - var(--face)) 100%,
+    var(--face) 100%,
+    0 calc(100% - var(--face)),
+    0 var(--face)
+  );
+  background: linear-gradient(150deg, #ffffff, var(--gem-lo) 45%, var(--gem-mid));
+}
+.co-crystal-face > .co-cover {
+  --face-in: 2.5cqw;
+  z-index: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  clip-path: polygon(
+    var(--face-in) 0,
+    calc(100% - var(--face-in)) 0,
+    100% var(--face-in),
+    100% calc(100% - var(--face-in)),
+    calc(100% - var(--face-in)) 100%,
+    var(--face-in) 100%,
+    0 calc(100% - var(--face-in)),
+    0 var(--face-in)
+  );
+  background: linear-gradient(172deg, var(--face-1), var(--face-2) 52%, var(--face-3));
+}
+.co-crystal-face > .co-cover > img {
+  object-fit: contain;
+}
+/* A light that crosses the crystal now and then; it never lies over a video. */
+.co-crystal-glint {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 60%;
+  background: linear-gradient(105deg, #0000 20%, #ffffff66 48%, #ffffff00 76%);
+  transform: translateX(0);
+  pointer-events: none;
+}
+.co-crystal.is-on-screen .co-crystal-glint {
+  animation: co-crystal-glint 9s cubic-bezier(0.5, 0, 0.3, 1) calc(var(--n, 0) * -1.4s) infinite;
+}
+.co-crystal:has(.co-cover.is-playing) .co-crystal-glint {
+  display: none;
+}
+/* An empty face is the inside of the crystal: pale, refracting, and lit from
+   below by the island's warm light, never a window onto a dark room. */
+.cw-island-deck .co-crystal .co-cover-placeholder {
+  color: #ffffff;
+  background:
+    radial-gradient(75% 70% at 50% 112%, color-mix(in oklab, var(--gem-core) 72%, #0000), #0000 70%),
+    linear-gradient(116deg, #0000 26%, #ffffff5c 27%, #ffffff00 46%),
+    linear-gradient(64deg, #0000 60%, #ffffff40 61%, #ffffff00 76%),
+    linear-gradient(172deg, var(--face-1), var(--face-2) 50%, var(--face-3));
+}
+.cw-island-deck .co-crystal .co-cover-placeholder::before {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background:
+    radial-gradient(1.3cqw 1.3cqw at 16% 26%, #ffffff, #0000),
+    radial-gradient(1cqw 1cqw at 84% 20%, #ffffffe0, #0000),
+    radial-gradient(0.9cqw 0.9cqw at 74% 76%, #ffffffd0, #0000),
+    radial-gradient(1.1cqw 1.1cqw at 28% 80%, #ffffffd0, #0000);
+}
+.cw-island-deck .co-crystal .co-cover-placeholder::after {
+  content: none;
+}
+.cw-island-deck .co-crystal .co-cover-note {
+  padding: 1.8cqw 3.6cqw;
+  gap: 0.8cqw;
+  border-color: #ffffff59;
+  background: color-mix(in oklab, var(--gem-edge) 74%, #0000);
+  box-shadow: 0 1.4cqw 4cqw color-mix(in oklab, var(--gem-edge) 40%, #0000);
+  text-shadow: 0 1px 3px #00000066;
+  font-size: clamp(10px, 2.8cqw, 13px);
+}
+.cw-island-deck .co-crystal .co-cover-placeholder .co-cover-icon {
+  color: #ffffff;
+  font-size: clamp(14px, 4.4cqw, 22px);
+  filter: drop-shadow(0 0 1.6cqw var(--gem-glow));
+}
+.cw-island-deck .co-crystal .co-cover-stage {
+  padding: 0.4cqw 2.4cqw;
+  font-size: clamp(10px, 2.8cqw, 13px);
+  color: #ffffff;
+  border-color: #ffffff5c;
+  background: #ffffff1f;
+}
+@media (hover: hover) {
+  .cw-hero-grid > .co-project:hover .co-crystal {
+    transform: perspective(1100px) rotateX(3deg) rotateY(-4deg) translateY(-4px);
+  }
+  .cw-hero-grid > .co-project:hover .co-crystal-aura {
+    opacity: 1;
+  }
+}
+/* A finished crystal wears its mark on the base, over the join with its panel. */
+.cw-island-deck .co-project[data-live="done"] .co-project-body::after {
+  content: none;
+}
+.cw-island-deck .co-project[data-live="done"] .co-crystal::after {
+  content: "✓ 已完成";
+  position: absolute;
+  z-index: 3;
+  right: 5cqw;
+  bottom: -1.6cqw;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font: 700 12px/1.4 system-ui, sans-serif;
+  color: #57380d;
+  background: linear-gradient(180deg, #fff8dc, #ffe199);
+  border: 1px solid #d2a445;
+  box-shadow: 0 3px 10px #1a12054d;
+}
+.cw-island-deck .co-project[data-live="done"] .co-crystal .co-spark {
+  position: absolute;
+  z-index: 3;
+  width: max(8px, 3cqw);
+  height: max(8px, 3cqw);
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, #0000 44%, var(--gem-core) 44% 56%, #0000 56%),
+    linear-gradient(0deg, #0000 44%, var(--gem-core) 44% 56%, #0000 56%);
+  filter: drop-shadow(0 0 4px #ffffffcc);
+}
+.cw-island-deck .co-project[data-live="done"] .co-crystal.is-on-screen .co-spark {
+  animation: co-lodge-spark 4.6s ease-in-out var(--delay, 0s) infinite;
+}
+
+/* -------------------------------------------------------------------- panel */
+/* The panel hangs from the crystal's base: its top edge tucks under the face,
+   and the crystal's shadow falls across it, so the two read as one piece. */
+.cw-island-deck .co-project > .co-project-body {
+  position: relative;
+  z-index: 0;
+  margin: -2.2cqw var(--base, 2cqw) 0;
+  padding: calc(14px + 2.2cqw) 16px 16px;
+  color: var(--gem-ink);
+  border: 1px solid color-mix(in oklab, var(--gem-mid) 40%, #d8e0f4) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 20px 20px;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--gem-edge) 34%, #0000), #0000 calc(2.2cqw + 18px)),
+    linear-gradient(180deg, color-mix(in oklab, var(--gem-lo) 32%, #ffffff), #fbfcff 32%, color-mix(in oklab, var(--gem-lo) 18%, #f2f5ff));
+  box-shadow:
+    inset 0 -1px 0 #ffffffb0,
+    0 22px 34px -18px #030822d0 !important;
+}
+.cw-island-deck .co-project[data-pinned="true"] > .co-project-body {
+  box-shadow:
+    inset 0 -1px 0 #ffffffb0,
+    0 0 0 2px color-mix(in oklab, var(--gem-core) 80%, #c79a3a),
+    0 22px 34px -18px #030822d0 !important;
+}
+.cw-island-deck .co-body-grid {
+  display: flex;
+  flex-direction: column;
+}
+.cw-island-deck :is(.co-body-main, .co-body-side) {
+  display: contents;
+}
+.cw-island-deck .co-body-side > .co-project-link {
+  order: -1;
+}
+.cw-island-deck .co-project-body > .co-project-sort {
+  gap: 6px;
+  margin: -4px -4px 10px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid color-mix(in oklab, var(--gem-mid) 24%, #0000);
+}
+.cw-island-deck .co-project-sort small {
+  padding: 2px 9px;
+  border-radius: 20px;
+  font: 800 11px/1.5 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--gem-ink) 85%, #fff);
+  background: color-mix(in oklab, var(--gem-lo) 30%, #ffffff);
+  border: 1px solid color-mix(in oklab, var(--gem-mid) 40%, #ffffff);
+}
+.cw-island-deck .co-pin-badge {
+  color: #56380e;
+  background: linear-gradient(180deg, #fff8dc, #ffe39f);
+  border-color: #d6a443;
+}
+.cw-island-deck .co-project-heading {
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid color-mix(in oklab, var(--gem-mid) 24%, #0000);
+}
+#creator-office .cw-island-deck .co-project-body .co-project-heading h3 {
+  font: 700 clamp(16px, 4.4cqw, 21px)/1.35 system-ui, sans-serif;
+  color: var(--gem-ink);
+  text-shadow: none;
+}
+#creator-office .cw-island-deck .co-project .co-button {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 12px !important;
+  color: color-mix(in oklab, var(--gem-ink) 90%, #fff);
+  border: 1px solid color-mix(in oklab, var(--gem-mid) 34%, #cdd6ee);
+  border-bottom-width: 2px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, color-mix(in oklab, var(--gem-lo) 16%, #f2f5ff));
+  box-shadow: 0 1px 0 #ffffff inset;
+}
+#creator-office .cw-island-deck .co-project .co-button.quiet {
+  background: #ffffffb3;
+}
+#creator-office .cw-island-deck .co-project .co-button.primary {
+  color: #ffffff;
+  border-color: color-mix(in oklab, var(--gem-deep) 75%, #000);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--gem-mid) 82%, #fff), var(--gem-deep));
+  text-shadow: 0 1px 1px #00000045;
+}
+#creator-office .cw-island-deck .co-project .co-button.danger {
+  color: #9b2f2f;
+  border-color: #e2aaa6;
+  background: linear-gradient(180deg, #fff6f5, #fbe1df);
+}
+#creator-office .cw-island-deck .co-project .co-pin-toggle[aria-pressed="true"] {
+  color: #56380e;
+  border-color: #d6a443;
+  background: linear-gradient(180deg, #fffaf0, #ffecbd);
+}
+#creator-office .cw-island-deck .co-project .co-rename-trigger {
+  min-width: 34px;
+  padding: 2px 6px;
+  font-size: 15px !important;
+}
+.cw-island-deck .co-project .co-project-link {
+  margin: 0 0 10px;
+}
+.cw-island-deck .co-project .co-link-actions {
+  gap: 6px;
+  padding: 0;
+  border: 0;
+}
+.cw-island-deck .co-project .co-source-name {
+  margin: 0 0 8px;
+  color: color-mix(in oklab, var(--gem-ink) 62%, #fff);
+}
+.cw-island-deck .co-project .co-progress {
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--gem-mid) 26%, #dfe5f5);
+  background: linear-gradient(180deg, #ffffffd9, color-mix(in oklab, var(--gem-lo) 14%, #f5f7ff));
+  box-shadow: 0 1px 0 #ffffff inset;
+}
+.cw-island-deck .co-project .co-progress .co-state {
+  font-size: 15px;
+  color: var(--gem-ink);
+}
+.cw-island-deck .co-project .co-progress .co-next {
+  margin: 2px 0 7px;
+  font-size: 13px;
+  color: color-mix(in oklab, var(--gem-ink) 66%, #fff);
+}
+.cw-island-deck .co-project .co-progress-track {
+  height: 7px;
+  background: color-mix(in oklab, var(--gem-lo) 30%, #e6ebf7);
+  box-shadow: 0 1px 2px #1c2a5a26 inset;
+}
+.cw-island-deck .co-project:not([data-live="running"]) .co-progress-track span {
+  background: linear-gradient(90deg, var(--gem-deep), var(--gem-mid) 62%, var(--gem-lo));
+  box-shadow: 0 0 8px color-mix(in oklab, var(--gem-glow) 60%, #0000);
+}
+#creator-office .cw-island-deck .co-project .co-route {
+  grid-template-columns: repeat(auto-fill, minmax(max(58px, 17cqw), 1fr));
+  gap: 5px;
+  margin: 0 0 4px;
+}
+#creator-office .cw-island-deck .co-project .co-route button {
+  min-height: 32px;
+  padding: 3px 2px;
+  font: 600 12px/1.3 system-ui, sans-serif !important;
+  color: color-mix(in oklab, var(--gem-ink) 76%, #fff);
+  border: 1px solid color-mix(in oklab, var(--gem-mid) 30%, #d5dcef);
+  border-bottom-width: 2px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff, #f1f4fd);
+  box-shadow: 0 1px 0 #ffffff inset;
+}
+#creator-office .cw-island-deck .co-project .co-route button.is-done {
+  color: color-mix(in oklab, var(--gem-deep) 78%, #000) !important;
+  border-color: color-mix(in oklab, var(--gem-mid) 70%, #fff) !important;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--gem-lo) 42%, #fff), color-mix(in oklab, var(--gem-lo) 72%, var(--gem-mid))) !important;
+}
+.cw-island-deck .co-project .co-save-status {
+  min-height: 0;
+  margin: 4px 0 8px;
+  font-size: 11.5px;
+  color: color-mix(in oklab, var(--gem-ink) 58%, #fff);
+}
+.cw-island-deck .co-project .co-recent-heading {
+  margin: 8px 0 6px;
+  font-size: 13px;
+  color: var(--gem-ink);
+}
+.cw-island-deck .co-project .co-recent-heading::before {
+  background: var(--gem-mid);
+}
+.cw-island-deck .co-project .co-milestones {
+  margin: 0 0 10px;
+  padding: 8px 0 8px 16px;
+  border-color: color-mix(in oklab, var(--gem-mid) 22%, #0000);
+}
+.cw-island-deck .co-project .co-milestones::before {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--gem-mid) 60%, #0000), #0000);
+}
+.cw-island-deck .co-project .co-milestones li::before {
+  background: var(--gem-mid);
+  box-shadow: 0 0 0 2px #ffffff;
+}
+.cw-island-deck .co-project .co-milestones :is(time, small) {
+  color: color-mix(in oklab, var(--gem-ink) 58%, #fff);
+}
+.cw-island-deck .co-project .co-milestones li:nth-child(n + 3) {
+  display: none;
+}
+.cw-island-deck .co-project .co-actions {
+  gap: 6px;
+  padding-top: 6px;
+}
+/* Folded, a crystal keeps its progress, its route and its everyday actions in
+   view; the source, the records and the rarer actions wait behind 更多. */
+.cw-island-deck .co-project:not(.is-expanded) .co-more {
+  display: none;
+}
+.cw-island-deck .cw-expand {
+  margin-left: auto;
+}
+
+/* ----------------------------------------------------- bridge and PROJECT DECK */
+#creator-office .cw-bridge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: clamp(130px, 21vh, 200px);
+  margin: clamp(34px, 6vh, 64px) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+#creator-office .cw-bridge:hover {
+  filter: none;
+}
+#creator-office .cw-bridge:focus-visible {
+  outline: none;
+}
+#creator-office .cw-bridge:focus-visible .cw-bridge-label {
+  outline: 3px solid #fff4c0;
+  outline-offset: 3px;
+}
+.cw-bridge-action {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font: 700 13px/1.2 system-ui, sans-serif;
+  color: #ffffff;
+  background: color-mix(in oklab, var(--deck-a) 80%, #000);
+  border: 1px solid #ffffff55;
+  box-shadow: 0 6px 16px -6px #050a2ab0;
+}
+.cw-bridge-action::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -2px;
+  transition: rotate 0.3s ease;
+}
+.cw-bridge[aria-expanded="true"] .cw-bridge-action::after {
+  rotate: -135deg;
+  translate: 0 2px;
+}
+#creator-office .cw-bridge:hover .cw-bridge-action {
+  background: color-mix(in oklab, var(--deck-b) 70%, #000);
+}
+#creator-office .cw-bridge[hidden],
+.cw-project-deck[hidden] {
+  display: none;
+}
+.cw-bridge::before {
+  content: "";
+  position: absolute;
+  inset: 0 -12%;
+  background:
+    radial-gradient(closest-side, color-mix(in oklab, var(--cloud-time, #fff) 80%, #fff) 40%, #0000) 0 64% / 280px 124px repeat-x,
+    radial-gradient(closest-side, color-mix(in oklab, var(--cloud-time, #fff) 70%, #eef2ff) 40%, #0000) 140px 36% / 320px 136px repeat-x,
+    radial-gradient(closest-side, color-mix(in oklab, var(--cloud-time, #fff) 60%, #dfe6ff) 40%, #0000) 70px 90% / 250px 96px repeat-x;
+  opacity: 0.92;
+}
+/* The magic bridge arching over the cloud down to the lower deck. */
+.cw-bridge::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 30%;
+  height: 80px;
+  border-radius: 50% 50% 0 0 / 80px 80px 0 0;
+  border-top: 3px solid color-mix(in oklab, var(--deck-glow) 80%, #fff);
+  box-shadow: 0 -8px 20px -8px var(--deck-glow);
+}
+.cw-bridge-label {
+  position: relative;
+  z-index: 1;
+  padding: 7px 20px;
+  border-radius: 999px;
+  font: 800 13px/1 system-ui, sans-serif;
+  letter-spacing: 0.3em;
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--deck-a), var(--deck-b));
+  box-shadow:
+    0 10px 22px -8px #050a2ac0,
+    0 0 0 1px #ffffff5c;
+}
+.cw-bridge-count {
+  position: relative;
+  z-index: 1;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font: 600 12px/1.2 system-ui, sans-serif;
+  color: #2a3160;
+  background: #ffffffd8;
+}
+/* The lower deck: a darker floor of night cloud where the rest of the crystals
+   stand small and close together, without the light the ACTIVE DECK gets. */
+.cw-project-deck {
+  position: relative;
+  margin: -34px calc(-1 * clamp(8px, 2vw, 34px)) 0;
+  padding: 50px clamp(12px, 2.4vw, 36px) 34px;
+  border-radius: 38px 38px 28px 28px;
+  background:
+    radial-gradient(60% 40px at 50% 0, color-mix(in oklab, var(--gem-glow) 22%, #0000), #0000),
+    linear-gradient(180deg, #121a46eb, #0b1032f2 60%, #070a24f7);
+  border: 1px solid #ffffff1f;
+  box-shadow:
+    0 30px 60px -30px #000000cc,
+    inset 0 1px 0 #ffffff29;
+}
+.cw-rest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
+  align-items: start;
+  gap: 24px 14px;
+}
+.cw-rest-grid > .co-project {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 250px;
+}
+.cw-rest-grid .co-crystal-aura {
+  opacity: 0.22;
+}
+.cw-rest-grid :is(.co-crystal-glint, .co-crystal-core, .co-cover-note),
+.cw-rest-grid .co-shard:is(:nth-child(1), :nth-child(3), :nth-child(5), :nth-child(7)) {
+  display: none;
+}
+.cw-rest-grid > .co-project > .co-project-body {
+  padding: calc(8px + 2.2cqw) 9px 10px;
+  border-radius: 0 0 14px 14px;
+  box-shadow:
+    inset 0 -1px 0 #ffffff80,
+    0 8px 16px -8px #000000cc !important;
+}
+.cw-rest-grid > .co-project[data-pinned="true"] > .co-project-body {
+  box-shadow:
+    inset 0 -1px 0 #ffffff80,
+    0 0 0 2px color-mix(in oklab, var(--gem-core) 80%, #c79a3a),
+    0 8px 16px -8px #000000cc !important;
+}
+.cw-rest-grid .co-project-body > .co-project-sort {
+  gap: 3px 5px;
+  margin: -2px -2px 6px;
+  padding: 0 0 6px;
+}
+.cw-rest-grid .co-project-sort small {
+  padding: 1px 7px;
+  font-size: 10px;
+}
+#creator-office .cw-rest-grid .co-project .co-button {
+  min-height: 24px;
+  padding: 1px 6px;
+  font-size: 10px !important;
+  border-radius: 8px;
+}
+.cw-rest-grid .co-pin-badge {
+  padding: 1px 7px;
+  font-size: 10px;
+}
+.cw-rest-grid .co-project-heading {
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 0 0 6px;
+}
+#creator-office .cw-rest-grid .co-project-body .co-project-heading h3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font: 650 13px/1.35 system-ui, sans-serif;
+}
+#creator-office .cw-rest-grid .co-project .co-rename-trigger {
+  min-height: 24px;
+  min-width: 26px;
+  padding: 0 3px;
+  font-size: 12px !important;
+}
+.cw-rest-grid .co-project .co-progress {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 9px;
+}
+.cw-rest-grid .co-project .co-progress .co-state {
+  font-size: 12px;
+}
+.cw-rest-grid .co-project .co-progress .co-next {
+  margin: 2px 0 4px;
+  font-size: 11px;
+}
+.cw-rest-grid .co-project .co-progress-track {
+  height: 5px;
+}
+.cw-rest-grid .co-live-flag {
+  margin: 0 0 4px;
+  padding: 1px 8px;
+  font-size: 10px;
+}
+.cw-island-deck .cw-rest-grid .co-project[data-live="done"] .co-crystal::after {
+  right: 3cqw;
+  padding: 1px 7px;
+  font-size: 10px;
+}
+/* Folded, a small crystal shows only its name and its progress. */
+.cw-rest-grid > .co-project:not(.is-expanded) :is(.co-project-link, .co-route, .co-save-status, .co-actions) {
+  display: none;
+}
+/* Its toggle rides the sort bar, so the one in the actions row stays hidden. */
+.cw-rest-grid .co-actions .cw-expand {
+  display: none;
+}
+.cw-rest-grid > .co-project.is-expanded {
+  grid-column: span 2;
+}
+.cw-older {
+  margin-top: 26px;
+}
+.cw-older:empty {
+  display: none;
+}
+.cw-older details.co-empty {
+  color: #dfe4fb;
+  background: #0b1030d8;
+  border-color: #ffffff33;
+}
+.cw-island-deck .cw-hero-grid > .co-empty {
+  color: #eef1ff;
+  background: #0b1030b0;
+  border-color: #ffffff40;
+}
+
+/* ------------------------------------------------------- arriving and leaving */
+.cw-deck.is-leaving {
+  animation: cw-deck-leave 0.26s cubic-bezier(0.4, 0, 0.8, 0.4) both;
+  pointer-events: none;
+}
+.cw-deck.is-arriving .cw-deck-head {
+  animation: cw-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.cw-deck.is-arriving .cw-deck-label {
+  animation: cw-rise 0.5s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.cw-deck.is-arriving .cw-hero-grid > .co-project {
+  animation: cw-card-in 0.62s cubic-bezier(0.16, 0.84, 0.24, 1) both;
+  animation-delay: calc(0.14s + min(var(--n, 0), 9) * 0.075s);
+}
+.cw-deck.is-arriving :is(.cw-bridge, .cw-project-deck, .cw-older) {
+  animation: cw-rise 0.7s 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ------------------------------------------------------------------ narrow */
+@media (max-width: 1100px) {
+  .cw-deck-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .cw-rest-slot {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .cw-cloud-cols {
+    grid-template-columns: repeat(4, minmax(min(76vw, 280px), 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+  }
+  .cw-cloud-col {
+    scroll-snap-align: start;
+  }
+  .cw-dock {
+    width: calc(100% - 96px);
+    padding: 8px 8px 12px;
+  }
+  .cw-beacon-text strong {
+    font-size: 11px;
+    white-space: normal;
+    text-align: center;
+  }
 }
 @media (max-width: 600px) {
-  .co-todo {
-    flex-wrap: wrap;
+  .cw-stage {
+    min-height: 560px;
   }
-  .co-todo-actions {
-    width: 100%;
-    padding-left: 34px;
-    justify-content: flex-start;
+  .cw-cloud {
+    padding: 10px 10px 12px;
+    border-radius: 30px;
+  }
+  .cw-cloud .co-todo-items {
+    max-height: 18vh;
+  }
+  .cw-deck-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cw-gem {
+    width: 24px;
+    height: 30px;
+  }
+  .cw-beacon-count {
+    display: none;
+  }
+}
+@media (min-width: 2200px) {
+  .cw-deck {
+    max-width: 1800px;
   }
 }
 
+/* ---------------------------------------------------------------- keyframes */
+@keyframes cw-bob {
+  from {
+    translate: 0 calc(-8px * var(--u));
+  }
+  to {
+    translate: 0 calc(8px * var(--u));
+  }
+}
+@keyframes cw-ripple {
+  0% {
+    opacity: 0.95;
+    scale: 0.22;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.3;
+  }
+}
+@keyframes cw-charge {
+  0% {
+    opacity: 0;
+    scale: 1.15;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+@keyframes cw-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes cw-pour {
+  to {
+    background-position: 0 calc(118px * var(--u));
+  }
+}
+@keyframes cw-mote {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(18px * var(--u)) calc(-150px * var(--u));
+  }
+}
+@keyframes cw-streak {
+  0% {
+    opacity: 0;
+    translate: calc(-160px * var(--u)) 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  60%,
+  100% {
+    opacity: 0;
+    translate: calc(260px * var(--u)) 0;
+  }
+}
+@keyframes cw-lantern {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    translate: calc(14px * var(--u)) calc(-120px * var(--u));
+  }
+  100% {
+    opacity: 0;
+    translate: calc(-10px * var(--u)) calc(-260px * var(--u));
+  }
+}
+@keyframes cw-fly-broom {
+  0% {
+    translate: calc(-430px * var(--u)) calc(30px * var(--u));
+  }
+  33% {
+    translate: calc(-140px * var(--u)) calc(-36px * var(--u));
+  }
+  66% {
+    translate: calc(170px * var(--u)) calc(16px * var(--u));
+  }
+  100% {
+    translate: calc(450px * var(--u)) calc(-26px * var(--u));
+  }
+}
+@keyframes cw-fly-bird {
+  0% {
+    translate: calc(-380px * var(--u)) calc(40px * var(--u));
+  }
+  25% {
+    translate: calc(-130px * var(--u)) calc(-60px * var(--u));
+  }
+  50% {
+    translate: calc(110px * var(--u)) calc(-92px * var(--u));
+  }
+  75% {
+    translate: calc(300px * var(--u)) calc(-40px * var(--u));
+  }
+  100% {
+    translate: calc(430px * var(--u)) calc(22px * var(--u));
+  }
+}
+@keyframes cw-fly-board {
+  0% {
+    opacity: 0;
+    translate: calc(-720px * var(--u)) calc(40px * var(--u));
+  }
+  3% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 1;
+  }
+  18%,
+  100% {
+    opacity: 0;
+    translate: calc(780px * var(--u)) calc(-70px * var(--u));
+  }
+}
+@keyframes cw-fly-cloud {
+  0% {
+    translate: calc(-270px * var(--u)) 0;
+  }
+  50% {
+    translate: calc(30px * var(--u)) calc(-52px * var(--u));
+  }
+  100% {
+    translate: calc(300px * var(--u)) calc(12px * var(--u));
+  }
+}
+@keyframes cw-face {
+  0%,
+  49.9% {
+    scale: 1 1;
+  }
+  50%,
+  100% {
+    scale: -1 1;
+  }
+}
+@keyframes cw-hover {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: -2deg;
+  }
+  50% {
+    translate: 0 calc(-10px * var(--u));
+    rotate: 2deg;
+  }
+}
+@keyframes cw-flap {
+  from {
+    rotate: -16deg;
+  }
+  to {
+    rotate: 24deg;
+  }
+}
+@keyframes cw-land {
+  0% {
+    opacity: 0;
+    translate: 46cqw -34cqw;
+    scale: 0.5;
+  }
+  14% {
+    opacity: 1;
+  }
+  72% {
+    translate: 0 -3cqw;
+    scale: 1;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes cw-takeoff {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  22% {
+    translate: 0 -3cqw;
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: -48cqw -38cqw;
+    scale: 0.5;
+  }
+}
+@keyframes cw-ride-off {
+  0%,
+  62% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes cw-ride-on {
+  0% {
+    opacity: 0;
+  }
+  22%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes cw-gem-glow {
+  50% {
+    filter: brightness(1.28);
+  }
+}
+@keyframes cw-energy {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: 1.65;
+  }
+}
+@keyframes cw-pulse {
+  40% {
+    scale: 1.25;
+  }
+}
+@keyframes cw-deck-leave {
+  to {
+    opacity: 0;
+    transform: translateY(calc(72px * var(--u))) scale(0.9);
+  }
+}
+@keyframes cw-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(48px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cw-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+@keyframes co-crystal-breathe {
+  50% {
+    opacity: 0.62;
+    transform: scale(1.05);
+  }
+}
+@keyframes co-crystal-core {
+  50% {
+    transform: scale(1.25);
+    filter: brightness(1.2);
+  }
+}
+@keyframes co-crystal-glint {
+  0%,
+  72% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(275%);
+  }
+}
+@keyframes cw-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------ reduced motion */
+/* The camera still crosses the same sky, only quicker and without banking;
+   nothing idles, bobs, flaps or streaks, and decks simply fade in. */
 @media (prefers-reduced-motion: reduce) {
   .co-isle-fall,
   .co-isle-pebble {
+    animation: none !important;
+  }
+  .cw-stage :is(.cw-isle-float, .cw-life, .cw-flyer-path, .cw-flyer-rig, .cw-gem-core, .cw-gem, .cw-isle-ripple) {
+    animation: none !important;
+  }
+  .cw-ride::before,
+  .cw-ride::after,
+  .cw-gem::before {
+    animation: none !important;
+  }
+  .cw-life {
+    opacity: 0.8;
+  }
+  .cw-deck.is-leaving {
+    animation: cw-fade 0.12s reverse both;
+  }
+  .cw-deck.is-arriving :is(.cw-deck-head, .cw-deck-label, .cw-hero-grid > .co-project, .cw-bridge, .cw-project-deck, .cw-older) {
+    animation: cw-fade 0.2s ease both !important;
+  }
+  .cw-hero-grid > .co-project,
+  .cw-hero-grid > .co-project:hover,
+  .cw-hero-grid > .co-project:hover .co-crystal {
+    transform: none !important;
+    translate: none !important;
+    transition: none;
+  }
+  .co-crystal :is(.co-crystal-aura, .co-crystal-core, .co-crystal-glint, .co-spark) {
+    animation: none !important;
+  }
+  .co-crystal-glint {
+    display: none;
+  }
+  .cw-cloud .co-todo-actions {
+    transition: none;
+  }
+  .co-yard-actor.cw-arriving .co-yard-rig,
+  .co-yard-actor.cw-leaving .co-yard-rig {
     animation: none !important;
   }
 }

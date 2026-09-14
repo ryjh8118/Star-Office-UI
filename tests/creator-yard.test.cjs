@@ -80,16 +80,26 @@ test("the island rests off screen and stands still for reduced motion", () => {
   assert.match(yard, /!yard\.classList\.contains\("is-on-screen"\)/, "an island off screen waits");
 });
 
-test("every house stands whole on an island, and a live update keeps the resident mid-play", () => {
+test("every project is a crystal, and the swings live on each island's resting islet", () => {
   const office = read("creator-office.js");
-  const house = office.slice(office.indexOf("function projectHouse"), office.indexOf("function projectYard"));
-  assert.doesNotMatch(house, /CreatorYard|co-yard/, "the island never sits between the cover and the panel");
-  assert.match(office, /card\.append\(body\);\s*const yard = projectYard\(p\);/, "the island comes after the whole house");
-  assert.match(office, /island\.dataset\.resident !== rebuilt\.dataset\.resident/);
-  assert.match(office, /querySelectorAll\("\.co-house, \.co-yard"\)/, "islands are watched on screen themselves");
+  const crystal = office.slice(office.indexOf("function projectCrystal"), office.indexOf("function residentOf"));
+  assert.match(crystal, /face\.append\(cover\)/, "the cover sits in the crystal's face");
+  assert.doesNotMatch(crystal, /CreatorYard|co-yard|co-house/, "a crystal keeps no yard and no house frame");
+  assert.doesNotMatch(office, /projectYard|projectHouse|\.co-house\b/, "no card still builds a house or a yard");
+  assert.match(office, /card\.append\(projectCrystal\(p, cover\)\);/);
+  assert.match(office, /previous\.querySelector\("\.co-crystal"\)\.replaceWith\(fresh\.querySelector\("\.co-crystal"\)\)/, "a live update swaps the crystal, never a playing video");
+  assert.match(office, /querySelectorAll\("\.co-crystal, \.co-yard"\)/, "crystals and islets are watched on screen themselves");
+  // The islets beside the title platforms are built once by the world, and a
+  // visitor lands only on an empty one.
+  const world = read("creator-transitions.js");
+  assert.match(world, /scope\.CreatorYard\.build\(\{ seed:/);
+  assert.match(world, /scope\.CreatorYard\.visit\(r\.yard, character,/);
+  assert.match(world, /scope\.CreatorYard\.leave\(r\.yard\)/);
+  const yard = read("creator-yard.js");
+  assert.match(yard, /if \(!isle \|\| !character \|\| yard\.querySelector\("\.co-yard-actor"\)\) return null;/);
+  assert.match(yard, /if \(!actor\.isConnected\) return;/, "a visitor that has flown off stops its schedule");
   const css = read("creator-yard.css");
-  assert.match(css, /\.co-project\.has-yard > \.co-project-body \{\s*padding-bottom: calc\(22px \+ var\(--yard-rise\)\);/);
-  assert.match(css, /\.co-project > \.co-yard \{[^}]*margin-top: calc\(var\(--yard-rise\) \* -1\);/);
+  assert.doesNotMatch(css, /has-yard|--yard-rise/, "no yard hangs under a card any more");
   assert.doesNotMatch(office, /co-resident-track/);
   const html = read("index.html");
   assert.ok(html.indexOf("creator-yard.js") > html.indexOf("creator-residents.js"));
@@ -101,7 +111,7 @@ test("a long-form card copies onto the short-video island, and only long-form ca
   const office = read("creator-office.js");
   assert.match(office, /save\("project-copy", \{ project_id: p\.project_id, format: "SHORT" \}\)/);
   assert.match(office, /const copies = shelf === "active";/);
-  assert.match(office, /hovered\?\.closest\(`#\$\{shelves\.short\.section\}, \.co-short-drop`\)/);
+  assert.match(office, /hovered\?\.closest\(`#\$\{shelves\.short\.section\}, \.co-short-drop, \.cw-beacon\[data-island="short"\]`\)/, "the short-video island, its pad or its beacon takes the copy");
   assert.match(office, /if \(copy\) await copyToShort\(p\);\s*else await moveProject/);
   assert.match(office, /\["projects", "project-source", "project-copy"\]\.includes\(path\)/);
   assert.match(office, /if \(!isShort\(p\) && !projectDone\(p\)\) \{/, "the copy button is for unfinished long-form cards");
