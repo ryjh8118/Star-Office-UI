@@ -196,7 +196,10 @@
     shortCompletedIds = [],
     projectDragId = null,
     pinnedCount = 0,
-    homeToggle = null;
+    homeToggle = null,
+    freshIds = new Set();
+  // Folded PROJECT DECK cards are not drawn; this says which island each waits on.
+  const foldedDeckOf = new Map();
   const zones = new Map();
   // The four islands of the sky world, in the order they lie along the dock.
   const ISLANDS = [
@@ -234,6 +237,8 @@
     isle.floor.hidden = !open || isle.bridge.hidden;
     isle.bridge.setAttribute("aria-expanded", String(open));
     isle.bridgeAction.textContent = open ? "收合" : "展開";
+    // A folded deck keeps no cards on the page; opening it draws them.
+    if (remember) render();
   }
   let browserStatus = { connected: false, observations: [] };
   const playingLinks = new Map();
@@ -348,19 +353,24 @@
   function sourceProjects() {
     return (response.projection || lastGood)?.projects || [];
   }
-  function allProjects() {
+  // The member cards ask for this every second, so it is worked out once per
+  // poll or save instead of once per question.
+  let projectMemo = { sources: null, presentation: null, all: [], primary: [], folded: new Map(), behind: new Map() };
+  function remembered() {
     const sources = sourceProjects();
-    return [
+    if (projectMemo.sources === sources && projectMemo.presentation === presentation) return projectMemo;
+    const byId = new Map(sources.map((p) => [p.project_id, p]));
+    const all = [
       ...sources,
       ...Object.values(presentation.local_projects || {}),
     ].map((card) => {
       const meta = presentation.projects[card.project_id] || {};
       const sid = Object.hasOwn(meta, "source_project_id")
         ? meta.source_project_id
-        : sources.some((p) => p.project_id === card.project_id)
+        : byId.has(card.project_id)
           ? card.project_id
           : null;
-      const source = sources.find((p) => p.project_id === sid);
+      const source = byId.get(sid);
       const empty = {
         classification: card.classification,
         project_type: card.project_type,
@@ -375,14 +385,86 @@
         source_name: source?.project_name || "",
       };
     });
-  }
-  function primary() {
-    return allProjects().filter(
+    const cards = all.filter(
       (p) =>
         p.classification === "REGISTERED" &&
         ["YOUTUBE", "VIDEO_PROJECT"].includes(p.project_type) &&
         !presentation.projects[p.project_id]?.hidden,
     );
+    const local = presentation.local_projects || {};
+    const folded = foldDuplicates(
+      cards,
+      (p) => presentation.projects[p.project_id],
+      (p) => Object.hasOwn(local, p.project_id),
+    );
+    const behind = new Map();
+    for (const [id, keeper] of folded) behind.set(keeper, [...(behind.get(keeper) || []), id]);
+    projectMemo = {
+      sources,
+      presentation,
+      all,
+      folded,
+      behind,
+      primary: cards.filter((p) => !folded.has(p.project_id)),
+    };
+    return projectMemo;
+  }
+  function allProjects() {
+    return remembered().all;
+  }
+  function primary() {
+    return remembered().primary;
+  }
+  // Content OS has registered some folders more than once: each rescan minted a
+  // new project id for the same folder, so one video stood on the desk as two,
+  // three or six crystals. The desk shows each project once. A card the user
+  // made, or has put anything of their own on, is theirs and always stays; the
+  // untouched system copies fold behind the one with the most evidence and wait
+  // in 工作紀錄 under 系統重複登記, so no canonical record loses its way in.
+  // Nothing is written anywhere. Pure, so the rule can be tested.
+  const USER_FIELDS = ["cover", "display_name", "manual_done", "disabled_steps", "link", "pinned_at", "format", "copied_from", "workflow_user_at"];
+  function userTouched(meta) {
+    if (!meta) return false;
+    return (
+      USER_FIELDS.some((key) => (Array.isArray(meta[key]) ? meta[key].length > 0 : meta[key] != null && meta[key] !== "")) ||
+      (meta.history || []).some((entry) => entry?.source === "USER")
+    );
+  }
+  // Premiere's auto-save beside a project ("…~recover") is the same project too,
+  // and never the one that stands for it.
+  const RECOVERY = /\s*~recover(?:ed)?\d*\s*$/i;
+  const duplicateKey = (name) =>
+    String(name ?? "")
+      .normalize("NFKC")
+      .replace(RECOVERY, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  const evidenceOrder = (a, b) =>
+    RECOVERY.test(a.project_name) - RECOVERY.test(b.project_name) ||
+    !!b.workspace - !!a.workspace ||
+    (b.evidence_file_count || 0) - (a.evidence_file_count || 0) ||
+    !!b.production_evidence - !!a.production_evidence ||
+    /^WORKSPACE-/.test(b.project_id) - /^WORKSPACE-/.test(a.project_id) ||
+    (a.project_id < b.project_id ? -1 : a.project_id > b.project_id ? 1 : 0);
+  // Returns folded project id → the id of the card it folds behind.
+  function foldDuplicates(cards, metaOf, isLocal) {
+    const groups = new Map();
+    for (const p of cards) {
+      const key = duplicateKey(p.project_name);
+      if (!key || isLocal(p)) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    const folded = new Map();
+    for (const group of groups.values()) {
+      if (group.length < 2) continue;
+      const touched = group.filter((p) => userTouched(metaOf(p)));
+      const keeper = [...(touched.length ? touched : group)].sort(evidenceOrder)[0];
+      for (const p of group)
+        if (p !== keeper && !touched.includes(p)) folded.set(p.project_id, keeper.project_id);
+    }
+    return folded;
   }
   // The card grid above deliberately shows only registered video projects. Everything
   // else the ledger remembers used to be listed in the old office panel, grouped by
@@ -410,6 +492,7 @@
     );
   }
   function historyGroup(p) {
+    if (remembered().folded.has(p.project_id)) return "duplicate";
     if (isScratch(p)) return "scratch";
     if (isYTish(p)) return "yt";
     return /(CODEX|CHATGPT|OPENAI)/iu.test(
@@ -424,6 +507,7 @@
     local: ["▣", "本地執行・系統"],
     cloud: ["☁", "雲端工作"],
     scratch: ["⚙", "測試與系統紀錄"],
+    duplicate: ["⧉", "系統重複登記・已合併到卡片"],
   };
   function archived() {
     const shown = new Set(primary().map((p) => p.project_id));
@@ -436,6 +520,9 @@
     const row = node("div", undefined, "co-history-row");
     row.dataset.projectId = p.project_id;
     const meta = node("div", undefined, "co-history-meta");
+    const keeper = remembered().folded.get(p.project_id);
+    if (keeper)
+      meta.append(node("span", "與卡片「" + (projectName(allProjects().find((c) => c.project_id === keeper) || {}) || "同名專案") + "」重複", "co-history-badge"));
     if (p.classification === "NEEDS_CLASSIFICATION")
       meta.append(node("span", "等待分類", "co-history-badge"));
     meta.append(node("span", clean(p.current_stage, "尚無進度紀錄")));
@@ -473,14 +560,20 @@
       box.dataset.historyGroup = key;
       // Activity polling re-renders this section, so a group the user opened has to
       // stay open; otherwise it collapses under them mid-read.
-      box.open = openHistoryGroups.has(key);
-      box.addEventListener("toggle", () =>
-        box.open ? openHistoryGroups.add(key) : openHistoryGroups.delete(key),
-      );
-      box.append(node("summary", `${icon} ${label} · ${list.length} 筆`));
+      // A closed group keeps no rows on the page; they are drawn when it opens.
       const rows = node("div", undefined, "co-history-rows");
-      for (const p of list) rows.append(historyRow(p));
-      box.append(rows);
+      const fill = () => {
+        if (!rows.childElementCount) for (const p of list) rows.append(historyRow(p));
+      };
+      box.open = openHistoryGroups.has(key);
+      if (box.open) fill();
+      box.addEventListener("toggle", () => {
+        if (box.open) {
+          openHistoryGroups.add(key);
+          fill();
+        } else openHistoryGroups.delete(key);
+      });
+      box.append(node("summary", `${icon} ${label} · ${list.length} 筆`), rows);
       historyRoot.append(box);
     }
     if (!historyRoot.children.length)
@@ -597,6 +690,55 @@
         j.project_id === pid &&
         window.RenguinOperations.effective(j) === "RUNNING",
     );
+  }
+  // 最新加入: when each project joined, so a new one is easy to find. A card the
+  // user made carries its own creation stamp; a system project dates from the
+  // first canonical event about it or about any registration folded behind it.
+  // Each island calls out only its newest few from the past week.
+  const FRESH_WINDOW_S = 7 * 86400,
+    FRESH_SHOWN = 3;
+  let firstEvents = { from: null, at: new Map() };
+  function firstEventAt(id) {
+    if (firstEvents.from !== eventStatuses) {
+      const at = new Map();
+      for (const e of Object.values(eventStatuses || {})) {
+        const t = epoch(e?.timestamp);
+        if (e?.project_id && Number.isFinite(t) && !(at.get(e.project_id) <= t)) at.set(e.project_id, t);
+      }
+      firstEvents = { from: eventStatuses, at };
+    }
+    return firstEvents.at.get(id);
+  }
+  function addedStamp(meta, local, eventTimes) {
+    if (local) {
+      const made = (meta?.history || []).find((e) => ["PROJECT_CREATED", "PROJECT_COPIED"].includes(e?.type));
+      return epoch(made?.timestamp || meta?.copied_from?.timestamp);
+    }
+    const times = eventTimes.filter(Number.isFinite);
+    return times.length ? Math.min(...times) : NaN;
+  }
+  function addedAt(p) {
+    const local = Object.hasOwn(presentation.local_projects || {}, p.project_id);
+    const ids = [p.project_id, ...(remembered().behind.get(p.project_id) || [])];
+    return addedStamp(presentation.projects[p.project_id], local, ids.map(firstEventAt));
+  }
+  // The newest of a list that joined within the window, newest first. Pure.
+  function freshest(list, stampOf, now = Date.now() / 1000, limit = FRESH_SHOWN) {
+    return list
+      .map((p) => [p, stampOf(p)])
+      .filter(([, t]) => Number.isFinite(t) && t <= now + 60 && now - t <= FRESH_WINDOW_S)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([p]) => p);
+  }
+  function joinedText(p) {
+    const t = addedAt(p);
+    if (!Number.isFinite(t)) return "";
+    const at = new Date(t * 1000),
+      today = new Date();
+    const days = Math.round((new Date(today.toDateString()) - new Date(at.toDateString())) / 86400000);
+    const clock = at.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return (days === 0 ? "今天 " + clock : days === 1 ? "昨天 " + clock : date(t, true)) + " 加入";
   }
 
   // Pinned projects lead 正在製作 in the order they were pinned; the rest keep
@@ -1076,11 +1218,20 @@
   }
   // A card lives on one island. Opening it flies there first, and only once the
   // camera has landed does the deck scroll to the card.
-  function openProject(p) {
-    const card = [...root.querySelectorAll(".co-project")].find(
-      (e) => e.dataset.projectId === p.project_id,
-    );
+  function openProject(p, spotlight = false) {
+    const find = () => [...root.querySelectorAll(".co-project")].find((e) => e.dataset.projectId === p.project_id);
+    let card = find();
+    if (!card && foldedDeckOf.has(p.project_id)) {
+      setDeckOpen(foldedDeckOf.get(p.project_id), true);
+      card = find();
+    }
     if (!card) return showDetails(p);
+    if (spotlight) {
+      card.classList.remove("is-spotlit");
+      void card.offsetWidth;
+      card.classList.add("is-spotlit");
+      setTimeout(() => card.classList.remove("is-spotlit"), 3200);
+    }
     const reveal = () => {
       if (card.dataset.tier === "compact") {
         const island = world?.islandOf(card);
@@ -1661,6 +1812,9 @@
     const side = node("div", undefined, "co-body-side");
     const columns = node("div", undefined, "co-body-grid");
     columns.append(main, side);
+    const fresh = freshIds.has(p.project_id);
+    card.dataset.fresh = String(fresh);
+    if (fresh) body.append(node("p", "✦ 最新加入 · " + joinedText(p), "co-fresh-badge"));
     body.append(heading, columns);
     side.append(mediaActions);
     // Everything marked co-more waits behind 展開 on a folded crystal: the
@@ -2563,6 +2717,36 @@
     card.classList.add("is-just-copied");
     setTimeout(() => card.classList.remove("is-just-copied"), 2600);
   }
+  // The short copy a long-form card already has, if any.
+  function shortCopyOf(p) {
+    const found = Object.entries(presentation.projects).find(
+      ([id, meta]) => meta.copied_from?.project_id === p.project_id && !meta.hidden && Object.hasOwn(presentation.local_projects || {}, id),
+    );
+    return found && { project_id: found[0] };
+  }
+  // A card dropped on 短影音完成 lands there finished: a long-form card as a
+  // finished short copy of itself (the long card stays where it is), a short
+  // video as itself. A long card already copied finishes that copy instead of
+  // making a second one.
+  async function finishShort(p) {
+    const copy = isShort(p) ? p : shortCopyOf(p);
+    if (copy && projectDone(copy)) {
+      toast("「" + projectName(p) + "」已經在短影音完成了");
+      return;
+    }
+    const saved = copy
+      ? await save("done", { project_id: copy.project_id, done: true })
+      : await save("project-copy", { project_id: p.project_id, format: "SHORT", done: true });
+    if (!saved) return;
+    toast(isShort(p) ? "已放入短影音完成" : "已把「" + projectName(p) + "」放入短影音完成 · 長片仍保留在原處");
+    const landed = isShort(p) ? p : shortCopyOf(p);
+    const card = landed && root.querySelector(`[data-project-id="${CSS.escape(landed.project_id)}"]`);
+    if (!card) return;
+    card.classList.remove("is-just-copied");
+    void card.offsetWidth;
+    card.classList.add("is-just-copied");
+    setTimeout(() => card.classList.remove("is-just-copied"), 2600);
+  }
   // One card is carried at a time: from its ⠿ handle at once, or from the card
   // itself after a short move with a mouse or a long press with a finger, so a
   // swipe that scrolls the page never lifts anything. While carried, a card on
@@ -2679,6 +2863,9 @@
     if (!plan || drag) return;
     const { p, shelf } = plan;
     const copies = shelf === "active";
+    // A long-form card can land on 短影音完成 as a finished short; a short video
+    // in the making can simply be finished there.
+    const finishes = copies || shelf === "short";
     projectDragId = p.project_id;
     dragging = true;
     try {
@@ -2698,21 +2885,37 @@
       img.alt = "";
       ghost.append(img);
     }
-    const hint = copies ? "拖到右邊「短影音正在製作」複製一份" : "放到其他卡片上排序";
+    const hint = copies
+      ? "拖到右邊「短影音正在製作」或「短影音完成」"
+      : finishes
+        ? "放到其他卡片上排序，或拖到右邊「短影音完成」"
+        : "放到其他卡片上排序";
     ghost.append(node("strong", projectName(p)), node("small", hint));
-    let pad = null;
+    // The short-video islands are far shorter than the long-form column, so from
+    // most cards they are out of sight; pads in view always take the drop.
+    let pad = null,
+      donePad = null,
+      rail = null;
+    if (finishes) {
+      rail = node("div", undefined, "co-drop-rail");
+      rail.setAttribute("aria-hidden", "true");
+    }
     if (copies) {
-      // The short-video island is far shorter than the long-form column, so from
-      // most cards it is out of sight; a pad in view always takes the drop.
       pad = node("div", undefined, "co-short-drop");
-      pad.setAttribute("aria-hidden", "true");
       pad.append(node("span", "▮", "co-short-drop-icon"), node("strong", "短影音正在製作"), node("small", "拖到這裡 · 複製一份"));
+      rail.append(pad);
       document.body.classList.add("co-copying-short");
     }
+    if (finishes) {
+      donePad = node("div", undefined, "co-done-drop");
+      donePad.dataset.idle = copies ? "拖到這裡 · 複製一份並標記完成" : "拖到這裡 · 標記完成";
+      donePad.append(node("span", "✦", "co-short-drop-icon"), node("strong", "短影音完成"), node("small", donePad.dataset.idle));
+      rail.append(donePad);
+    }
     const recycler = stardustRecycler();
-    document.body.append(...[pad, recycler.el, ghost].filter(Boolean));
+    document.body.append(...[rail, recycler.el, ghost].filter(Boolean));
     recycler.measure();
-    drag = { card, p, shelf, copies, ghost, pad, recycler, hint, pointerId: e.pointerId, startY: e.clientY, target: null, overShort: false, overTrash: false };
+    drag = { card, p, shelf, copies, finishes, ghost, pad, donePad, rail, recycler, hint, pointerId: e.pointerId, startY: e.clientY, target: null, overShort: false, overDone: false, overTrash: false };
     addEventListener("pointermove", onDragMove, { passive: false });
     addEventListener("pointerup", onDragEnd);
     addEventListener("pointercancel", cancelDrag);
@@ -2734,7 +2937,7 @@
   function onDragMove(e) {
     if (!drag || (e.pointerId !== undefined && e.pointerId !== drag.pointerId)) return;
     e.preventDefault?.();
-    const { p, shelf, copies, ghost, pad, recycler } = drag;
+    const { p, shelf, copies, finishes, ghost, pad, donePad, recycler } = drag;
     const hovered = document.elementFromPoint(e.clientX, e.clientY);
     const pull = recycler.pull(e.clientX, e.clientY);
     if (pull > 0 || e.clientY - drag.startY > 24) recycler.wake();
@@ -2743,8 +2946,11 @@
     // onto the short-video island, anywhere on it, onto its beacon, or the pad.
     const overShort =
       !overTrash && copies && !!hovered?.closest(`#${shelves.short.section}, .co-short-drop, .cw-beacon[data-island="short"]`);
-    // Holding still on the pad, the dock or near the recycler must not scroll the page away.
-    if (!hovered?.closest(".co-short-drop, .cw-dock") && pull === 0) {
+    // …and it, or a short video in the making, may land on 短影音完成 finished.
+    const overDone =
+      !overTrash && !overShort && finishes && !!hovered?.closest(`#${shelves.shortCompleted.section}, .co-done-drop, .cw-beacon[data-island="short-result"]`);
+    // Holding still on a pad, the dock or near the recycler must not scroll the page away.
+    if (!hovered?.closest(".co-drop-rail, .cw-dock") && pull === 0) {
       if (e.clientY < 65) window.scrollBy(0, -24);
       else if (e.clientY > innerHeight - 65) window.scrollBy(0, 24);
     }
@@ -2761,21 +2967,31 @@
     document.querySelector('.cw-beacon[data-island="short"]')?.classList.toggle("is-copy-target", overShort);
     pad?.classList.toggle("is-copy-target", overShort);
     if (pad) pad.querySelector("small").textContent = overShort ? "放開 · 複製一份，長片保留" : "拖到這裡 · 複製一份";
-    ghost.classList.toggle("is-copy", overShort);
+    document.getElementById(shelves.shortCompleted.section)?.classList.toggle("is-copy-target", overDone);
+    document.querySelector('.cw-beacon[data-island="short-result"]')?.classList.toggle("is-copy-target", overDone);
+    donePad?.classList.toggle("is-copy-target", overDone);
+    if (donePad)
+      donePad.querySelector("small").textContent = overDone ? (copies ? "放開 · 放入短影音完成，長片保留" : "放開 · 標記完成") : donePad.dataset.idle;
+    ghost.classList.toggle("is-copy", overShort || overDone);
     ghost.querySelector("small").textContent = overTrash
       ? "放開 → 移除，可以復原"
       : overShort
         ? "放開 → 複製到短影音，長片保留"
-        : drag.hint;
-    const target = overShort || overTrash ? null : hovered?.closest(`#${shelves[shelf].section} .co-project`);
+        : overDone
+          ? copies
+            ? "放開 → 放入短影音完成，長片保留"
+            : "放開 → 放入短影音完成"
+          : drag.hint;
+    const target = overShort || overDone || overTrash ? null : hovered?.closest(`#${shelves[shelf].section} .co-project`);
     drag.target = target && target.dataset.projectId !== p.project_id ? target.dataset.projectId : null;
     root.querySelectorAll(".is-drop-target").forEach((el) => el.classList.remove("is-drop-target"));
     if (drag.target) target.classList.add("is-drop-target");
     drag.overShort = overShort;
+    drag.overDone = overDone;
     drag.overTrash = overTrash;
   }
   function endDrag(swallowed) {
-    const { card, ghost, pad, recycler } = drag;
+    const { card, ghost, rail, recycler } = drag;
     removeEventListener("pointermove", onDragMove, { passive: false });
     removeEventListener("pointerup", onDragEnd);
     removeEventListener("pointercancel", cancelDrag);
@@ -2785,10 +3001,12 @@
     drag = null;
     dragging = false;
     projectDragId = null;
-    pad?.remove();
+    rail?.remove();
     document.body.classList.remove("co-copying-short", "co-card-dragging");
-    document.getElementById(shelves.short.section)?.classList.remove("is-copy-target");
-    document.querySelector('.cw-beacon[data-island="short"]')?.classList.remove("is-copy-target");
+    for (const [section, island] of [[shelves.short.section, "short"], [shelves.shortCompleted.section, "short-result"]]) {
+      document.getElementById(section)?.classList.remove("is-copy-target");
+      document.querySelector(`.cw-beacon[data-island="${island}"]`)?.classList.remove("is-copy-target");
+    }
     card.classList.remove("is-trash-armed");
     root
       .querySelectorAll(".co-project.is-dragging,.co-project.is-drop-target")
@@ -2812,10 +3030,11 @@
   }
   async function onDragEnd(e) {
     if (!drag || e.pointerId !== drag.pointerId) return;
-    const { p, shelf, target, overShort: copy, overTrash: trash } = drag;
+    const { p, shelf, target, overShort: copy, overDone: finish, overTrash: trash } = drag;
     endDrag(trash);
     if (trash) removeProject(p);
     else if (copy) await copyToShort(p);
+    else if (finish) await finishShort(p);
     else await moveProject(p.project_id, target, shelf);
   }
   function projectSorting(card, p, index, shelf = "active") {
@@ -2829,8 +3048,10 @@
     );
     handle.title =
       (copies
-        ? "拖曳排序；拖到右邊「短影音正在製作」會複製一份過去，長片保留在原處"
-        : "拖曳排序，或使用上、下方向鍵移動") + "；拖到下方星塵回收艙或按 Delete 移除（可復原）";
+        ? "拖曳排序；拖到右邊「短影音正在製作」會複製一份過去，拖到「短影音完成」會複製並標記完成，長片保留在原處"
+        : shelf === "short"
+          ? "拖曳排序；拖到右邊「短影音完成」標記完成"
+          : "拖曳排序，或使用上、下方向鍵移動") + "；拖到下方星塵回收艙或按 Delete 移除（可復原）";
     handle.setAttribute("aria-label", (copies ? "拖曳排序或複製到短影音 " : "拖曳排序 ") + projectName(p));
     handle.draggable = false;
     handle.disabled = !storeReady;
@@ -2969,6 +3190,20 @@
       if (![...retained].some(card => card.dataset.projectId === id)) playingLinks.delete(id);
     }
   }
+  // Under an island's title, the projects that joined it most recently: one
+  // click flies there, opens a folded deck if it has to, and lights the card.
+  function showJoined(isle, list) {
+    isle.joined.replaceChildren();
+    isle.joined.hidden = !list.length;
+    if (!list.length) return;
+    isle.joined.append(node("span", "✦ 最新加入", "cw-joined-label"));
+    for (const p of list) {
+      const chip = button("", () => openProject(p, true), "cw-joined-chip");
+      chip.append(node("strong", projectName(p)), node("small", joinedText(p)));
+      chip.setAttribute("aria-label", "前往最新加入的專案「" + projectName(p) + "」，" + joinedText(p));
+      isle.joined.append(chip);
+    }
+  }
   function render() {
     if (!root || dragging || editingName) return;
     const payload = response.projection || lastGood;
@@ -2998,6 +3233,7 @@
       response.status,
       storeReady,
       [...pendingRemoval.keys()],
+      [...openDecks],
       (window.RenguinOperations?.current.jobs || []).map((j) => [
         j.project_id,
         window.RenguinOperations.effective(j),
@@ -3047,17 +3283,25 @@
       }
       completedProjectIds = finishedShelves[0].recent.map((p) => p.project_id);
       shortCompletedIds = finishedShelves[1].recent.map((p) => p.project_id);
-      // Every island's first six stand on its ACTIVE DECK, the rest below.
+      // Every island's first six stand on its ACTIVE DECK, the rest below; a
+      // folded PROJECT DECK draws nothing until it is opened.
       const decks = [
         { id: "work", shelf: "active", list: activeProjects },
         { id: "result", shelf: "completed", list: finishedShelves[0].recent },
         { id: "short", shelf: "short", list: shortProjects },
         { id: "short-result", shelf: "shortCompleted", list: finishedShelves[1].recent },
       ];
+      const joined = new Map(decks.map((d) => [d.id, freshest(d.list, addedAt)]));
+      freshIds = new Set([...joined.values()].flat().map((p) => p.project_id));
+      foldedDeckOf.clear();
       for (const d of decks) {
         const [top, others] = deckSplit(d.list);
         for (const p of top) cardGroups.get(islands[d.id].hero).push(projectCard(p));
-        for (const p of others) cardGroups.get(islands[d.id].rest).push(projectCard(p));
+        for (const p of others) {
+          foldedDeckOf.set(p.project_id, d.id);
+          if (openDecks.has(d.id)) cardGroups.get(islands[d.id].rest).push(projectCard(p));
+        }
+        showJoined(islands[d.id], joined.get(d.id));
       }
       reconcileProjectCards(cardGroups);
       for (const d of decks) {
@@ -3090,10 +3334,13 @@
       ]);
       renderHistory();
       const renderedCards = new Map([...root.querySelectorAll(".co-project")].map(card => [card.dataset.projectId, card]));
-      activeProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index));
-      shortProjects.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index, "short"));
-      for (const f of finishedShelves)
-        f.recent.forEach((p, index) => projectSorting(renderedCards.get(p.project_id), p, index, f.shelf));
+      const sortBar = (shelf) => (p, index) => {
+        const card = renderedCards.get(p.project_id);
+        if (card) projectSorting(card, p, index, shelf);
+      };
+      activeProjects.forEach(sortBar("active"));
+      shortProjects.forEach(sortBar("short"));
+      for (const f of finishedShelves) f.recent.forEach(sortBar(f.shelf));
       if (!islands.work.hero.children.length)
         islands.work.hero.append(
           node(
@@ -3139,10 +3386,11 @@
           isle.older.append(d);
         }
       }
-      world?.setCount("work", activeProjects.length + " 個");
-      world?.setCount("result", finishedShelves[0].list.length + " 個");
-      world?.setCount("short", shortProjects.length + " 支");
-      world?.setCount("short-result", finishedShelves[1].list.length + " 支");
+      const newly = (id) => (joined.get(id).length ? " · 新 " + joined.get(id).length : "");
+      world?.setCount("work", activeProjects.length + " 個" + newly("work"));
+      world?.setCount("result", finishedShelves[0].list.length + " 個" + newly("result"));
+      world?.setCount("short", shortProjects.length + " 支" + newly("short"));
+      world?.setCount("short-result", finishedShelves[1].list.length + " 支" + newly("short-result"));
       // The residents of each island's projects fly the sky around that island.
       const residents = (list) => list.map(residentOf).filter(Boolean);
       world?.setResidents({
@@ -3389,8 +3637,11 @@
       const rest = node("div", undefined, "cw-rest-grid");
       floor.append(rest);
       const older = node("div", undefined, "cw-older");
-      deck.append(head, sky, bridge, floor, older);
-      islands[spec.id] = { deck, hero, rest, tools, summary, bridge, bridgeCount, bridgeAction, label, floor, older };
+      const joined = node("nav", undefined, "cw-joined");
+      joined.setAttribute("aria-label", spec.title + " · 最新加入");
+      joined.hidden = true;
+      deck.append(head, joined, sky, bridge, floor, older);
+      islands[spec.id] = { deck, hero, rest, tools, summary, bridge, bridgeCount, bridgeAction, label, floor, older, joined };
       zones.set(spec.zone, { section: deck, summary });
     }
     islands.work.tools.append(button("＋ 新增長片", () => projectSource()));
@@ -3534,6 +3785,11 @@
     PIN_LIMIT,
     TODO_COLUMNS,
     todoCategory,
+    foldDuplicates,
+    userTouched,
+    addedStamp,
+    freshest,
+    FRESH_WINDOW_S,
     world: () => world,
   };
   window.RenguinControlRoom = {

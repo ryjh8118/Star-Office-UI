@@ -1217,17 +1217,24 @@ body {
   color: #0f6b61;
   font-weight: 700;
 }
-.co-short-drop {
+/* The pads a carried card can land on, stacked at the right edge. */
+.co-drop-rail {
   position: fixed;
   z-index: 9999;
   right: max(16px, 4vw);
   top: 50%;
   display: grid;
+  gap: 16px;
+  width: min(300px, 40vw);
+  translate: 0 -50%;
+  pointer-events: auto;
+}
+.co-short-drop,
+.co-done-drop {
+  display: grid;
   justify-items: center;
   gap: 4px;
-  width: min(300px, 40vw);
   padding: 26px 18px;
-  translate: 0 -50%;
   border: 3px dashed #7ff0dc;
   border-radius: 22px;
   background: #0f3b36e0;
@@ -1247,42 +1254,76 @@ body {
   color: #fff;
   font-size: 22px;
 }
-.co-short-drop strong {
+.co-short-drop strong,
+.co-done-drop strong {
   font-size: 17px;
 }
-.co-short-drop small {
+.co-short-drop small,
+.co-done-drop small {
   font-size: 13px;
   color: #b9f3e8;
 }
-.co-short-drop.is-copy-target {
+.co-short-drop.is-copy-target,
+.co-done-drop.is-copy-target {
   scale: 1.06;
   border-style: solid;
   background: #16ad9ef0;
   box-shadow: 0 0 0 6px #7ff0dc55, 0 18px 44px #04121099;
 }
-.co-short-drop.is-copy-target small {
+.co-short-drop.is-copy-target small,
+.co-done-drop.is-copy-target small {
   color: #fff;
   font-weight: 700;
+}
+/* 短影音完成 wears the finished island's gold. */
+.co-done-drop {
+  border-color: #ffd27a;
+  background: #3b2d0fe0;
+  color: #fff6de;
+}
+.co-done-drop .co-short-drop-icon {
+  background: #e0a632;
+}
+.co-done-drop small {
+  color: #ffe6ad;
+}
+.co-done-drop.is-copy-target {
+  background: #d69a2af0;
+  box-shadow: 0 0 0 6px #ffd27a55, 0 18px 44px #04121099;
 }
 @keyframes co-short-drop-in {
   from {
     opacity: 0;
-    translate: 24px -50%;
+    translate: 24px 0;
   }
 }
 @media (max-width: 900px) {
-  .co-short-drop {
+  .co-drop-rail {
     right: 50%;
     top: auto;
     bottom: 18px;
     translate: 50% 0;
-    width: min(320px, 86vw);
-    padding: 16px;
+    width: min(340px, 90vw);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 10px;
+  }
+  .co-short-drop,
+  .co-done-drop {
+    padding: 14px 8px;
+  }
+  .co-short-drop strong,
+  .co-done-drop strong {
+    font-size: 14px;
+  }
+  .co-short-drop small,
+  .co-done-drop small {
+    font-size: 11px;
   }
   @keyframes co-short-drop-in {
     from {
       opacity: 0;
-      translate: 50% 24px;
+      translate: 0 24px;
     }
   }
 }
@@ -1970,9 +2011,90 @@ body.co-card-dragging {
   }
 }
 @media (max-width: 900px) {
-  /* The copy pad rides above the recycler instead of covering it. */
-  .co-short-drop {
+  /* The drop pads ride above the recycler instead of covering it. */
+  .co-drop-rail {
     bottom: calc(18px + clamp(88px, 11vw, 124px) + 64px);
+  }
+}
+/* 最新加入: under an island's title, the projects that joined it last. */
+.cw-joined {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px clamp(12px, 2.4vw, 48px) 10px;
+}
+.cw-joined-label {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd27a, #ffb4e6);
+  color: #3a2410;
+  font: 700 13px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 16px #ffd27a80;
+}
+#creator-office .cw-joined-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  max-width: min(360px, 100%);
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid #ffe3a3aa;
+  border-radius: 999px;
+  background: #141a3dd9;
+  color: #fff6de;
+  font: 600 14px/1.25 system-ui, sans-serif;
+  cursor: pointer;
+}
+#creator-office .cw-joined-chip strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#creator-office .cw-joined-chip small {
+  flex: none;
+  color: #ffd79a;
+  font-size: 12px;
+  font-weight: 500;
+}
+#creator-office .cw-joined-chip:hover,
+#creator-office .cw-joined-chip:focus-visible {
+  border-color: #ffd27a;
+  background: #242c66;
+  outline: none;
+  box-shadow: 0 0 0 3px #ffd27a66;
+}
+.co-fresh-badge {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffe7a8, #ffd0ef);
+  color: #5a3312;
+  font: 700 12px/1.3 system-ui, sans-serif;
+}
+.co-project[data-fresh="true"] .co-project-body {
+  box-shadow: 0 0 0 2px #ffd27a, 0 0 22px #ffd27a66;
+}
+.co-project.is-spotlit {
+  animation: co-spotlit 3s ease-out;
+}
+@keyframes co-spotlit {
+  0%,
+  30% {
+    filter: drop-shadow(0 0 26px #ffd27a);
+  }
+  100% {
+    filter: drop-shadow(0 0 0 #ffd27a00);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-project.is-spotlit {
+    animation: none;
+    outline: 3px solid #ffd27a;
   }
 }
 .co-project-sort .co-trash-button {

@@ -51,7 +51,9 @@
       caption: mode === "full" && t > 0.03 && t < 0.3 ? "universe" : t > s.doors[0] && t < s.through[1] - 0.04 && mode !== "reduced" ? "welcome" : "",
     };
   }
-  const api = { DURATION, RECENT_FULL_MS, introMode, frame, SHOTS };
+  // The film waits at the closed airlock until the creator clicks to go in.
+  const GATE = Object.freeze({ full: SHOTS.full.doors[0], quick: SHOTS.quick.doors[0], reduced: 0 });
+  const api = { DURATION, RECENT_FULL_MS, introMode, frame, SHOTS, GATE };
   if (typeof module !== "undefined") module.exports = api;
   if (typeof document === "undefined" || typeof document.createElement !== "function") {
     scope.CreatorStation = api;
@@ -203,6 +205,8 @@
   }
 
   /* ------------------------------------------------------------------ entry */
+  // The channel's own penguin looks out of the station's top window.
+  const CHANNEL_ICON = "/static/renguin-characters/system/channel-icon.png";
   const STATION_SVG = `
 <svg class="so-station-art" viewBox="-500 -350 1000 700" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
   <defs>
@@ -211,6 +215,7 @@
     <linearGradient id="so-panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2d5fb0"/><stop offset="1" stop-color="#173a78"/></linearGradient>
     <radialGradient id="so-warm" cx=".5" cy=".62" r=".7"><stop offset="0" stop-color="#fff3c8"/><stop offset=".45" stop-color="#ffc977"/><stop offset="1" stop-color="#d9793d"/></radialGradient>
     <clipPath id="so-door-clip"><rect x="-72" y="-58" width="144" height="160" rx="12"/></clipPath>
+    <clipPath id="so-channel-clip"><circle cx="0" cy="-162" r="42"/></clipPath>
   </defs>
   <g class="so-art-wings">
     <rect x="-430" y="-18" width="240" height="10" fill="#4a5374"/>
@@ -237,9 +242,9 @@
   <g>
     <rect x="-176" y="-184" width="64" height="48" rx="14" fill="url(#so-warm)"/>
     <rect x="112" y="-184" width="64" height="48" rx="14" fill="url(#so-warm)"/>
-    <rect x="-34" y="-186" width="68" height="52" rx="16" fill="url(#so-warm)"/>
-    <g fill="#2b2140" fill-opacity=".78"><ellipse cx="0" cy="-150" rx="13" ry="16"/><circle cx="0" cy="-170" r="10"/></g>
-    <g fill="#fff" fill-opacity=".9"><ellipse cx="0" cy="-147" rx="7" ry="10"/><path d="M-3-166l3 4 3-4z" fill="#ffb347"/></g>
+    <circle cx="0" cy="-162" r="45" fill="url(#so-warm)" stroke="#1b2038" stroke-width="6"/>
+    <image class="so-art-channel" href="${CHANNEL_ICON}" x="-39" y="-199" width="78" height="71" preserveAspectRatio="xMidYMax meet" clip-path="url(#so-channel-clip)"/>
+    <circle class="so-art-channel-ring" cx="0" cy="-162" r="45" fill="none" stroke="#ffd27a" stroke-width="4"/>
     <path d="M-150-172q12 18 26 0M126-172q12 18 26 0" stroke="#3b7a4a" stroke-width="5" fill="none"/>
   </g>
   <g class="so-art-sign">
@@ -290,6 +295,10 @@
       universe: Object.assign(el("so-intro-caption is-universe", overlay, "p"), { textContent: "RENGUIN · CREATOR UNIVERSE" }),
       welcome: Object.assign(el("so-intro-caption is-welcome", overlay, "p"), { textContent: "STAR OFFICE · 歡迎回來" }),
     };
+    const enter = el("so-intro-enter", overlay, "button");
+    enter.type = "button";
+    enter.textContent = "點擊進入 STAR OFFICE";
+    enter.hidden = true;
     const skip = el("so-intro-skip", overlay, "button");
     skip.type = "button";
     skip.textContent = "跳過 ›";
@@ -318,11 +327,14 @@
     size();
     addEventListener("resize", size);
     const total = DURATION[mode];
+    const gateAt = GATE[mode];
     let start = performance.now(),
       last = start,
       raf = 0,
       done = false,
-      skipTo = null;
+      skipTo = null,
+      entered = false,
+      waiting = false;
     function drawStars(f, dt) {
       const w = canvas.width,
         h = canvas.height,
@@ -357,6 +369,8 @@
     }
     function paint(t, dt) {
       const f = frame(mode, t);
+      // Holding at the door, the stars only drift.
+      if (waiting) f.warp = mode === "reduced" ? 0 : 0.3;
       scene.style.transform = `translate(-50%, -50%) scale(${f.scale.toFixed(4)})`;
       doorL.style.transform = `translateX(${(-f.door * 70).toFixed(2)}px)`;
       doorR.style.transform = `translateX(${(f.door * 70).toFixed(2)}px)`;
@@ -373,6 +387,7 @@
       cancelAnimationFrame(raf);
       removeEventListener("resize", size);
       removeEventListener("keydown", onKey, true);
+      document.removeEventListener("visibilitychange", onHidden);
       overlay.remove();
       document.querySelector(".co-map-header")?.classList.add("so-arrived");
       setTimeout(() => document.querySelector(".co-map-header")?.classList.remove("so-arrived"), 1600);
@@ -383,6 +398,15 @@
       last = now;
       let t = (now - start) / total;
       if (skipTo) t = skipTo.from + (now - skipTo.at) / skipTo.ms;
+      else if (!entered && t >= gateAt) {
+        t = gateAt;
+        if (!waiting) {
+          waiting = true;
+          overlay.classList.add("is-waiting");
+          enter.hidden = false;
+          enter.focus({ preventScroll: true });
+        }
+      }
       if (t >= 1) {
         paint(1, dt);
         finish();
@@ -391,25 +415,50 @@
       paint(t, dt);
       raf = requestAnimationFrame(tick);
     }
-    // Any key or click jumps to the arrival and fades out quickly.
+    // A click, a tap, Enter or Space goes in through the airlock; before the
+    // film reaches the door it simply carries on through without stopping.
+    function goIn() {
+      if (done || entered) return;
+      entered = true;
+      if (waiting) start = performance.now() - gateAt * total;
+      waiting = false;
+      overlay.classList.remove("is-waiting");
+      enter.hidden = true;
+    }
+    // 跳過 and Escape land at once and fade out quickly.
     function skipIntro() {
       if (done || skipTo) return;
+      entered = true;
+      waiting = false;
+      enter.hidden = true;
       const now = performance.now();
       const t = Math.min(1, (now - start) / total);
       const from = Math.max(t, SHOTS[mode].arrive[0]);
       skipTo = { at: now, from, ms: 240 / (1 - from || 1) };
     }
     function onKey(e) {
-      if (["Escape", "Enter", " ", "Spacebar"].includes(e.key)) {
+      if (e.key === "Escape") {
         e.preventDefault();
         skipIntro();
+      } else if (["Enter", " ", "Spacebar"].includes(e.key) && e.target !== skip) {
+        e.preventDefault();
+        goIn();
       }
     }
-    overlay.addEventListener("pointerdown", skipIntro);
+    overlay.addEventListener("pointerdown", (e) => {
+      if (!skip.contains(e.target)) goIn();
+    });
+    enter.addEventListener("click", goIn);
     skip.addEventListener("click", skipIntro);
     addEventListener("keydown", onKey, true);
-    // A tab hidden mid-film lands at once instead of running a film nobody sees.
-    document.addEventListener("visibilitychange", () => document.hidden && finish(), { once: true });
+    // A tab hidden before going in waits at the door instead of running a film
+    // nobody sees; hidden on the way in, it lands at once.
+    function onHidden() {
+      if (!document.hidden) return;
+      if (entered) finish();
+      else start = Math.min(start, performance.now() - gateAt * total);
+    }
+    document.addEventListener("visibilitychange", onHidden);
     skip.focus({ preventScroll: true });
     paint(0, 0);
     raf = requestAnimationFrame(tick);

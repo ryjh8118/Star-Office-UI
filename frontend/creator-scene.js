@@ -88,6 +88,14 @@
     if (state.hash === hash) return;
     state.hash = hash;
     const token = ++state.token;
+    // A walk cut short sets off again from where the member is, not from where
+    // that walk began.
+    if (state.animation?.playState === "running") {
+      const box = el.offsetParent || el.parentElement;
+      const [tx, ty] = getComputedStyle(el).translate.split(" ").map(parseFloat);
+      if (box?.clientWidth && box.clientHeight)
+        state.point = [state.point[0] + ((tx || 0) * 100) / box.clientWidth, state.point[1] + ((ty || 0) * 100) / box.clientHeight];
+    }
     state.animation?.cancel();
     clearTimeout(state.timer);
     const label = el.querySelector(".rsc-label"),
@@ -145,8 +153,17 @@
       [target.point[0], 68],
       target.point,
     ];
+    // The member stays placed where it stood and the walk is a translation from
+    // there, so the compositor draws every step and a busy page never makes it
+    // stutter; arriving moves the placement and drops the translation together.
+    const box = el.offsetParent || el.parentElement;
+    const w = (box?.clientWidth || 0) / 100,
+      h = (box?.clientHeight || 0) / 100;
+    const [x0, y0] = state.point;
+    el.style.left = x0 + "%";
+    el.style.top = y0 + "%";
     state.animation = el.animate(
-      points.map(([x, y]) => ({ left: x + "%", top: y + "%" })),
+      points.map(([x, y]) => ({ translate: `${((x - x0) * w).toFixed(1)}px ${((y - y0) * h).toFixed(1)}px` })),
       { duration: 4600, easing: "linear", fill: "forwards" },
     );
     state.animation.finished.then(arrive).catch(() => {});

@@ -176,6 +176,19 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.copy_short('Original').status_code,400)
         self.client.post('/api/creator/project',json={'project_id':'TEST-1','hidden':True,'confirmed':True})
         self.assertEqual(self.copy_short().status_code,409)
+    def test_a_long_video_dropped_on_short_completed_lands_there_finished(self):
+        self.project['project_type']='VIDEO_PROJECT'
+        self.get()
+        response = self.client.post('/api/creator/project-copy', json={'project_id':'TEST-1','format':'SHORT','done':True})
+        self.assertEqual(response.status_code,200)
+        pid = next(iter(response.json['local_projects']))
+        twin = self.get()['projects'][pid]
+        self.assertEqual(twin['format'],'SHORT')
+        self.assertIs(twin['manual_done']['done'],True)
+        self.assertEqual(twin['history'][-1]['type'],'USER_MANUAL_DONE')
+        self.assertNotIn('manual_done', self.get()['projects']['TEST-1'], 'the long card stays unfinished where it was')
+        for bad in ['yes', 1, None]:
+            self.assertEqual(self.client.post('/api/creator/project-copy', json={'project_id':'TEST-1','format':'SHORT','done':bad}).status_code,400)
     def test_completed_shelf_order_is_kept_apart_from_the_working_order(self):
         self.get()
         self.client.post('/api/creator/project-order',json={'order':['TEST-1']})

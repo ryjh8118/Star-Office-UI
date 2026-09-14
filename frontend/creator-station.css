@@ -544,12 +544,54 @@ html.so-station body.co-home-collapsed .co-map-header[data-zone="home"] {
 .so-intro[data-mode="reduced"] .so-intro-stars {
   opacity: 0.8;
 }
+/* Waiting at the airlock: the channel window glows and the way in is offered. */
+.so-intro-enter {
+  left: 50%;
+  bottom: max(11%, 64px);
+  translate: -50% 0;
+  min-height: 52px;
+  padding: 12px 30px;
+  border: 2px solid #ffd27a;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2a2f6ee6, #151a45e6);
+  color: #ffe7b0;
+  font: 700 clamp(15px, 1.8vw, 20px)/1.2 ArkPixel, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  box-shadow: 0 0 0 6px #ffd27a22, 0 0 32px #ffb45a66;
+  cursor: pointer;
+}
+.so-intro-enter[hidden] {
+  display: none;
+}
+.so-intro-enter:focus-visible {
+  outline: 3px solid #fff3c8;
+  outline-offset: 4px;
+}
+.so-intro.is-waiting .so-intro-enter {
+  animation: so-enter-breathe 2.2s ease-in-out infinite;
+}
+.so-intro.is-waiting .so-art-channel-ring {
+  animation: so-channel-glow 2.2s ease-in-out infinite;
+}
+@keyframes so-enter-breathe {
+  50% {
+    box-shadow: 0 0 0 10px #ffd27a33, 0 0 48px #ffb45a99;
+  }
+}
+@keyframes so-channel-glow {
+  50% {
+    stroke: #fff3c8;
+    stroke-width: 7px;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .so-galaxy.is-live .so-twinkle,
   .so-hull.is-live .so-hull-light,
   .so-hull.is-live .so-thruster::after,
-  html.so-station .co-map-header.so-arrived {
+  html.so-station .co-map-header.so-arrived,
+  .so-intro.is-waiting .so-intro-enter,
+  .so-intro.is-waiting .so-art-channel-ring {
     animation: none;
   }
   .so-intro-caption {
