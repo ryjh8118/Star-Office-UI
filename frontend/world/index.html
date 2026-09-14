@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Renguin World</title>
+    <meta name="description" content="Renguin 頻道歷史的可探索世界：每一支完成的內容，都讓城市長大一點。" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6 58 20 58 44 32 58 6 44 6 20Z' fill='%239fd08a'/%3E%3Cpath d='M32 6 58 20 32 34 6 20Z' fill='%23c7ecb2'/%3E%3Cellipse cx='32' cy='30' rx='8' ry='11' fill='%23343a56'/%3E%3Cellipse cx='32' cy='32' rx='5' ry='7' fill='%23fff6e6'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/static/world/world.css?v={{WORLD_VERSION}}" />
+  </head>
+  <body>
+    <div id="rw-app" class="rw-app" data-status="loading">
+      <header class="rw-top">
+        <a class="rw-back" href="/">← 回到 Star Office</a>
+        <div class="rw-brand">
+          <span class="rw-brand-mark" aria-hidden="true">◆</span>
+          <span>RENGUIN WORLD</span>
+        </div>
+        <div class="rw-top-tools">
+          <span id="rw-source" class="rw-source-badge" hidden></span>
+          <button id="rw-time" class="rw-chip-button" type="button" aria-label="切換時段">時段：自動</button>
+          <button id="rw-refresh" class="rw-chip-button" type="button">重新整理</button>
+        </div>
+      </header>
+      <div id="rw-banner" class="rw-banner" role="status" hidden></div>
+      <main class="rw-layout">
+        <section class="rw-stage-card" aria-label="城市">
+          <div id="rw-stage" class="rw-stage">
+            <div class="rw-loading">
+              <div class="rw-loading-island" aria-hidden="true"></div>
+              <p>正在載入世界…</p>
+            </div>
+          </div>
+          <div class="rw-gossip" aria-live="polite">
+            <button id="rw-gossip-prev" class="rw-gossip-nav" type="button" aria-label="上一句">‹</button>
+            <figure id="rw-gossip" class="rw-gossip-bubble">
+              <blockquote></blockquote>
+              <figcaption></figcaption>
+            </figure>
+            <button id="rw-gossip-next" class="rw-gossip-nav" type="button" aria-label="下一句">›</button>
+          </div>
+          <div id="rw-districts" class="rw-districts" aria-label="街區"></div>
+        </section>
+        <aside id="rw-hud" class="rw-hud" aria-label="世界狀態"></aside>
+      </main>
+      <footer id="rw-footer" class="rw-footer"></footer>
+    </div>
+    <noscript><p class="rw-noscript">Renguin World 需要啟用 JavaScript。</p></noscript>
+    <script src="/static/world/world-scene.js?v={{WORLD_VERSION}}" defer></script>
+    <script src="/static/world/world-app.js?v={{WORLD_VERSION}}" defer></script>
+  </body>
+</html>

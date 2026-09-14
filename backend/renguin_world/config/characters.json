@@ -1,0 +1,127 @@
+{
+  "schema": "RENGUIN_WORLD_CHARACTER_ROLES_V1",
+  "note": "World placement and behaviour only. Appearance, names and canon live in ASSET-01 (general) and ASSET-08 (members). Real-member avatars are matched by profession, never by name, so no member identity is committed here.",
+  "general": {
+    "RENGUIN": {
+      "character_type": "MAIN_CHARACTER",
+      "default_district": "CREATOR_DISTRICT",
+      "asset_ref": "/static/renguin-characters/director/renguin.png",
+      "allowed_states": ["IDLE", "WALKING", "FILMING", "EDITING", "CELEBRATING", "NAPPING"],
+      "allowed_actions": ["wave", "film", "celebrate", "nap"],
+      "dialogue_pool": "RENGUIN",
+      "special_flags": ["SINGLE_INSTANCE", "ALWAYS_VISIBLE"]
+    },
+    "DOLA": {
+      "character_type": "SUPPORTING_CHARACTER",
+      "default_district": "CREATOR_DISTRICT",
+      "asset_ref": "/static/renguin-characters/editor/dola.png",
+      "allowed_states": ["IDLE", "WALKING", "EDITING", "CELEBRATING"],
+      "allowed_actions": ["wave", "carry_drives", "celebrate"],
+      "dialogue_pool": "DOLA",
+      "special_flags": ["ALWAYS_VISIBLE"]
+    },
+    "XUEBAO": {
+      "character_type": "SUPPORTING_CHARACTER",
+      "default_district": "CREATOR_DISTRICT",
+      "asset_ref": "/static/renguin-characters/scanner/xuebao.png",
+      "allowed_states": ["IDLE", "WALKING", "REVIEWING", "CELEBRATING"],
+      "allowed_actions": ["wave", "inspect", "celebrate"],
+      "dialogue_pool": "XUEBAO",
+      "special_flags": ["ALWAYS_VISIBLE"]
+    },
+    "DODO": {
+      "character_type": "SUPPORTING_CHARACTER",
+      "default_district": "MAIN_CITY",
+      "allowed_states": ["IDLE", "WALKING", "NAPPING", "CELEBRATING"],
+      "allowed_actions": ["wave", "nap", "celebrate"],
+      "dialogue_pool": "DODO",
+      "special_flags": ["ALWAYS_VISIBLE"]
+    },
+    "ERIC": {
+      "character_type": "SUPPORTING_CHARACTER",
+      "default_district": "CREATOR_DISTRICT",
+      "asset_ref": "/static/renguin-characters/astra/eric.png",
+      "allowed_states": ["IDLE", "WALKING", "ENGINEERING", "CELEBRATING"],
+      "allowed_actions": ["wave", "fix", "celebrate"],
+      "dialogue_pool": "ERIC",
+      "special_flags": ["ALWAYS_VISIBLE"]
+    }
+  },
+  "defaults": {
+    "BASE_CHARACTER": {
+      "character_type": "SPECIAL_GUEST",
+      "default_district": "MAIN_CITY",
+      "allowed_states": ["IDLE", "WALKING", "CELEBRATING"],
+      "allowed_actions": ["wave", "visit"],
+      "public_visibility": true,
+      "special_flags": ["ROTATING_GUEST"]
+    },
+    "TRANSFORMATION_FORM": {
+      "character_type": "MAIN_CHARACTER",
+      "default_district": "ENTERTAINMENT_DISTRICT",
+      "allowed_states": ["EVENT_ONLY"],
+      "allowed_actions": [],
+      "public_visibility": false,
+      "special_flags": ["TRANSFORMATION_FORM", "EVENT_SKIN_ONLY", "SHARES_SINGLE_INSTANCE_WITH_SOURCE"]
+    },
+    "OFFICE_RESIDENT_ONLY": {
+      "character_type": "SPECIAL_GUEST",
+      "default_district": "MAIN_CITY",
+      "allowed_states": ["IDLE", "WALKING"],
+      "allowed_actions": ["wave"],
+      "public_visibility": false,
+      "special_flags": ["NOT_IN_CHARACTER_BIBLE", "OFFICE_RESIDENT_ASSET"]
+    }
+  },
+  "guest_districts": {
+    "PINK_BEAR": "ENTERTAINMENT_DISTRICT",
+    "XAVIER": "ENTERTAINMENT_DISTRICT",
+    "BINBIN": "ENTERTAINMENT_DISTRICT",
+    "XIAO_V": "ENTERTAINMENT_DISTRICT",
+    "GUO": "TRAVEL_DISTRICT",
+    "GUO_JIN": "TRAVEL_DISTRICT",
+    "ERIC_SENIOR": "MAIN_CITY",
+    "CAMILLA": "MAIN_CITY"
+  },
+  "office_residents": {
+    "manifest": "creator-residents.json",
+    "asset_root": "/static/renguin-characters/residents/",
+    "aliases": {
+      "ares": "ARES", "DEREK": "DEREK", "DODO": "DODO", "eric": "ERIC", "ERIC長輩": "ERIC_SENIOR",
+      "JAMES": "JAMES", "LUDI": "LUDI", "PAM": "PAM", "RICKY": "RICKY", "ULY": "ULY", "YIDA": "YIDA",
+      "丹丹": "DANDAN", "傑西": "JESSE", "卡蜜拉": "CAMILLA", "哆啦": "DOLA", "國哥": "GUO", "小v": "XIAO_V",
+      "小潘": "PINK_BEAR", "彬彬": "BINBIN", "獅子XAIVER": "XAVIER", "郭晉": "GUO_JIN", "雪寶": "XUEBAO", "韓修": "HAN_XIU"
+    },
+    "not_characters": ["LOGO"]
+  },
+  "member_world_npc": {
+    "GOOSE_EGG": { "world_role": "孵蛋所的蛋", "district": "MEMBER_DISTRICT", "min_era": "ERA_01" },
+    "MOTHER_PENGUIN_EGG": { "world_role": "孵蛋所照顧者", "district": "MEMBER_DISTRICT", "min_era": "ERA_02" },
+    "HATCHING_PENGUIN": { "world_role": "孵蛋所新生", "district": "MEMBER_DISTRICT", "min_era": "ERA_02" },
+    "KINDERGARTEN_PENGUIN": { "world_role": "幼兒園小班", "district": "MEMBER_DISTRICT", "min_era": "ERA_03" },
+    "VILLAGER_PENGUIN": { "world_role": "會員區村民", "district": "MEMBER_DISTRICT", "min_era": "ERA_01" },
+    "KNIGHT_PENGUIN": { "world_role": "城門巡守", "district": "MAIN_CITY", "min_era": "ERA_05" },
+    "ARMORED_KNIGHT_PENGUIN": { "world_role": "城門重甲巡守", "district": "MAIN_CITY", "min_era": "ERA_05" },
+    "PENGUIN_PRINCESS": { "world_role": "王城貴賓", "district": "MEMBER_DISTRICT", "min_era": "ERA_05" },
+    "KING_PENGUIN": { "world_role": "會員區城主", "district": "MEMBER_DISTRICT", "min_era": "ERA_05" },
+    "IMPERIAL_PENGUIN": { "world_role": "皇宮貴賓", "district": "MEMBER_DISTRICT", "min_era": "ERA_05" },
+    "EARL_GENTLEMAN_PENGUIN": { "world_role": "紳士俱樂部會長", "district": "ENTERTAINMENT_DISTRICT", "min_era": "ERA_05" },
+    "SUPREME_PENGUIN": { "world_role": "至尊殿堂主人", "district": "VIDEO_HALL", "min_era": "ERA_06" },
+    "CREATOR_PENGUIN": { "world_role": "造物工坊", "district": "CREATOR_DISTRICT", "min_era": "ERA_02" }
+  },
+  "professions": {
+    "NURSE": { "label": "護理師", "match": ["護理師"], "district": "MAIN_CITY", "min_era": "ERA_03", "density_group": "CORE", "day": true, "night": true },
+    "FACTORY_WORKER": { "label": "工廠作業員", "match": ["工廠作業員", "工廠"], "district": "MAIN_CITY", "min_era": "ERA_05", "density_group": "COMMUTER", "day": true, "night": false },
+    "DELIVERY_COURIER": { "label": "外送員", "match": ["外送員", "送貨員", "快遞"], "district": "MAIN_CITY", "min_era": "ERA_04", "density_group": "COMMUTER", "day": true, "night": true },
+    "CONSTRUCTION_ASSISTANT": { "label": "建築工程助理", "match": ["工程助理", "建築工程", "建築助理"], "district": "MAIN_CITY", "min_era": "ERA_01", "density_group": "CORE", "day": true, "night": false },
+    "BAKERY_STAFF": { "label": "烘焙門市", "match": ["烘焙"], "district": "MAIN_CITY", "min_era": "ERA_04", "density_group": "CORE", "day": true, "night": false },
+    "CALL_CENTER": { "label": "電話客服", "match": ["電話客服"], "district": "CREATOR_DISTRICT", "min_era": "ERA_06", "density_group": "COMMUTER", "day": true, "night": false },
+    "HOTEL_STAFF": { "label": "飯店客服", "match": ["酒店客服", "飯店客服"], "district": "TRAVEL_DISTRICT", "min_era": "ERA_03", "density_group": "CORE", "day": true, "night": true }
+  },
+  "generic_civilians": {
+    "VILLAGER": { "label": "村民", "district": "MAIN_CITY", "min_era": "ERA_01", "density_group": "CORE", "day": true, "night": false },
+    "TRAVELER": { "label": "旅人", "district": "TRAVEL_DISTRICT", "min_era": "ERA_02", "density_group": "COMMUTER", "day": true, "night": true },
+    "VENDOR": { "label": "攤販", "district": "MAIN_CITY", "min_era": "ERA_02", "density_group": "NIGHTLIFE", "day": true, "night": true },
+    "FESTIVAL_GOER": { "label": "慶典遊客", "district": "MAIN_CITY", "min_era": "ERA_01", "density_group": "FESTIVAL", "day": true, "night": true }
+  }
+}

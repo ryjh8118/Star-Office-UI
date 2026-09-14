@@ -3488,10 +3488,15 @@
       );
     });
     const shortcuts = node("div", undefined, "co-map-actions");
+    // Renguin World is a page of its own: a plain link, so the Office loads none of it.
+    const worldLink = node("a", "Renguin World", "co-world-link");
+    worldLink.href = "/world";
+    worldLink.title = "打開 Renguin World：完成的內容讓城市長大";
     shortcuts.append(
       button("任務雲", () => focusTodo()),
       button("長片", () => visitIsland("work")),
       button("短影音", () => visitIsland("short")),
+      worldLink,
     );
     if (window.CreatorEnvironment) {
       const envButton = node("button");

@@ -1,0 +1,111 @@
+{
+  "schema": "RENGUIN_WORLD_ERA_REGISTRY_V1",
+  "art_theme_version": "renguin-iso-v1",
+  "levels_per_era": 5,
+  "eras": [
+    {
+      "id": "ERA_01",
+      "name": "遠古營地",
+      "name_en": "Ancient Camp",
+      "variant": "camp",
+      "min_score": 0,
+      "stages": ["遠古空地", "篝火空地", "小型營地", "熱鬧營地", "營地聚會"],
+      "city": { "radius": 2, "buildings_min": 0, "buildings_max": 5, "height": 1, "roads": "trail" },
+      "landmarks": ["CAMPFIRE"],
+      "population_capacity": 6,
+      "features": ["篝火", "帳篷", "第一台攝影機"],
+      "tagline": "一堆篝火、一隻企鵝，和一台剛開機的攝影機。"
+    },
+    {
+      "id": "ERA_02",
+      "name": "部落村莊",
+      "name_en": "Tribal Village",
+      "variant": "tribe",
+      "min_score": 24,
+      "stages": ["部落成形", "茅屋增加", "部落", "部落市集", "部落慶典"],
+      "city": { "radius": 3, "buildings_min": 5, "buildings_max": 9, "height": 1, "roads": "trail" },
+      "landmarks": ["CREATOR_TOTEM"],
+      "population_capacity": 12,
+      "features": ["茅草屋", "創作圖騰", "創作者街區開放"],
+      "tagline": "有人開始定居，圖騰上刻著每一支片的名字。"
+    },
+    {
+      "id": "ERA_03",
+      "name": "河畔聚落",
+      "name_en": "Riverside Settlement",
+      "variant": "riverside",
+      "min_score": 50,
+      "stages": ["河道開通", "碼頭搭建", "聚落", "木橋完工", "河岸熱鬧"],
+      "city": { "radius": 3, "buildings_min": 9, "buildings_max": 13, "height": 1, "roads": "dirt" },
+      "landmarks": ["RIVER_DOCK", "WOODEN_BRIDGE"],
+      "population_capacity": 18,
+      "features": ["河道", "碼頭", "木造屋", "旅行港區開放"],
+      "tagline": "河流帶來旅人，也帶走企鵝去下一個國家。"
+    },
+    {
+      "id": "ERA_04",
+      "name": "繁榮城鎮",
+      "name_en": "Thriving Town",
+      "variant": "town",
+      "min_score": 88,
+      "stages": ["磚造街道", "市集開張", "城鎮", "鐘樓完工", "城鎮繁榮"],
+      "city": { "radius": 4, "buildings_min": 13, "buildings_max": 18, "height": 2, "roads": "cobble" },
+      "landmarks": ["MARKET", "CLOCK_TOWER"],
+      "population_capacity": 26,
+      "features": ["磚造房", "市集", "鐘樓", "影片大廳與鵝寶會員區開放"],
+      "tagline": "鐘樓每整點響一次，提醒大家新片進度。"
+    },
+    {
+      "id": "ERA_05",
+      "name": "王國都市",
+      "name_en": "Kingdom City",
+      "variant": "kingdom",
+      "min_score": 125,
+      "stages": ["城牆奠基", "石造大街", "大型都市雛形", "王城完工", "王國盛典"],
+      "city": { "radius": 5, "buildings_min": 18, "buildings_max": 24, "height": 3, "roads": "stone" },
+      "landmarks": ["CITY_WALL", "CASTLE_KEEP"],
+      "population_capacity": 34,
+      "features": ["城牆", "王城", "石造大街", "娛樂夜市區開放"],
+      "tagline": "城堡升起了旗子，旗子上是一隻企鵝。"
+    },
+    {
+      "id": "ERA_06",
+      "name": "現代都會",
+      "name_en": "Modern Metropolis",
+      "variant": "modern",
+      "min_score": 165,
+      "stages": ["柏油道路", "第一棟大樓", "現代都會", "電視塔完工", "不夜城"],
+      "city": { "radius": 5, "buildings_min": 24, "buildings_max": 30, "height": 4, "roads": "asphalt" },
+      "landmarks": ["TV_TOWER", "VIDEO_HALL_DOME"],
+      "population_capacity": 42,
+      "features": ["玻璃大樓", "柏油路與車流", "電視塔", "影片大廳圓頂"],
+      "tagline": "大樓外牆的螢幕在播上一支片的預告。"
+    },
+    {
+      "id": "ERA_07",
+      "name": "未來新城",
+      "name_en": "Future City",
+      "variant": "future",
+      "min_score": 215,
+      "stages": ["空中花園", "單軌列車", "未來新城", "星港施工", "星港倒數"],
+      "city": { "radius": 6, "buildings_min": 30, "buildings_max": 36, "height": 5, "roads": "glow" },
+      "landmarks": ["MONORAIL", "SKY_GARDEN"],
+      "population_capacity": 50,
+      "features": ["空中花園", "單軌列車", "星港之門施工預告"],
+      "tagline": "單軌列車繞城一圈，剛好是一支短影音的長度。"
+    },
+    {
+      "id": "ERA_08",
+      "name": "星港時代",
+      "name_en": "Star Port Era",
+      "variant": "starport",
+      "min_score": 255,
+      "stages": ["星港之門點亮", "星港試航", "大型 Renguin City", "星際訪客", "星港盛典"],
+      "city": { "radius": 6, "buildings_min": 36, "buildings_max": 40, "height": 5, "roads": "glow" },
+      "landmarks": ["SPACE_GATE"],
+      "population_capacity": 58,
+      "features": ["星港之門", "發射平台", "Space Gate Preview"],
+      "tagline": "星港之門亮了。門的另一邊是什麼，下一百支片再告訴你。"
+    }
+  ]
+}

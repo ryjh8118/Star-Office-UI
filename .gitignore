@@ -58,3 +58,6 @@ frontend/renguin-achievements/
 
 # Selective recovery workspaces quarantine stashed runtime state, keys and covers.
 .recovery-*/
+
+# Renguin World runtime: precomputed state cache, local overrides, popularity snapshot.
+.world-runtime/

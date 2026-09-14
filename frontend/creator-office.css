@@ -939,6 +939,23 @@ body {
 .co-map-actions button {
   min-height: 40px;
 }
+.co-map-header a.co-world-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font:
+    14px system-ui,
+    sans-serif;
+  color: var(--co-cream);
+  text-decoration: none;
+  border: 1px solid #7fa37a;
+  background: #3f5a45;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.co-map-header a.co-world-link:hover {
+  filter: brightness(1.08);
+}
 @media (min-width: 1600px) {
   .co-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

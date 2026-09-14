@@ -1,0 +1,130 @@
+# Renguin World — Character System
+
+## Authorities that already exist (discovered, referenced, never copied)
+
+| Authority | Location | What the world takes |
+| --- | --- | --- |
+| **ASSET-01** Character Bible v1.28 via `GENERAL_CHARACTER_CANON_INDEX.json` (derived lookup index, 37 characters: 24 base, 13 transformation forms) | `Content_OS/10_AI_Editorial_Engine/06_Local_Runner/image_generation/config/` | id, 中文名, entity type, authority version + sha256 of the index |
+| **ASSET-08** Member Character Library v1.0 (`MEMBER_CHARACTER_REGISTRY_V1.json`, manifest sha-checked) | `Character_Bible/Member_Character_Library/` | 13 `MEMBER_WORLD_NPC` (public canon), 7 `REAL_MEMBER_AVATAR` (identity private) |
+| Office resident images (`creator-residents.json`, exact user-provided PNGs) | `frontend/renguin-characters/residents/` | the image a general character already wears in the Office |
+| Office role images (director / editor / scanner / astra) | `frontend/renguin-characters/` | Renguin, 哆啦, 雪寶, Eric |
+| Renguin World member registry (148 members, 7 avatars) | `Renguin_World/01_Data/member_registry.json` | **counts per tier** and avatar mapping status by profession only |
+
+No second Character Bible exists. `backend/renguin_world/config/characters.json`
+holds world placement only (district, allowed states/actions, dialogue pool);
+it has no appearance text. The registry is rebuilt from the authorities on
+demand (at most once a minute) and carries `authority_role:
+DERIVED_VIEW_NOT_AN_AUTHORITY`.
+
+## World Character Registry
+
+```json
+{
+  "character_id": "RENGUIN",
+  "display_name": "企鵝",
+  "character_type": "MAIN_CHARACTER | SUPPORTING_CHARACTER | GOOSEBABY | CIVILIAN | SPECIAL_GUEST",
+  "source_authority": "ASSET-01 | ASSET-08 | STAR_OFFICE_RESIDENT_MANIFEST",
+  "source_ref": { "index_character_id": "RENGUIN", "entity_type": "BASE_CHARACTER", "authority_version": "1.28" },
+  "asset_ref": "/static/renguin-characters/director/renguin.png",
+  "default_district": "CREATOR_DISTRICT",
+  "public_visibility": true,
+  "allowed_states": ["IDLE", "WALKING", "FILMING", "EDITING", "CELEBRATING", "NAPPING"],
+  "allowed_actions": ["wave", "film", "celebrate", "nap"],
+  "dialogue_pool": "RENGUIN",
+  "special_flags": ["SINGLE_INSTANCE", "ALWAYS_VISIBLE"]
+}
+```
+
+| Type | Who (V1) |
+| --- | --- |
+| MAIN_CHARACTER | Renguin (single instance). Transformation forms are listed as `EVENT_SKIN_ONLY`, `SHARES_SINGLE_INSTANCE_WITH_SOURCE`, not public — the Bible allows one Renguin at a time. |
+| SUPPORTING_CHARACTER | 哆啦, 雪寶, DODO, Eric (ASSET-08's own first four plus the Office's ASTRA) |
+| SPECIAL_GUEST | the other base characters with an Office image, rotating daily; residents missing from the Bible (e.g. JOSH) are listed `NOT_IN_CHARACTER_BIBLE` and hidden unless an override shows them |
+| GOOSEBABY | Member Character Library characters (below) |
+| CIVILIAN | profession archetypes (below) |
+
+Rendering rules:
+
+- A character with an authority image is shown as that image, trimmed and scaled
+  (`/api/world/character-thumb`). The world never redraws a canon character.
+- A character whose image may not be shown is a neutral penguin **token** with a
+  鵝寶 tag — clearly a placeholder, not a likeness.
+- Who is on the street: EMPTY_WORLD shows Renguin alone; otherwise the
+  always-visible cast, plus up to `min(6, era+1)` guests and goosebabies whose
+  district is open. States follow the city: CELEBRATING in REVIVAL/FESTIVAL,
+  NAPPING when dormant (if the character allows it).
+
+## Goosebaby Registry
+
+A minimal normalisation — nothing is retyped.
+
+```json
+{
+  "goosebaby_id": "GOOSE_EGG | MEMBER_AVATAR_<12 hex>",
+  "display_name": "鵝蛋 | 護理師鵝寶",
+  "avatar_name": null,
+  "profession": "NURSE",
+  "world_role": "孵蛋所的蛋 | 護理師（具名平民鵝寶）",
+  "district": "MEMBER_DISTRICT",
+  "asset_ref": "/api/world/character-asset/GOOSE_EGG | null",
+  "public_visibility": true,
+  "status": "CANONICAL_MEMBER_CHARACTER | BOUND | CANDIDATE | UNBOUND | UNKNOWN",
+  "member_class": "MEMBER_WORLD_NPC | REAL_MEMBER_AVATAR",
+  "notes": ""
+}
+```
+
+- **MEMBER_WORLD_NPC** (鵝蛋, 母企鵝蛋, 企鵝破蛋, 幼兒園企鵝, 村民企鵝, 騎士企鵝, 騎士盔甲企鵝, 企鵝公主, 國王企鵝, 皇上企鵝, 伯爵紳士企鵝, 至尊企鵝, 造物主企鵝):
+  public canon; readable ids; images served from the library after the profile's
+  sha256 is re-verified; each has a world role and the era it appears from.
+- **REAL_MEMBER_AVATAR** (7): ASSET-08 marks their identity private and its
+  cloud index hides their names. The world follows the same rule: an opaque id
+  derived from the profile hash, a profession title (護理師鵝寶, 外送員鵝寶, …),
+  `avatar_name: null`, no image. Matching to the member registry is by
+  profession, so no member name is read into the world or committed to this repo.
+- **Population**: `{ total, by_tier: {BRONZE, SILVER, GOLD, PLATINUM}, snapshot_at }`
+  from the member registry. It grows the 鵝寶會員區 crowd (up to +12 residents)
+  once the district is open. No member row, name or URL is copied.
+
+## Civilian Registry
+
+Profession archetypes taken from the existing 平民企鵝 (real-member avatar
+professions), plus four world archetypes:
+
+| civilian_id | Label | District | From era | Density group | Day / night |
+| --- | --- | --- | --- | --- | --- |
+| CIVILIAN_NURSE | 護理師 | MAIN_CITY | ERA_03 | CORE | ✓ / ✓ |
+| CIVILIAN_FACTORY_WORKER | 工廠作業員 | MAIN_CITY | ERA_05 | COMMUTER | ✓ / – |
+| CIVILIAN_DELIVERY_COURIER | 外送員 | MAIN_CITY | ERA_04 | COMMUTER | ✓ / ✓ |
+| CIVILIAN_CONSTRUCTION_ASSISTANT | 建築工程助理 | MAIN_CITY | ERA_01 | CORE | ✓ / – |
+| CIVILIAN_BAKERY_STAFF | 烘焙門市 | MAIN_CITY | ERA_04 | CORE | ✓ / – |
+| CIVILIAN_CALL_CENTER | 電話客服 | CREATOR_DISTRICT | ERA_06 | COMMUTER | ✓ / – |
+| CIVILIAN_HOTEL_STAFF | 飯店客服 | TRAVEL_DISTRICT | ERA_03 | CORE | ✓ / ✓ |
+| CIVILIAN_VILLAGER / TRAVELER / VENDOR / FESTIVAL_GOER | 村民 / 旅人 / 攤販 / 慶典遊客 | — | ERA_01–02 | CORE / COMMUTER / NIGHTLIFE / FESTIVAL | — |
+
+Civilians are generic tokens coloured by profession badge — crowd, not
+characters.
+
+## NPC density presets
+
+| Preset | Resident factor | Groups on the street |
+| --- | --- | --- |
+| EMPTY | 0 | — |
+| QUIET | 0.3 | CORE |
+| NORMAL | 0.6 | CORE, COMMUTER |
+| BUSY | 0.85 | + NIGHTLIFE |
+| FESTIVAL | 1.0 | + FESTIVAL |
+
+`visible = round((era population + member bonus) × factor)`, drawn up to 28
+walkers on desktop and 14 on phones. Districts adjust their own crowd from the
+last 30 days of matching content (travel → 旅行港區, nightlife/entertainment →
+娛樂夜市區, fitness → 主城區 GYM hotspot, career → 創作者街區, shorts → 主城區).
+
+## Resident gossip
+
+`config/gossip.json` — prewritten pools only: GENERIC, PROJECT (with a published
+title), ACTIVE, QUIET, DORMANT, DEEP_DORMANT, REVIVAL, FESTIVAL, EMPTY_WORLD,
+ERA, PROFESSION, CHARACTER_SPECIFIC. Twelve lines are picked deterministically
+per day, score and state. No AI call, no network; a test checks the pool has
+no insults and that every emitted line comes from it. Tone: cheeky, never
+shaming — 「新片勒？」「聽說企鵝還活著。」「工地先停工了，放心，鷹架都還在。」

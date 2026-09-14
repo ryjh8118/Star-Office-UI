@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const read = (name) => fs.readFileSync(path.join(__dirname, "../frontend", name), "utf8");
+// Checkouts with core.autocrlf=true carry CRLF; the layout assertions below are written with LF.
+const read = (name) => fs.readFileSync(path.join(__dirname, "../frontend", name), "utf8").replace(/\r\n/g, "\n");
 const office = read("creator-office.js");
 const slice = (from, to) => office.slice(office.indexOf(from), office.indexOf(to, office.indexOf(from) + from.length));
 

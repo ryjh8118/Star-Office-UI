@@ -1,0 +1,34 @@
+{
+  "_note": "Copy to <world runtime>/world-overrides.json (Production: .world-runtime/, Preview: .preview-runtime/.world-runtime/). Local-only; never committed. Every key is optional.",
+  "contents": {
+    "WORKSPACE-EXAMPLE-000000000000": {
+      "content_type": "special",
+      "flagship": true,
+      "tags": ["travel"],
+      "district": "TRAVEL_DISTRICT",
+      "youtube_video_id": "AAAAAAAAAAA",
+      "published_at": "2026-09-01T12:00:00+08:00",
+      "series_slug": "example-series"
+    },
+    "OFFICE-example-to-hide": { "exclude": true }
+  },
+  "extra_contents": [
+    {
+      "project_id": "MANUAL-EXAMPLE-001",
+      "title": "Office 出現之前就上架的影片",
+      "content_type": "long",
+      "status": "PUBLISHED",
+      "published_at": "2024-05-01T20:00:00+08:00",
+      "runtime_seconds": 1500
+    }
+  ],
+  "series": {
+    "example-series": { "complete": true, "title": "範例系列" }
+  },
+  "featured": ["WORKSPACE-EXAMPLE-000000000000"],
+  "characters": {
+    "OFFICE_RESIDENT_RESIDENT_07": { "public_visibility": true },
+    "PINK_BEAR": { "default_district": "MAIN_CITY" }
+  },
+  "era": { "force_era": null, "min_era": null }
+}
