@@ -692,7 +692,8 @@ a:focus-visible,
 }
 .sw-end {
   position: absolute;
-  z-index: 7;
+  /* Controls, not scenery: above the city's light wash (65) and every layer, like the swipe hint. */
+  z-index: 90;
   left: 0;
   right: 0;
   bottom: calc(40 * var(--u));
