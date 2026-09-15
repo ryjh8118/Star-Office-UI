@@ -408,3 +408,25 @@ test("V2 townsfolk: the crowd wears its role, never a character, and closed lots
   const css = read("frontend/world/seamless.css");
   assert.ok(/\.sw-pawn \{[^}]*background: var\(--folk\)/.test(css) && !/\.sw-pawn \{[^}]*border:/.test(css), "the pawn is a painted townsperson, not a grey outline");
 });
+
+test("Camera depth: light, air and near fronds frame the street without covering a resident", () => {
+  const s = grown("kingdom", 0.5);
+  const city = Art.city(s);
+  // Fronds grow only away from every resident spot, on the main street and in each district.
+  const fronds = (svg) => [...svg.matchAll(/class="swp-near[^"]*" d="M([\d.]+) /g)].map((m) => +m[1]);
+  const main = fronds(city.layers.foreground);
+  assert.ok(main.length >= 1, "the main street has near fronds");
+  for (const x of main) assert.ok(Art.GEOMETRY.city.spots.every((sx) => Math.abs(sx - (x + 62)) > 100), `frond at ${x} stands clear of the spots`);
+  for (const d of Districts.paint(s)) for (const x of fronds(d.layers.foreground)) assert.ok((d.spots || []).every((sx) => Math.abs(sx - (x + 62)) > 100), `${d.id} frond at ${x}`);
+  // Farther rows sit in more air; the hero landmark is backlit.
+  const veil = (svg) => [...svg.matchAll(/class="swp-mist"[^>]*height="(\d+)"[^>]*opacity="([\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
+  const [sky] = veil(city.layers.backdrop);
+  const [back] = veil(city.layers.buildings);
+  assert.ok(sky && back && sky[0] > back[0] && sky[1] > back[1], "the skyline is hazier than the set-back row");
+  assert.ok(city.layers.backdrop.includes('class="swp-hero"'), "the main street's landmark is backlit");
+  // The light wash sits between the painted layers and the residents, so official characters stay clean.
+  const css = read("frontend/world/seamless.css");
+  const z = +css.match(/\.sw-city::after,\s*\.sw-island::after \{[^}]*z-index: (\d+)/)[1];
+  const stack = Object.fromEntries(Art.LAYER_STACKS.city.map((l) => [l.name, l.z]));
+  assert.ok(z > stack.foreground && z < stack.residents, `light wash z ${z}`);
+});

@@ -573,6 +573,10 @@
           seed: "d:" + d.id,
         };
         const art = d.status !== "UNLOCKED" ? lot(c) : (PAINT[d.id] || generic)(c);
+        // Camera depth, the same on every stretch: the district's hero is backlit, near fronds frame it between residents.
+        const hero = d.status === "UNLOCKED" && art.hotspots?.[0]?.box;
+        if (hero) art.backdrop = B.heroLight(hero[0] + hero[2] / 2, hero[1] + hero[3] / 2, Math.max(300, hero[2] * 0.75), Math.max(260, hero[3] * 1.2)) + (art.backdrop || "");
+        art.foreground = (art.foreground || "") + B.nearEdge(d.x, d.width, G.ground, G.height, d.spots || [], "d:" + d.id);
         const chunk = (layer) => svg(layer, d.x, d.width, G.height, art[layer]);
         return {
           id: d.id,

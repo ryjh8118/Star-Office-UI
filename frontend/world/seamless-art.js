@@ -238,7 +238,8 @@
 
   // Background sky over the island: high clouds and the sun/moon, all on one slow layer.
   function islandSky() {
-    let s = `<circle class="sw-sun" cx="620" cy="190" r="70"/>`;
+    // The sun stands upper left, where every building's light comes from (contact shadows fall to the right).
+    let s = `<circle class="sw-sun-halo" cx="-700" cy="170" r="130"/><circle class="sw-sun" cx="-700" cy="170" r="70"/>`;
     for (const [x, y, id, sc] of [[-980, 260, "sw-cloud-b", 0.8], [-560, 150, "sw-cloud-c", 1], [-260, 330, "sw-cloud-a", 0.7], [260, 120, "sw-cloud-c", 0.8], [760, 360, "sw-cloud-a", 0.9], [-900, 640, "sw-cloud-a", 1.1], [700, 760, "sw-cloud-b", 1]])
       s += use(id, x, y, sc, ` class="sw-far"`);
     return islandSvg(s);
@@ -327,7 +328,8 @@
     const pal = B.palette(variant, "MAIN_CITY");
     const { flat, box, mix: blend } = B.kit;
     const step = Math.max(0, g - idx * 3);
-    const haze = 0.16;
+    // The hero of the street: less air in front of it than the set-back row, so it reads first.
+    const haze = 0.05;
     const tone = (c) => blend(c, B.HAZE, haze);
     const wall = pal.wall("hall"),
       roof = pal.roof("hall");
@@ -452,7 +454,7 @@
     for (const [x, sc, id] of [[40, 0.9, "sw-tree"], [2740, 0.95, "sw-pine"], [2790, 0.8, "sw-tree"]]) backRow += use(id, x, base - 30, sc);
     const skyline = B.row(MAIN_LOTS.skyline, { ...rowOpts, rowId: "s", count: skyCount, scale: 0.62, lift: 48, haze: 0.32, height: floors + 1, maxFloors: 6 });
     backRow += skyline.svg;
-    if (total) backRow += townHall(idx, g, landmarks, lit, base);
+    if (total) backRow += B.heroLight(1300, base - 330, 520, 430, true) + townHall(idx, g, landmarks, lit, base);
     for (const [x, sc] of [[1105, 0.75], [1495, 0.7]]) backRow += use("swb-cypress", x, base - 30, sc);
     if (skyCount && frontCount >= MAIN_LOTS.front.length && idx >= 3 && visual.construction && visual.construction !== "COMPLETE") backRow += B.crane(2650, base - 30, 0.95);
 
@@ -546,6 +548,7 @@
     for (const x of [250, 1060, 1590, 2380]) fg += use("sw-flowers", x, base + 72, 1.1);
     fg += use("sw-bush", 20, base + 96, 1.5) + use("sw-bush", W - 30, base + 96, 1.6) + use("sw-fence", 2560, base + 70, 1);
     fg += B.frontEdge({ x0: 0, base }, [330, 1180, 1760, 2470], idx >= 3 ? "flowers" : "garden");
+    fg += B.nearEdge(0, W, base, G.height, G.spots, "main");
     // A dormant city grows tall grass (V1's grass_level); nothing is taken away.
     const grass = visual.grass_level || 0;
     if (grass >= 2) for (let k = 0; k < W / 120; k++) fg += use("sw-tuft", 30 + k * 120 + hash(k + "|tallgrass") * 40, base + 66, 1.5 + grass * 0.25);

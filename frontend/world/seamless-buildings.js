@@ -122,6 +122,10 @@
       `<radialGradient id="swb-pool" cy=".6"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".8"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>` +
       `<linearGradient id="swb-neon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bff4ff"/><stop offset="1" stop-color="#7fd6f2"/></linearGradient>` +
       `<linearGradient id="swb-water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cc0cb"/><stop offset="1" stop-color="#5d8fa3"/></linearGradient>` +
+      // Camera depth (see "cinema" below): colours come from the daypart's CSS variables, so one gradient serves day and night.
+      `<linearGradient id="swp-mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--mist);stop-opacity:0"/><stop offset=".6" style="stop-color:var(--mist);stop-opacity:.55"/><stop offset="1" style="stop-color:var(--mist);stop-opacity:.9"/></linearGradient>` +
+      `<radialGradient id="swp-hero"><stop offset="0" style="stop-color:var(--hero);stop-opacity:.9"/><stop offset=".45" style="stop-color:var(--hero);stop-opacity:.36"/><stop offset="1" style="stop-color:var(--hero);stop-opacity:0"/></radialGradient>` +
+      `<linearGradient id="swp-shaft" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" style="stop-color:var(--hero);stop-opacity:.42"/><stop offset="1" style="stop-color:var(--hero);stop-opacity:0"/></linearGradient>` +
       pattern("swb-plank", 40, 16, `<path d="M0 15.5H40" stroke="${INK}" stroke-opacity=".2" stroke-width="1.6"/><path d="M${hash("pk") * 30 + 4} 0V16" stroke="${INK}" stroke-opacity=".12" stroke-width="1.2"/>`) +
       pattern("swb-log", 60, 18, `<path d="M0 17H60" stroke="${INK}" stroke-opacity=".22" stroke-width="2"/><path d="M0 2H60" stroke="#fff" stroke-opacity=".12" stroke-width="2"/>`) +
       pattern("swb-mud", 64, 40, `<ellipse cx="14" cy="10" rx="9" ry="4" fill="${INK}" fill-opacity=".07"/><ellipse cx="44" cy="30" rx="12" ry="5" fill="#fff" fill-opacity=".08"/>`) +
@@ -424,7 +428,49 @@
       s += scale === 1 && !opts.lift ? body : `<g transform="translate(${lot.x} ${base - (opts.lift || 0)}) scale(${scale}) translate(${-lot.x} ${-base})">${body}</g>`;
       shown.push({ id: `${opts.rowId}${i}`, x: lot.x, since: lot.since || 0, lvl: e.lvl, floors: e.floors, width: e.width, kind, parts: e.parts.length });
     }
+    // Set-back rows sit in air: a veil in the sky's own colour settles over their feet, thicker the farther the row.
+    if (shown.length && (opts.haze || 0) > 0) s += mist(Math.min(...shown.map((l) => l.x)) - 80, Math.max(...shown.map((l) => l.x + l.width * scale)) + 100, base - (opts.lift || 0) * 0.4, opts.haze);
     return { svg: s, lots: shown };
+  }
+
+  // ---------- cinema: camera depth that never changes what stands on the street ----------
+  // A mist veil in front of one row: taller and denser with the row's haze.
+  function mist(x0, x1, base, haze) {
+    const h = Math.round(120 + haze * 520);
+    const alpha = Math.round(Math.min(0.7, 0.12 + haze * 1.1) * 100) / 100;
+    return `<rect class="swp-mist" x="${r1(x0)}" y="${r1(base - h)}" width="${r1(x1 - x0)}" height="${h + 8}" rx="60" fill="url(#swp-mist)" opacity="${alpha}"/>`;
+  }
+
+  // Backlight behind a stretch's hero landmark, with an optional shaft of the key light falling onto it from the upper left.
+  function heroLight(cx, cy, rx, ry, shaft = false) {
+    let s = `<ellipse class="swp-hero" cx="${r1(cx)}" cy="${r1(cy)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="url(#swp-hero)"/>`;
+    if (shaft) s += `<polygon class="swp-shaft" points="${pts([[cx - rx * 1.2, cy - ry * 1.7], [cx - rx * 0.7, cy - ry * 1.7], [cx + rx * 0.4, cy + ry], [cx - rx * 0.3, cy + ry]])}" fill="url(#swp-shaft)"/>`;
+    return s;
+  }
+
+  // Near-camera fronds on the fast foreground layer: dark silhouettes rising from the bottom of the frame.
+  // They grow only between residents' spots, and the residents' layer is above them, so no character is ever covered.
+  function nearEdge(x0, w, base, H, spots = [], seed = "near") {
+    const clear = (x) => spots.every((sx) => Math.abs(sx - x) > 160);
+    let s = "";
+    for (let k = 0, x = x0 + 140 + rnd(seed, 0) * 260; x < x0 + w - 100; k++, x += 560 + rnd(seed + "gap", k) * 460) {
+      if (!clear(x)) continue;
+      const top = base + 40 + rnd(seed + "top", k) * 60;
+      const lean = (rnd(seed + "lean", k) - 0.5) * 70;
+      let back = "",
+        front = "";
+      for (let j = 0; j < 5; j++) {
+        const bx = x + (j - 2) * 24,
+          tx = bx + lean + (j - 2) * 40,
+          ty = top + Math.abs(j - 2) * 36;
+        const d = `M${r1(bx - 14)} ${H}Q${r1(bx - 8 + lean * 0.3)} ${r1((ty + H) / 2)} ${r1(tx)} ${r1(ty)}Q${r1(bx + 20 + lean * 0.3)} ${r1((ty + H) / 2 + 24)} ${r1(bx + 16)} ${H}Z`;
+        if (j % 2) back += d;
+        else front += d;
+      }
+      s += `<path class="swp-near" d="${back}"/><path class="swp-near is-front" d="${front}"/>`;
+      if (rnd(seed + "post", k) < 0.35) s += `<rect class="swp-near is-front" x="${r1(x + 96)}" y="${r1(top + 50)}" width="24" height="${r1(H - top - 50)}" rx="8"/>`;
+    }
+    return s;
   }
 
   // ---------- ground: grass verge, road, curb, retaining wall and soil, the same on every stretch ----------
@@ -607,7 +653,7 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -4 54 94" width="54" height="94">${s}</svg>`;
   }
 
-  const api = { ERA, DISTRICT_TINT, HAZE, grade, evolve, palette, defs, house, row, ground, surfaceOf, frontEdge, crane, townsfolk, TONES, kit: { OUT, INK, r1, rnd, shade, mix, pts, poly, flat, rect, box, use, esc, hash } };
+  const api = { ERA, DISTRICT_TINT, HAZE, grade, evolve, palette, defs, house, row, mist, heroLight, nearEdge, ground, surfaceOf, frontEdge, crane, townsfolk, TONES, kit: { OUT, INK, r1, rnd, shade, mix, pts, poly, flat, rect, box, use, esc, hash } };
   root.RenguinSeamlessBuildings = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -52,6 +52,15 @@ button {
   --sea: #fbf8f1;
   --night: 0;
   --night-tint: #141a44;
+  /* Camera depth, one light for the whole world: a warm key from the upper left, air in the sky's own colour,
+     a backlight for each stretch's hero landmark, near-camera silhouettes and the shade that grounds the frame. */
+  --key: #fff3cf;
+  --key-a: 0.22;
+  --mist: #e4eef2;
+  --hero: #fff0c2;
+  --near: #4a6152;
+  --near-front: #36483f;
+  --ground-shade: #2c234038;
 }
 .sw-app[data-daypart="dusk"] {
   --sky-0: #eea487;
@@ -71,6 +80,13 @@ button {
   --sea: #fcefe2;
   --night: 0.12;
   --night-tint: #7a3f52;
+  --key: #ffc98f;
+  --key-a: 0.3;
+  --mist: #f3d6c4;
+  --hero: #ffc98a;
+  --near: #4a3f48;
+  --near-front: #3a3040;
+  --ground-shade: #3a1f3a40;
 }
 .sw-app[data-daypart="night"] {
   --sky-0: #161b46;
@@ -91,6 +107,13 @@ button {
   /* Lighter than the sky alone would need: the city's painted layers dim themselves at night (below). */
   --night: 0.16;
   --night-tint: #141a44;
+  --key: #9fb2ff;
+  --key-a: 0.18;
+  --mist: #3d4a78;
+  --hero: #ffcf7a;
+  --near: #1d2440;
+  --near-front: #151a31;
+  --ground-shade: #0b0f2a66;
 }
 .sw-night {
   position: fixed;
@@ -383,6 +406,10 @@ a:focus-visible,
 }
 .sw-far {
   opacity: 0.85;
+}
+.sw-sun-halo {
+  fill: var(--sun);
+  opacity: 0.22;
 }
 .sw-sun {
   fill: var(--sun);
@@ -703,11 +730,12 @@ a:focus-visible,
   position: absolute;
   left: 50%;
   bottom: calc(-6 * var(--u));
-  width: calc(96 * var(--u));
-  height: calc(16 * var(--u));
+  width: calc(104 * var(--u));
+  height: calc(18 * var(--u));
   translate: -50% 0;
   border-radius: 50%;
-  background: #2c234026;
+  /* A firm grounding shadow: official characters stand on the street, not float over the painting. */
+  background: radial-gradient(closest-side, #2c234059, #2c234000);
 }
 .sw-actor-body {
   display: block;
@@ -722,6 +750,9 @@ a:focus-visible,
   max-width: calc(210 * var(--u));
   object-fit: contain;
   object-position: 50% 100%;
+  /* Official characters stay clean and flat-lit: a thin paper rim lifts them off the rendered, lit environment
+     (the scene's light and air layers stop below the residents' layer). Painted once; the idle motion moves the layer. */
+  filter: drop-shadow(0 0 calc(1.6 * var(--u)) #fffaf0) drop-shadow(0 calc(5 * var(--u)) calc(7 * var(--u)) #2c234033);
   transition: scale 0.18s;
 }
 .sw-actor.is-celebrating .sw-actor-body {
@@ -890,11 +921,52 @@ a:focus-visible,
   height: calc(87 * var(--u));
   translate: -50% -100%;
   background: var(--folk) 50% 100% / contain no-repeat;
+  /* Townsfolk belong to the environment: a step quieter than any official character. */
+  opacity: 0.9;
   pointer-events: none;
   animation: sw-walk var(--dur, 9s) ease-in-out calc(var(--delay, 0) * -1s) infinite alternate;
 }
 .sw-app[data-daypart="night"] .sw-pawn {
-  opacity: 0.9;
+  opacity: 0.8;
+}
+
+/* ---------- Camera depth: light, air and near occlusion (visual only; never covers a resident) ---------- */
+/* One key light for every painted layer of a section: a screen-space wash from the upper left and the shade that
+   grounds the bottom of the frame. Sections make no stacking context, so this sits between the painted layers and the
+   residents (city: foreground 60 < 65 < residents 70; island: buildings 40 < 50 < residents 70). */
+.sw-city::after,
+.sw-island::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 65;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 80% at 0% 0%, color-mix(in srgb, var(--key) calc(var(--key-a) * 100%), transparent), transparent 62%),
+    linear-gradient(to bottom, transparent 70%, var(--ground-shade));
+}
+.sw-island::after {
+  z-index: 50;
+  background: radial-gradient(90% 70% at 10% 8%, color-mix(in srgb, var(--key) calc(var(--key-a) * 100%), transparent), transparent 60%);
+}
+/* Air over the far land: the horizon settles into the sky's colour. */
+.sw-city > [data-layer="distant"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 28%, color-mix(in srgb, var(--mist) 55%, transparent) 52%, color-mix(in srgb, var(--mist) 70%, transparent) 62%, transparent 76%);
+}
+.sw-app[data-daypart="night"] .swp-shaft {
+  opacity: 0;
+}
+.swp-near {
+  fill: var(--near);
+  opacity: 0.78;
+}
+.swp-near.is-front {
+  fill: var(--near-front);
+  opacity: 0.88;
 }
 
 /* Residents' gossip: a paper speech bubble above each open district's signpost, opening towards the district. */
