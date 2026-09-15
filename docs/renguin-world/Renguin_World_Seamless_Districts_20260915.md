@@ -1,6 +1,8 @@
 # Renguin World — Seamless district migration (2026-09-15)
 
-Status: **built and verified in Preview, not merged**. Branch
+Status: **merged into master and live on Production** at `/world/seamless` (release record:
+[Renguin_World_Seamless_Master_20260915.md](Renguin_World_Seamless_Master_20260915.md)).
+Built and first verified in Preview on branch
 `claude/renguin-world-seamless-migration-feddec`. The structure contract
 (`Renguin_World_Architecture.md`, A/B/C) is unchanged; V1 `/world` is unchanged
 and remains the Production default and the rollback. Art stays PROVISIONAL

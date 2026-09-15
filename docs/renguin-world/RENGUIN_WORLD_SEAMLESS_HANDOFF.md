@@ -17,7 +17,7 @@ and the documents it cites, not recalled.
 | `985cd54` | Resolve World residents through character authority; show official profession art |
 | Stable master / Production | `128f1fd` (tag `renguin-world-stable-20260915`), V1 `/world` |
 | Working tree at hand-off | clean |
-| Merge / push / deploy | none. Not allowed before FINAL MASTER GATE |
+| Merge / push / deploy | none at hand-off; done after the FINAL MASTER GATE was approved (see NEXT_SESSION_START_POINT) |
 
 The same four commits also sit on `claude/renguin-world-camera-character-5b0a90`
 (its worktree was clean). That branch is left untouched.
@@ -47,26 +47,31 @@ The same four commits also sit on `claude/renguin-world-camera-character-5b0a90`
 5. Public / Private boundary
 6. Performance
 7. Full regression
-8. FINAL MASTER GATE — stop and wait for approval
+8. FINAL MASTER GATE — approved; merged, verified on Production and pushed
 
 ## NEXT_SESSION_START_POINT
 
-**FINAL MASTER GATE — waiting for the user.** Priorities 1–7 are PASS on this
-branch (see the migration log). Nothing is merged, pushed or deployed. The next
-action is the user's decision; do not start release steps without it.
+**MERGED AND LIVE (2026-09-15).** The FINAL MASTER GATE was approved by the user and
+every release step below has run; the record is
+[Renguin_World_Seamless_Master_20260915.md](Renguin_World_Seamless_Master_20260915.md).
+There is no feature-branch work left: master carries the seamless world,
+Production serves it at `/world/seamless`, and `/world` is still V1.
 
-If the merge is approved, the release steps are (none have been run):
+The one open decision is the user's: whether `/world/seamless` becomes the default
+`/world`. Until then V1 stays the default and the rollback. Art stays PROVISIONAL
+(`RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2.md`).
 
-1. Merge this branch into master non-destructively (fast-forward or reviewed merge;
-   the canonical checkout carries foreign staged files), never reset or force.
-2. On the Production checkout run `scripts/build_world_thumbnails.py` with the four
-   `RENGUIN_*` variables, so profession residents use their private derivatives.
-3. Restart Production with all four `RENGUIN_*` variables and check `native_coverage`.
-4. Production acceptance in a real browser: `world-check.cjs` (V1, still the default
-   `/world`), `world-seamless-check.cjs`, `world-parity-check.cjs --state` on
-   Production's own state, and `world-production-acceptance.cjs`.
-5. Making `/world/seamless` the default `/world` is a separate decision, not part of
-   this gate; V1 stays the rollback until then.
+Release steps as run:
+
+1. Merged into master non-destructively (merge commit built with `commit-tree`,
+   canonical checkout fast-forwarded; its foreign staged files untouched).
+2. `scripts/build_world_thumbnails.py` on the Production checkout with the four
+   `RENGUIN_*` variables (private derivatives are git-ignored and per machine).
+3. Production restarted through the Content OS controller with all four `RENGUIN_*`
+   variables; `native_coverage`, project count and world state reconciled.
+4. Production acceptance in a real browser: `world-check.cjs --live`,
+   `world-seamless-check.cjs`, `world-parity-check.cjs` (simulated and `--state` on
+   Production's own state), `world-production-acceptance.cjs --expect … --declared …`.
 
 ## Environment
 
