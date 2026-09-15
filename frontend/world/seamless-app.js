@@ -196,11 +196,21 @@
     return b;
   }
 
-  // The anonymous crowd: faceless paper pawns (NEUTRAL_PLACEHOLDER), never a likeness.
+  // Townsfolk sprites come from the building kit: generic paper folk in their role's clothes, one data URL per role and tone.
+  const FOLK = new Map();
+  const folk = (role, tone) => {
+    const key = `${role}:${tone}`;
+    if (!FOLK.has(key)) FOLK.set(key, `url("data:image/svg+xml,${encodeURIComponent(window.RenguinSeamlessBuildings.townsfolk(role, tone))}")`);
+    return FOLK.get(key);
+  };
+
+  // The anonymous crowd (NEUTRAL_PLACEHOLDER): style-safe townsfolk, never a likeness. The sprite is the element's own
+  // background, so the walking element paints its box and runs on the compositor.
   function pawn(p, x) {
     const el = node("i", undefined, "sw-pawn");
     el.dataset.resolution = "NEUTRAL_PLACEHOLDER";
-    el.style.cssText = `--x:${x};--y:${p.y};--run:${p.run};--dur:${p.dur}s;--delay:${p.delay}`;
+    el.dataset.role = p.role || "CITIZEN";
+    el.style.cssText = `--x:${x};--y:${p.y};--run:${p.run};--dur:${p.dur}s;--delay:${p.delay};--folk:${folk(p.role || "CITIZEN", p.tone || 0)}`;
     return el;
   }
 

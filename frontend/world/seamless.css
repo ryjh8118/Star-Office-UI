@@ -88,7 +88,8 @@ button {
   --skyline: #56608c;
   --sun: #f4f1dc;
   --sea: #bfc4e0;
-  --night: 0.3;
+  /* Lighter than the sky alone would need: the city's painted layers dim themselves at night (below). */
+  --night: 0.16;
   --night-tint: #141a44;
 }
 .sw-night {
@@ -408,6 +409,48 @@ a:focus-visible,
 }
 .sw-far-house {
   fill: var(--far-house);
+}
+.sw-far-town {
+  fill: var(--skyline);
+  opacity: 0.55;
+}
+.sw-far-light {
+  fill: #ffe39a;
+  opacity: 0;
+}
+/* Light sources of the lit building kit (seamless-buildings.js). Windows read --swb-lit and
+   --swb-halo inside their <use> instance; nothing is set on the root, so each symbol keeps its default. */
+.swb-w.is-warm {
+  --swb-lit: 0.5;
+}
+.sw-app:is([data-daypart="dusk"], [data-daypart="night"]) .swb-w.is-lit {
+  --swb-lit: 1;
+  --swb-halo: 0.55;
+}
+.sw-app[data-daypart="night"] .swb-w.is-lit {
+  --swb-halo: 1;
+}
+.sw-app:is([data-daypart="dusk"], [data-daypart="night"]) .swb-farwin.is-lit {
+  fill: #f7b95a;
+}
+.swb-pool {
+  opacity: 0;
+}
+.sw-app[data-daypart="dusk"] .swb-pool {
+  opacity: 0.5;
+}
+.sw-app[data-daypart="night"] :is(.swb-pool, .sw-far-light) {
+  opacity: 0.95;
+}
+.sw-app[data-daypart="night"] .swb-neon {
+  filter: brightness(1.25);
+}
+/* At night the painted city dims under its own lights; the lights themselves are brightened to match. */
+.sw-app[data-daypart="night"] .sw-city :is([data-layer="distant"], [data-layer="backdrop"], [data-layer="buildings"], [data-layer="street"], [data-layer="foreground"]) {
+  filter: brightness(0.74) saturate(0.85);
+}
+.sw-app[data-daypart="night"] .sw-city :is(.sw-bulb.is-lit, .sw-lantern.is-lit) {
+  filter: brightness(1.35);
 }
 .sw-skyline,
 .sw-skyline rect,
@@ -837,35 +880,21 @@ a:focus-visible,
   animation: sw-fall 3.4s linear var(--delay, 0s) 6 both;
 }
 
-/* The anonymous crowd: faceless paper pawns, smaller than any character, strolling along the street. */
-/* The pawn's own box is its body, so the walking element paints something and can run on the compositor. */
+/* The anonymous crowd: style-safe paper townsfolk, about half a character's height, strolling behind the residents. */
+/* The sprite is the pawn's own background, so the walking element paints something and can run on the compositor. */
 .sw-pawn {
   position: absolute;
   left: calc(var(--x) * var(--u));
   top: calc(var(--y) * var(--u));
-  width: calc(30 * var(--u));
-  height: calc(44 * var(--u));
+  width: calc(50 * var(--u));
+  height: calc(87 * var(--u));
   translate: -50% -100%;
-  border: max(1px, calc(2 * var(--u))) solid #8d8373;
-  border-radius: 45% 45% 18% 18%;
-  background: #e9e0cf;
+  background: var(--folk) 50% 100% / contain no-repeat;
   pointer-events: none;
   animation: sw-walk var(--dur, 9s) ease-in-out calc(var(--delay, 0) * -1s) infinite alternate;
 }
-.sw-pawn::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% - 2 * var(--u));
-  width: calc(24 * var(--u));
-  height: calc(24 * var(--u));
-  translate: -50% 0;
-  border: inherit;
-  border-radius: 50%;
-  background: inherit;
-}
 .sw-app[data-daypart="night"] .sw-pawn {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* Residents' gossip: a paper speech bubble above each open district's signpost, opening towards the district. */

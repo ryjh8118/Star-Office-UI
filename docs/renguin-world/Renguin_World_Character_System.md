@@ -16,7 +16,8 @@ result is recorded as `resolution` on the registry entry and on the street cast:
    every request, and the label is the profession (護理師居民 · 鵝寶居民), never the
    member name.
 3. `NEUTRAL_PLACEHOLDER` — no authority character exists for the role (村民, 旅人,
-   攤販, 慶典遊客 crowd roles). One faceless paper pawn; no face, costume or badge.
+   攤販, 慶典遊客 crowd roles). Since 2026-09-16 a style-safe townsperson (see below);
+   before that one faceless grey paper pawn.
 4. `UNRESOLVED` — an image exists but no authority confirms who it is (Office-only
    residents such as JOSH). Hidden, never guessed.
 
@@ -24,6 +25,24 @@ Crowd roles never copy a character: ASSET-08 forbids duplicating one, so a
 profession role (`CIVILIAN_NURSE`) carries `character_ref` to its single
 profession character and the anonymous walkers stay placeholders. The generic
 badge-coloured penguin sprite is gone.
+
+### Style-safe townsfolk (2026-09-16)
+
+The grey pawns read as placeholders, so the crowd now wears its role. A walker is a
+generic paper townsperson drawn from shapes in `seamless-buildings.js#townsfolk`: round
+head with two dot eyes, a coat in one of six palettes, and the role's clothes —
+straw hat and basket (村民), cap, backpack and stick (旅人), headscarf, apron and tray
+(攤販), party hat and balloon (慶典遊客), or a beanie for a plain citizen. Rules:
+
+- No animal features, no likeness of any character, no names, no member badges; the
+  sprite contains no image and no character reference (unit-tested).
+- Only roles without an authority character walk in the crowd. A profession role still
+  stands as its single profession character and is never repeated as a walker.
+- Townsfolk are about half a character's height and walk behind the residents, so the
+  authority characters stay the main presentation.
+- The engine still decides how many walk (`residents.visible`, render caps); the page
+  picks the role from the engine's `NEUTRAL_PLACEHOLDER` archetypes for that district,
+  then the district's own mix.
 
 `python -m renguin_world residents` prints the report. Real authorities on
 2026-09-15: TOTAL 60 · CANONICAL 37 · PROFESSION 14 (7 characters + 7 role refs) ·

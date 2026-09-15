@@ -80,6 +80,7 @@
   // ---------- who stands where (references only; never a drawn likeness) ----------
   const shown = (c) => c.render_mode === "IMAGE" && (!c.resolution || c.resolution === "CANONICAL_CHARACTER" || c.resolution === "PROFESSION_CHARACTER");
   const Districts = () => root.RenguinSeamlessDistricts || (typeof require === "function" ? require("./seamless-districts.js") : null);
+  const Buildings = () => root.RenguinSeamlessBuildings || (typeof require === "function" ? require("./seamless-buildings.js") : null);
 
   // The island holds up to three Star Office crew. Everyone else stands in the district the
   // engine placed them in when that district is open on the street, otherwise on the main street.
@@ -163,86 +164,9 @@
       `<path d="M-13-136H13L9-164H-9Z" class="sw-lamp-glass" stroke="${OUT}" stroke-opacity=".5" stroke-width="1.5"/><path d="M-15-164H15L0-178Z" fill="#4e4763"/></symbol>` +
       `<symbol id="sw-fence" overflow="visible"><path d="M0-34V2M60-34V2M120-34V2" stroke="#a98458" stroke-width="7" stroke-linecap="round"/><path d="M-6-24H126M-6-10H126" stroke="#c29c6b" stroke-width="6" stroke-linecap="round"/></symbol>` +
       `<symbol id="sw-bench" overflow="visible"><rect x="-40" y="-26" width="80" height="9" rx="3" fill="#b98a5a" stroke="${OUT}" stroke-opacity=".35"/><rect x="-40" y="-44" width="80" height="8" rx="3" fill="#c79a68" stroke="${OUT}" stroke-opacity=".35"/><path d="M-32-17V0M32-17V0M-34-36V-26M34-36V-26" stroke="#6f5646" stroke-width="5"/></symbol>` +
+      Buildings().defs() +
       `</defs></svg>`
     );
-  }
-
-  // ---------- era buildings, side view with a narrow 2.5D return ----------
-  function facade(kind, st, x, base, w, floors, seed, lit, opts = {}) {
-    const FH = 88,
-      dep = 16;
-    let s = `<g class="sw-house" data-kind="${kind}">`;
-    s += `<ellipse cx="${r1(x + w / 2)}" cy="${base + 5}" rx="${r1(w * 0.6)}" ry="11" fill="#2c2340" opacity=".1"/>`;
-    const win = (wx, wy, ww = 38, wh = 46) =>
-      rect(wx, wy, ww, wh, lit && hash(seed + wx + wy) < 0.8 ? "#ffe39a" : "#a9bfd0", ` rx="4" class="sw-win${lit ? " is-lit" : ""}"`) +
-      `<path d="M${r1(wx + ww / 2)} ${r1(wy + 2)}V${r1(wy + wh - 2)}M${r1(wx + 2)} ${r1(wy + wh / 2)}H${r1(wx + ww - 2)}" stroke="${shade(st.wall, -0.45)}" stroke-width="3" opacity=".7"/>` +
-      rect(wx - 4, wy + wh, ww + 8, 8, shade(st.trim, -0.1), ` rx="2"`);
-    if (kind === "tent") {
-      const cx = x + w / 2,
-        h = 150;
-      s += poly([[x + 6, base], [cx, base - h], [x + w - 6, base]], st.roof);
-      for (let k = 1; k < 4; k++) s += `<path d="M${r1(cx)} ${base - h}L${r1(x + 6 + ((w - 12) * k) / 4)} ${base}" stroke="${st.trim}" stroke-width="5" opacity=".75"/>`;
-      s += `<path d="M${r1(cx - 22)} ${base}L${r1(cx)} ${base - 64}L${r1(cx + 22)} ${base}Z" fill="#6b4a3a"/><path d="M${r1(cx)} ${base - h}V${base - h - 26}" stroke="#8a5a36" stroke-width="4"/><path d="M${r1(cx)} ${base - h - 26}l20 7-20 7Z" fill="${st.trim}"/>`;
-      return s + "</g>";
-    }
-    const wallH = kind === "hut" ? 78 : floors * FH + 26;
-    const top = base - wallH;
-    s += poly([[x + w, top], [x + w + dep, top - dep * 0.6], [x + w + dep, base - dep * 0.6], [x + w, base]], shade(st.wall, -0.24));
-    s += rect(x, top, w, wallH, st.wall);
-    if (kind === "hut" || kind === "cabin") for (let y = top + 14; y < base; y += 16) s += `<path d="M${x + 2} ${y}H${x + w - 2}" stroke="${shade(st.wall, -0.3)}" stroke-width="1.5" opacity=".45"/>`;
-    if (kind === "house") for (let k = 0; k < 10; k++) s += `<rect x="${r1(x + 10 + hash(seed + "b" + k) * (w - 34))}" y="${r1(top + 12 + hash(seed + "by" + k) * (wallH - 30))}" width="20" height="9" rx="1.5" fill="${shade(st.wall, -0.14)}" opacity=".75"/>`;
-    if (kind === "manor") for (let y = top + 22; y < base; y += 22) s += `<path d="M${x + 2} ${y}H${x + w - 2}" stroke="${shade(st.wall, -0.18)}" stroke-width="1.5"/>`;
-    if (kind === "tower" || kind === "spire") for (let y = top + 18; y < base - 20; y += FH) s += rect(x + 6, y, w - 12, 10, st.trim, ` opacity=".5"`);
-    // Windows per floor; the ground floor keeps room for the door.
-    const cols = Math.max(1, Math.floor((w - 30) / 72));
-    for (let f = kind === "hut" ? 1 : 0; f < (kind === "hut" ? 1 : floors); f++) {
-      const wy = base - (f + 1) * FH + 12;
-      for (let c = 0; c < cols; c++) {
-        const wx = x + 18 + ((w - 36 - 38) * (cols === 1 ? 0.5 : c / (cols - 1)));
-        if (f === 0 && Math.abs(wx + 19 - (x + w * 0.5)) < 44) continue;
-        s += win(wx, wy);
-      }
-    }
-    const dx = x + w * 0.5 - 26;
-    s += `<path d="M${r1(dx)} ${base}V${base - 58}A26 26 0 0 1 ${r1(dx + 52)} ${base - 58}V${base}Z" fill="${shade(st.roof, -0.35)}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/><circle cx="${r1(dx + 40)}" cy="${base - 36}" r="3.5" fill="#f2c46b"/>`;
-    s += rect(dx - 8, base - 4, 68, 6, shade(st.trim, -0.2));
-    if (opts.shop) {
-      const ax = dx - 34,
-        aw = 120;
-      let stripes = "";
-      for (let k = 0; k < 6; k++) stripes += `<path d="M${r1(ax + (aw * k) / 6)} ${base - 104}h${r1(aw / 6)}l-4 26h${r1(-aw / 6)}Z" fill="${k % 2 ? "#fff4e0" : opts.shop}"/>`;
-      s += `<g class="sw-awning">${stripes}<path d="M${ax} ${base - 104}H${ax + aw}" stroke="${OUT}" stroke-opacity=".45" stroke-width="2"/></g>`;
-      s += `<circle cx="${r1(x + w - 22)}" cy="${base - 118}" r="16" fill="#fff8ea" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/>` + (opts.icon || "");
-    }
-    // Roofs carry the era.
-    if (kind === "hut") {
-      s += `<path d="M${x - 16} ${top + 6}Q${r1(x + w / 2)} ${top - 118} ${x + w + 16 + dep} ${top + 6}Z" fill="${st.roof}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/>`;
-      for (let k = 0; k < 9; k++) s += `<path d="M${r1(x - 6 + ((w + 30) * k) / 8)} ${top + 4}l${r1((w / 2 - ((w + 30) * k) / 8) * 0.25)} -24" stroke="${shade(st.roof, -0.25)}" stroke-width="2"/>`;
-    } else if (kind === "cabin" || kind === "house") {
-      const rh = Math.min(120, w * 0.44);
-      const L = [x - 16, top + 4],
-        P = [x + w / 2, top - rh],
-        R = [x + w + 16, top + 4];
-      s += poly([P, [P[0] + dep, P[1] - dep * 0.6], [R[0] + dep, R[1] - dep * 0.6], R], shade(st.roof, -0.28));
-      s += poly([L, P, R], st.roof);
-      for (let row = 1; row < 4; row++) {
-        const y = P[1] + (rh * row) / 4,
-          half = ((w / 2 + 16) * row) / 4;
-        s += `<path d="M${r1(P[0] - half)} ${r1(y)}H${r1(P[0] + half)}" stroke="${shade(st.roof, -0.22)}" stroke-width="2.5" stroke-dasharray="14 5" opacity=".8"/>`;
-      }
-      s += rect(x + w * 0.72, top - rh * 0.62, 22, rh * 0.5, shade(st.wall, -0.15));
-      if (kind === "cabin") s += `<circle cx="${r1(P[0])}" cy="${r1(P[1] + rh * 0.55)}" r="13" fill="${lit ? "#ffe39a" : "#a9bfd0"}" stroke="${shade(st.wall, -0.45)}" stroke-width="3"/>`;
-    } else if (kind === "manor") {
-      const rh = 70;
-      s += poly([[x - 10, top + 4], [x + 26, top - rh], [x + w - 26, top - rh], [x + w + 10, top + 4]], st.roof);
-      s += poly([[x + w - 26, top - rh], [x + w - 26 + dep, top - rh - 9], [x + w + 10 + dep, top - 5], [x + w + 10, top + 4]], shade(st.roof, -0.28));
-      if (hash(seed + "turret") < 0.6) s += rect(x + w - 58, top - rh - 54, 36, 58, st.wall) + poly([[x + w - 64, top - rh - 54], [x + w - 40, top - rh - 104], [x + w - 16, top - rh - 54]], st.roof);
-    } else if (kind === "tower") {
-      s += rect(x - 6, top - 14, w + 12 + dep, 16, shade(st.roof, -0.1)) + rect(x + w * 0.3, top - 44, w * 0.3, 30, st.roof) + `<path d="M${r1(x + w * 0.45)} ${top - 44}V${top - 84}" stroke="${OUT}" stroke-width="2.5"/><circle cx="${r1(x + w * 0.45)}" cy="${top - 88}" r="5" fill="#ff7b7b" class="sw-beacon"/>`;
-    } else {
-      s += `<path d="M${x - 8} ${top + 2}A${r1(w / 2 + 8)} ${r1(w * 0.36)} 0 0 1 ${x + w + 8} ${top + 2}Z" fill="${st.roof}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/>` + `<path d="M${r1(x + w / 2)} ${r1(top - w * 0.36)}V${r1(top - w * 0.36 - 50)}" stroke="${OUT}" stroke-width="2.5"/><circle cx="${r1(x + w / 2)}" cy="${r1(top - w * 0.36 - 54)}" r="6" fill="${st.trim}" class="sw-beacon"/>`;
-    }
-    return s + "</g>";
   }
 
   const islandSvg = (body) => `<svg class="sw-art" viewBox="-1100 0 2200 1000" width="2200" height="1000" aria-hidden="true" focusable="false">${body}</svg>`;
@@ -368,6 +292,107 @@
     return `<svg class="sw-art ${cls}" viewBox="0 0 ${Math.max(W, total)} ${H}" width="${Math.max(W, total)}" height="${H}" aria-hidden="true" focusable="false">${s}</svg>`;
   }
 
+  // Main-street lots. `order` is the order the engine's building count fills them; `since` is the grade a
+  // lot can first stand at, and how far the world has grown past it is how far that building has upgraded.
+  // Lots sit a few units apart, so a grown street reads as blocks; the plaza keeps its opening to the landmark.
+  const MAIN_LOTS = {
+    front: [
+      { x: 478, w: 205, since: 0, order: 0, shop: "#e07d4f", sign: 0 },
+      { x: 2205, w: 200, since: 0, order: 1, shop: "#6fae9a", sign: 1 },
+      { x: 697, w: 170, since: 1, order: 2, floors: -1 },
+      { x: 2418, w: 175, since: 2, order: 3, shop: "#e3a93d", sign: 2, floors: -1 },
+      { x: 880, w: 128, since: 3, order: 4, floors: -1 },
+      { x: 2606, w: 190, since: 4, order: 5 },
+    ],
+    back: [
+      { x: 590, w: 180, since: 1, order: 0 },
+      { x: 2135, w: 165, since: 1, order: 1 },
+      { x: 775, w: 200, since: 2, order: 2 },
+      { x: 2325, w: 190, since: 2, order: 3 },
+      { x: 1560, w: 210, since: 3, order: 4 },
+      { x: 950, w: 150, since: 4, order: 5 },
+      { x: 2520, w: 190, since: 4, order: 6 },
+      { x: 1765, w: 170, since: 5, order: 7 },
+      { x: 2700, w: 150, since: 6, order: 8 },
+    ],
+    skyline: [180, 345, 505, 670, 830, 985, 1575, 1735, 1895, 2055, 2215, 2375, 2535, 2690].map((x, i) => ({ x, w: 150 + Math.round(hash(i + "|skyw") * 50), since: [0, 1, 0, 2, 3, 1, 2, 0, 4, 3, 1, 5, 6, 2][i], order: i, floors: i % 3 === 1 ? 1 : 0 })),
+  };
+  const MAIN_LAMPS = [130, 700, 1100, 1560, 2060, 2600];
+
+  // The main street's landmark behind the plaza: one building per era, rebuilt grander each time,
+  // with wings and banners added as the era progresses.
+  function townHall(idx, g, landmarks, lit, base) {
+    const B = Buildings();
+    const variant = VARIANTS[idx];
+    const pal = B.palette(variant, "MAIN_CITY");
+    const { flat, box, mix: blend } = B.kit;
+    const step = Math.max(0, g - idx * 3);
+    const haze = 0.16;
+    const tone = (c) => blend(c, B.HAZE, haze);
+    const wall = pal.wall("hall"),
+      roof = pal.roof("hall");
+    const H = (o) => B.house({ base, lit, trim: pal.trim, stone: pal.stone, mat: pal.mat, wall, roof, haze, lvl: 0, parts: [], ...o });
+    const cx = 1300;
+    // A square tower with a lit face, a shaded return and a cap.
+    const tower = (x, w, h, cap, face = wall) => {
+      const top = base - h;
+      let s = flat([[x + w, top], [x + w + 16, top - 9], [x + w + 16, base - 9], [x + w, base]], tone(shade(face, -0.32)), ` stroke="${OUT}" stroke-opacity=".36" stroke-width="1.5"`);
+      s += rect(x, top, w, h, tone(face)) + box(x, top, w, h, `url(#swb-${pal.mat === "panel" || pal.mat === "glass" ? "panel" : pal.mat === "plank" ? "log" : "stone"})`) + box(x, top, w, h, "url(#swb-lightwall)") + box(x, base - 60, w, 60, "url(#swb-ao)");
+      if (cap === "spire") s += poly([[x - 10, top + 2], [x + w / 2, top - w * 1.2], [x + w + 10, top + 2]], tone(roof)) + flat([[x + w / 2, top - w * 1.2], [x + w + 10, top + 2], [x + w / 2, top + 2]], "#2c2340", ` opacity=".16"`) + flat([[x - 10, top + 2], [x + w / 2, top - w * 1.2], [x + w / 2, top + 2]], "url(#swb-sheen)");
+      else if (cap === "cone") s += poly([[x - 14, top + 4], [x + w / 2, top - w * 0.95], [x + w + 14, top + 4]], tone(roof)) + flat([[x + w / 2, top - w * 0.95], [x + w + 14, top + 4], [x + w / 2, top + 4]], "#2c2340", ` opacity=".16"`);
+      else if (cap === "crenel") for (let k = 0; k < Math.floor(w / 22); k++) s += rect(x + k * 22 + 2, top - 18, 14, 18, tone(face));
+      else s += rect(x - 6, top - 12, w + 12, 12, tone(pal.trim));
+      return s;
+    };
+    const banner = (x, y, color) => `<path d="M${x} ${y}h26v54l-13-10-13 10Z" fill="${tone(color)}" stroke="${OUT}" stroke-opacity=".4"/><path d="M${x + 13} ${y + 14}l4 8h-8Z" fill="#fff4d6"/>`;
+    let s = `<g class="sw-landmark" data-era="${variant}" data-step="${step}" transform="translate(${cx} ${base - 34}) scale(.82) translate(${-cx} ${-base})">`;
+    if (idx === 0) {
+      if (step >= 1) s += H({ kind: "tent", x: cx - 300, w: 150, lvl: 1, roof: "#6fae9a" }) + H({ kind: "tent", x: cx + 150, w: 150, lvl: 1, roof: "#e8a05a" });
+      s += H({ kind: "tent", x: cx - 150, w: 300, lvl: 4 + step, parts: step >= 2 ? ["flowers", "sign"] : ["flowers"] });
+    } else if (idx === 1) {
+      for (const tx of [cx - 230, cx + 206]) s += `<g class="sw-totem-pole">${[0, 1, 2, 3].map((k) => rect(tx, base - 60 - k * 56, 26, 56, tone(["#c98a55", "#e6bb5e", "#8a5a36", "#6fae9a"][k]))).join("")}${poly([[tx - 28, base - 238], [tx + 13, base - 262], [tx + 54, base - 238]], tone("#e07d4f"))}</g>`;
+      if (step >= 1) s += H({ kind: "hut", x: cx - 330, w: 120, lvl: 1 }) + H({ kind: "hut", x: cx + 230, w: 120, lvl: 1 });
+      s += H({ kind: "hut", x: cx - 150, w: 290, lvl: 4 + step, parts: ["flowers", "sign"] });
+    } else if (idx === 2) {
+      s += tower(cx - 34, 68, 400, "spire") + `<path d="M${cx - 16} ${base - 330}v-34a16 16 0 0 1 32 0v34Z" fill="#3d3244"/><path d="M${cx - 10} ${base - 336}q10-22 20 0Z" fill="#f2c46b"/>`;
+      if (step >= 1) s += H({ kind: "cabin", x: cx - 330, w: 150, floors: 1, lvl: 2, parts: ["flowers", "chimney"] }) + H({ kind: "cabin", x: cx + 190, w: 150, floors: 1, lvl: 2, parts: ["flowers"] });
+      s += H({ kind: "cabin", x: cx - 165, w: 330, floors: 2, lvl: 5 + step, parts: ["flowers", "chimney", "dormer"] });
+      if (step >= 2) s += banner(cx - 150, base - 176, "#e07d4f") + banner(cx + 124, base - 176, "#6fae9a");
+    } else if (idx === 3) {
+      s += H({ kind: "house", x: cx - 330, w: 200, floors: 2, lvl: 5, parts: ["flowers", "chimney", "dormer", "balcony"] }) + H({ kind: "house", x: cx + 130, w: 200, floors: 2, lvl: 5, parts: ["flowers", "balcony", "dormer"] });
+      s += tower(cx - 70, 140, 470, "spire");
+      s += `<circle cx="${cx}" cy="${base - 400}" r="40" fill="#fff8e8" stroke="${OUT}" stroke-opacity=".5" stroke-width="3"/><circle cx="${cx}" cy="${base - 400}" r="44" fill="none" stroke="${tone(pal.trim)}" stroke-width="6"/><path d="M${cx} ${base - 400}V${base - 428}M${cx} ${base - 400}H${cx + 20}" stroke="${OUT}" stroke-width="4" stroke-linecap="round"/>`;
+      for (const k of [0, 1]) s += `<use href="#swb-win-arch" x="${cx - 44 + k * 54}" y="${base - 310}" color="${pal.trim}" class="swb-w${lit ? " is-lit" : ""}"/>`;
+      s += `<path d="M${cx - 52} ${base}V${base - 110}A52 52 0 0 1 ${cx + 52} ${base - 110}V${base}Z" fill="${tone(pal.trim)}" stroke="${OUT}" stroke-opacity=".4"/><path d="M${cx - 38} ${base}V${base - 104}A38 38 0 0 1 ${cx + 38} ${base - 104}V${base}Z" fill="#3d3244"/>`;
+      if (step >= 1) s += banner(cx - 110, base - 250, "#bb4d42") + banner(cx + 84, base - 250, "#5b6f8f");
+      if (step >= 2) s += `<path d="M${cx - 330} ${base - 196}Q${cx - 170} ${base - 150} ${cx - 70} ${base - 220}M${cx + 70} ${base - 220}Q${cx + 170} ${base - 150} ${cx + 330} ${base - 196}" stroke="${OUT}" stroke-opacity=".4" stroke-width="2" fill="none"/>`;
+    } else if (idx === 4) {
+      s += tower(cx - 330, 96, 400, "cone") + tower(cx + 234, 96, 400, "cone");
+      s += rect(cx - 240, base - 250, 480, 250, tone(wall)) + box(cx - 240, base - 250, 480, 250, "url(#swb-stone)") + box(cx - 240, base - 80, 480, 80, "url(#swb-ao)");
+      for (let k = 0; k < 20; k++) s += rect(cx - 240 + k * 24 + 3, base - 268, 16, 18, tone(wall));
+      s += H({ kind: "manor", x: cx - 140, w: 280, floors: 3, lvl: 8, parts: ["flowers", "chimney", "balcony", "turret"] });
+      for (const bx of [cx - 318, cx + 246]) s += use("swb-flag", bx + 48, base - 480, 1.2, ` color="${tone("#e05a4f")}"`);
+      if (step >= 1) s += banner(cx - 220, base - 230, "#5d72a6") + banner(cx + 194, base - 230, "#5d72a6");
+      if (step >= 2) s += banner(cx - 170, base - 230, "#f2c14e") + banner(cx + 144, base - 230, "#f2c14e");
+    } else if (idx === 5) {
+      // The TV tower and a glass city hall.
+      const tx = cx + 230;
+      s += `<g class="sw-tv-tower"><path d="M${tx - 50} ${base}L${tx - 8} ${base - 560}H${tx + 8}L${tx + 50} ${base}Z" fill="${tone("#d6dde4")}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/><path d="M${tx} ${base - 560}L${tx + 8} ${base - 560}L${tx + 50} ${base}H${tx}Z" fill="#2c2340" opacity=".14"/>`;
+      s += `<ellipse cx="${tx}" cy="${base - 470}" rx="66" ry="26" fill="${tone("#a5bacb")}" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><path d="M${tx - 60} ${base - 470}H${tx + 60}" stroke="url(#swb-neon)" stroke-width="6" class="swb-neon"/><path d="M${tx} ${base - 560}V${base - 660}" stroke="${OUT}" stroke-width="3"/><circle cx="${tx}" cy="${base - 664}" r="7" fill="#ff7b7b" class="sw-beacon"/></g>`;
+      s += H({ kind: "tower", x: cx - 130, w: 230, floors: 5, lvl: 6, parts: ["sign", "roofgarden"] });
+      if (step >= 1) s += H({ kind: "tower", x: cx - 300, w: 150, floors: 3, lvl: 3, parts: ["sign"] });
+      if (step >= 2) s += `<path d="M${cx - 150} ${base - 380}H${tx - 40}" stroke="url(#swb-neon)" stroke-width="8" class="swb-neon"/>`;
+    } else {
+      // The sky spire and its floating garden ring; the starport adds a glowing dock ring.
+      s += H({ kind: "spire", x: cx - 300, w: 120, floors: 4, lvl: 3 }) + H({ kind: "spire", x: cx + 190, w: 120, floors: 4, lvl: 3 });
+      s += H({ kind: "spire", x: cx - 95, w: 190, floors: 6, lvl: 8, parts: ["turret"] });
+      s += `<ellipse cx="${cx}" cy="${base - 660}" rx="240" ry="34" fill="none" stroke="${tone("#9fe6f2")}" stroke-width="10" class="swb-neon"/>`;
+      if (step >= 1 || landmarks.has("SKY_GARDEN")) for (let k = 0; k < 7; k++) s += `<ellipse cx="${cx - 210 + k * 70}" cy="${base - 676 + Math.abs(3 - k) * 6}" rx="26" ry="18" fill="${tone(k % 2 ? "#7fab6e" : "#5f8a5d")}"/>`;
+      if (idx === 7) s += `<circle cx="${cx}" cy="${base - 820}" r="70" fill="none" stroke="url(#swb-neon)" stroke-width="12" class="swb-neon"/><circle cx="${cx}" cy="${base - 820}" r="52" fill="#1f2758" opacity=".85"/>`;
+    }
+    return s + `</g>`;
+  }
+
   function city(state, streetWidth = GEOMETRY.city.width) {
     const idx = eraIndex(state);
     const variant = VARIANTS[idx];
@@ -382,10 +407,13 @@
     const W = G.width;
     const floors = Math.max(1, Math.min(4, visual.building_height || 1));
     const total = Math.max(0, visual.buildings || 0);
-    const front = [[470, 250], [760, 230], [2090, 250], [2380, 240]];
-    const back = [[40, 190], [1010, 170], [1560, 180], [1870, 170], [2250, 160], [2600, 180], [640, 150], [2440, 150]];
-    const frontCount = Math.min(front.length, Math.ceil(total / 3));
-    const backCount = Math.min(back.length, Math.max(0, total - frontCount));
+    const B = Buildings();
+    const g = B.grade(state);
+    // The engine's building count fills the lots in order; the grade decides how grand each one has become.
+    const frontCount = Math.min(MAIN_LOTS.front.length, Math.ceil(total / 2));
+    const backCount = Math.min(MAIN_LOTS.back.length, Math.max(0, total - 2));
+    const skyCount = total ? Math.min(MAIN_LOTS.skyline.length, total + 2) : 0;
+    const rowOpts = { base, g, variant, district: "MAIN_CITY", lit, shops, height: floors };
     const svg = (cls, body) => `<svg class="sw-art ${cls}" viewBox="0 0 ${W} ${G.height}" width="${W}" height="${G.height}" aria-hidden="true" focusable="false">${body}</svg>`;
 
     // Sky: clouds and kites, the slowest layer.
@@ -407,19 +435,26 @@
         h = 18 + hash("farhh" + k) * 16;
       bg += `<path class="sw-far-house" d="M${r1(x)} ${r1(y + h)}V${r1(y)}L${r1(x + w / 2)} ${r1(y - w * 0.45)}L${r1(x + w)} ${r1(y)}V${r1(y + h)}Z"/>`;
     }
+    // A far town on the hills that thickens as the world grows: roofs, then towers.
+    for (let k = 0, x = 0; k < Math.min(60, 12 + g * 3) && x < W; k++) {
+      x += 30 + hash(k + "|fartown") * 70;
+      const y = 574 + hash(k + "|fartowny") * 30,
+        w = 30 + hash(k + "|fartownw") * 34,
+        h = 26 + hash(k + "|fartownh") * (24 + g * 3);
+      bg += idx >= 5 && k % 3 === 0 ? `<path class="sw-far-town" d="M${r1(x)} ${r1(y + 40)}V${r1(y - h)}h${r1(w * 0.7)}V${r1(y + 40)}Z"/>` : `<path class="sw-far-town" d="M${r1(x)} ${r1(y + 40)}V${r1(y - h * 0.5)}L${r1(x + w / 2)} ${r1(y - h * 0.5 - w * 0.4)}L${r1(x + w)} ${r1(y - h * 0.5)}V${r1(y + 40)}Z"/>`;
+      if (lit && hash(k + "|farlit") < 0.5) bg += `<rect class="sw-far-light" x="${r1(x + w * 0.3)}" y="${r1(y - h * 0.3)}" width="5" height="6"/>`;
+    }
     bg += `<path class="sw-hill-near" d="M0 650Q240 590 520 630T1080 610T1620 640T2180 612T2800 630V1080H0Z"/>`;
 
-    // Backdrop: older, smaller houses and trees behind the street.
+    // Backdrop: the town behind the street — a skyline row in haze, and the main street's landmark
+    // behind the plaza, which is rebuilt grander every era and gains wings within one.
     let backRow = "";
-    const backStyle = STYLES[VARIANTS[Math.max(0, idx - 1)]];
-    for (let k = 0; k < backCount; k++) {
-      const [x, w] = back[k];
-      backRow += `<g transform="translate(${x} ${base - 34}) scale(.62) translate(${-x} ${-base})">${facade(backStyle.kind, backStyle, x, base, w, Math.max(1, floors - 1), "back" + k, lit && hash("bl" + k) < shops)}</g>`;
-    }
-    for (const [x, sc, id] of [[330, 0.8, "sw-tree"], [1480, 0.7, "sw-pine"], [1830, 0.75, "sw-tree"], [2700, 0.9, "sw-pine"], [980, 0.6, "sw-pine"]]) backRow += use(id, x, base - 30, sc);
-    if (idx >= 3 && landmarks.has("CLOCK_TOWER")) {
-      backRow += `<g class="sw-clock">` + rect(1250, 300, 100, 410, "#e6dac4") + poly([[1238, 300], [1300, 218], [1362, 300]], STYLES.town.roof) + `<circle cx="1300" cy="360" r="30" fill="#fff8e8" stroke="${OUT}" stroke-opacity=".5" stroke-width="2"/><path d="M1300 360V338M1300 360H1318" stroke="${OUT}" stroke-width="3" stroke-linecap="round"/></g>`;
-    }
+    for (const [x, sc, id] of [[40, 0.9, "sw-tree"], [2740, 0.95, "sw-pine"], [2790, 0.8, "sw-tree"]]) backRow += use(id, x, base - 30, sc);
+    const skyline = B.row(MAIN_LOTS.skyline, { ...rowOpts, rowId: "s", count: skyCount, scale: 0.62, lift: 48, haze: 0.32, height: floors + 1, maxFloors: 6 });
+    backRow += skyline.svg;
+    if (total) backRow += townHall(idx, g, landmarks, lit, base);
+    for (const [x, sc] of [[1105, 0.75], [1495, 0.7]]) backRow += use("swb-cypress", x, base - 30, sc);
+    if (skyCount && frontCount >= MAIN_LOTS.front.length && idx >= 3 && visual.construction && visual.construction !== "COMPLETE") backRow += B.crane(2650, base - 30, 0.95);
 
     // Buildings: station, homes, plaza, market, construction.
     let mid = "";
@@ -434,20 +469,22 @@
       (cx, cy) => `<path d="M${cx - 8} ${cy - 6}h14v10a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6Z" fill="#8fc8e8"/><path d="M${cx + 6} ${cy - 3}h3a3 3 0 0 1 0 6h-3" fill="none" stroke="#8fc8e8" stroke-width="2"/>`,
       (cx, cy) => `<path d="M${cx} ${cy - 9}l2.6 5.4 6 .8-4.3 4.1 1 5.9-5.3-2.8-5.3 2.8 1-5.9-4.3-4.1 6-.8Z" fill="#f2b33d"/>`,
     ];
-    for (let k = 0; k < frontCount; k++) {
-      const [x, w] = front[k];
-      const open = hash("shop" + k) < shops;
-      const icon = icons[k % icons.length](r1(x + w - 22), base - 118);
-      mid += facade(st.kind, st, x, base, w, floors, "front" + k, lit && hash("fl" + k) < shops, k % 2 === 0 && open ? { shop: ["#e07d4f", "#6fae9a", "#e3a93d"][k % 3], icon } : {});
-    }
+    const lots = (list) => list.map((lot) => (lot.sign === undefined ? lot : { ...lot, sign: icons[lot.sign] }));
+    const back = B.row(MAIN_LOTS.back, { ...rowOpts, rowId: "b", count: backCount, scale: 0.8, lift: 22, haze: 0.12, height: floors + 1, maxFloors: 5 });
+    const front = B.row(lots(MAIN_LOTS.front), { ...rowOpts, rowId: "f", count: frontCount, maxFloors: 4 });
+    mid += back.svg + front.svg;
+    // The construction site takes the next lot the street has not built yet; once every lot stands,
+    // the street keeps building upward: scaffolding climbs the last front building for its next storey.
     if (visual.construction && visual.construction !== "COMPLETE") {
-      const [x, w] = front[frontCount] || [2600, 180];
+      const next = MAIN_LOTS.front.find((lot) => !front.lots.some((l) => l.x === lot.x));
       const mode = String(visual.construction).toLowerCase();
-      mid += `<g class="sw-construction is-${esc(mode)}">` + rect(x + 10, base - 12, w - 20, 12, "#e9d9b5");
-      for (let k = 0; k < 4; k++) mid += `<path d="M${x + 20 + k * ((w - 40) / 3)} ${base - 12}V${base - 190}" stroke="#c98c3a" stroke-width="6"/>`;
-      for (const y of [60, 120, 180]) mid += `<path d="M${x + 14} ${base - y}H${x + w - 14}" stroke="#c98c3a" stroke-width="6"/>`;
-      mid += `<path d="M${x + 20} ${base - 190}L${x + w - 20} ${base - 60}" stroke="#c98c3a" stroke-width="4" opacity=".7"/>`;
-      if (idx >= 3) mid += `<path d="M${x + w - 30} ${base}V${base - 330}M${x - 40} ${base - 320}H${x + w + 20}M${x + 10} ${base - 320}V${base - 250}" stroke="#f2b33d" stroke-width="8" fill="none"/>`;
+      const top = next ? base : base - (front.lots.at(-1)?.floors || 1) * 86 - 150;
+      const { x, w } = next || MAIN_LOTS.front.at(-1);
+      mid += `<g class="sw-construction is-${esc(mode)}${next ? "" : " is-upward"}">` + rect(x + 10, top - 12, w - 20, 12, "#e9d9b5");
+      for (let k = 0; k < 4; k++) mid += `<path d="M${r1(x + 20 + k * ((w - 40) / 3))} ${top - 12}V${top - 190}" stroke="#c98c3a" stroke-width="6"/>`;
+      for (const y of [60, 120, 180]) mid += `<path d="M${x + 14} ${top - y}H${x + w - 14}" stroke="#c98c3a" stroke-width="6"/>`;
+      mid += `<path d="M${x + 20} ${top - 190}L${x + w - 20} ${top - 60}" stroke="#c98c3a" stroke-width="4" opacity=".7"/>`;
+      if (idx >= 3) mid += `<path d="M${x + w - 30} ${top}V${top - 330}M${x - 40} ${top - 320}H${x + w + 20}M${x + 10} ${top - 320}V${top - 250}" stroke="#f2b33d" stroke-width="8" fill="none"/>`;
       mid += `</g>`;
     }
     // Plaza: campfire before the town era, fountain after.
@@ -485,28 +522,13 @@
       mid += `<g class="sw-cart"><circle cx="1600" cy="${base - 16}" r="16" fill="#8a6848"/><circle cx="1700" cy="${base - 16}" r="16" fill="#8a6848"/>` + rect(1570, base - 80, 160, 56, "#c79a68", ` rx="6"`) + `<path d="M1650 ${base - 80}V${base - 160}" stroke="#8a6848" stroke-width="5"/><path d="M1580 ${base - 150}Q1650 ${base - 210} 1720 ${base - 150}Z" fill="#e07d4f" stroke="${OUT}" stroke-opacity=".35"/></g>`;
     }
     // Lamps and trees along the street.
-    for (const x of [130, 700, 1100, 1560, 2060, 2600]) mid += use("sw-lamp", x, base, 1);
+    for (const x of MAIN_LAMPS) mid += use("sw-lamp", x, base, 1);
     for (const [x, sc, id] of [[60, 1.2, "sw-tree"], [1850, 0.9, "sw-pine"], [2720, 1.25, "sw-tree"], [2780, 0.8, "sw-pine"]]) mid += use(id, x, base, sc);
 
-    // Street: the road surface, the bridge over the stream and the soil cross-section.
-    let ground = "";
+    // Street: the road, curb, retaining wall and soil (shared with every district), then the stream and its bridge.
     const roads = visual.roads || "trail";
-    const surface = roads === "asphalt" ? "#7d8591" : roads === "glow" ? "#a9c3cf" : roads === "stone" ? "url(#sw-slab)" : roads === "cobble" ? "url(#sw-cobble)" : "#dcc7a0";
     const river = idx >= 2;
-    ground += `<path d="M0 ${base - 6}H${W}V${G.height}H0Z" fill="#8fbd78"/>`;
-    ground += `<rect x="0" y="${base}" width="${W}" height="64" fill="${surface}"/>`;
-    if (roads === "trail" || roads === "dirt") for (let k = 0; k < 60; k++) ground += `<ellipse cx="${r1(hash("peb" + k) * W)}" cy="${r1(base + 10 + hash("peby" + k) * 44)}" rx="${r1(3 + hash("pebr" + k) * 5)}" ry="2.5" fill="#bda27a" opacity=".7"/>`;
-    if (roads === "asphalt") ground += `<path d="M0 ${base + 32}H${W}" stroke="#f4efe4" stroke-width="4" stroke-dasharray="40 30"/>`;
-    if (roads === "glow") ground += `<path d="M0 ${base + 4}H${W}" stroke="#9fe6f2" stroke-width="4"/>`;
-    ground += `<path d="M0 ${base}H${W}" stroke="#f4ead2" stroke-width="5"/><path d="M0 ${base + 64}H${W}" stroke="#8e6f52" stroke-width="4"/>`;
-    ground += `<path d="M0 ${base + 66}H${W}V${G.height}H0Z" fill="#b58e63"/>`;
-    ground += `<path d="M0 ${base + 118}Q400 ${base + 100} 800 ${base + 124}T1600 ${base + 116}T2400 ${base + 126}T${W} ${base + 114}V${G.height}H0Z" fill="#9d7a57"/>`;
-    ground += `<path d="M0 ${base + 214}Q500 ${base + 196} 1000 ${base + 220}T2000 ${base + 204}T${W} ${base + 218}V${G.height}H0Z" fill="#86664b"/>`;
-    for (let k = 0; k < 40; k++) ground += `<ellipse cx="${r1(hash("stone" + k) * W)}" cy="${r1(base + 90 + hash("stoney" + k) * 240)}" rx="${r1(6 + hash("stoner" + k) * 14)}" ry="${r1(4 + hash("stoneh" + k) * 8)}" fill="${k % 2 ? "#c9a57a" : "#6f5443"}" opacity=".55"/>`;
-    for (let k = 0; k < 14; k++) {
-      const x = 80 + k * 200 + hash("rootx" + k) * 80;
-      ground += `<path d="M${r1(x)} ${base + 66}C${r1(x + 10)} ${base + 110} ${r1(x - 20)} ${base + 140} ${r1(x + 6)} ${base + 190}" fill="none" stroke="#6f5443" stroke-width="3" opacity=".5" stroke-linecap="round"/>`;
-    }
+    let ground = B.ground({ x0: 0, w: W, base, H: G.height, roads, idx, seed: "main", lamps: MAIN_LAMPS });
     if (river) {
       // The street crosses the stream on a wooden bridge; the water runs in a cut below.
       ground += `<path d="M1890 ${base + 30}Q1916 ${base + 176} 1990 ${base + 186}H2050Q2124 ${base + 176} 2150 ${base + 30}Z" fill="#6f9fae"/><path d="M1900 ${base + 44}Q2020 ${base + 64} 2140 ${base + 44}V${base + 30}H1900Z" fill="#8cc0cb"/>`;
@@ -523,6 +545,7 @@
     for (const x of [30, 500, 790, 1100, 1350, 1600, 1860, 2140, 2400, 2760]) fg += use("sw-tuft", x, base + 70, 1.2) + use("sw-tuft", x + 26, base + 72, 0.9);
     for (const x of [250, 1060, 1590, 2380]) fg += use("sw-flowers", x, base + 72, 1.1);
     fg += use("sw-bush", 20, base + 96, 1.5) + use("sw-bush", W - 30, base + 96, 1.6) + use("sw-fence", 2560, base + 70, 1);
+    fg += B.frontEdge({ x0: 0, base }, [330, 1180, 1760, 2470], idx >= 3 ? "flowers" : "garden");
     // A dormant city grows tall grass (V1's grass_level); nothing is taken away.
     const grass = visual.grass_level || 0;
     if (grass >= 2) for (let k = 0; k < W / 120; k++) fg += use("sw-tuft", 30 + k * 120 + hash(k + "|tallgrass") * 40, base + 66, 1.5 + grass * 0.25);
@@ -545,7 +568,7 @@
         foreground: svg("sw-city-foreground", fg),
       },
       effects,
-      stats: { variant, grass, front_houses: frontCount, back_houses: backCount, river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
+      stats: { variant, grass, front_houses: front.lots.length, back_houses: back.lots.length + skyline.lots.length, grade: g, evolution: [...front.lots, ...back.lots, ...skyline.lots], river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
     };
   }
 
@@ -624,7 +647,7 @@
     };
   }
 
-  const api = { GEOMETRY, LAYER_STACKS, CABLE_Z, kit: { OUT, r1, shade, pts, poly, rect, use, facade }, scene, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, facade, eraIndex };
+  const api = { GEOMETRY, LAYER_STACKS, CABLE_Z, kit: { OUT, r1, shade, pts, poly, rect, use }, scene, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, eraIndex };
   root.RenguinSeamlessArt = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
