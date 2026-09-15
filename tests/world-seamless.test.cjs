@@ -429,4 +429,6 @@ test("Camera depth: light, air and near fronds frame the street without covering
   const z = +css.match(/\.sw-city::after,\s*\.sw-island::after \{[^}]*z-index: (\d+)/)[1];
   const stack = Object.fromEntries(Art.LAYER_STACKS.city.map((l) => [l.name, l.z]));
   assert.ok(z > stack.foreground && z < stack.residents, `light wash z ${z}`);
+  // The street's own controls (回到空島) are never dimmed by it.
+  assert.ok(+css.match(/\.sw-end \{[^}]*z-index: (\d+)/)[1] > z, "the end-of-street controls sit above the light wash");
 });
