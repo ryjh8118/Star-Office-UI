@@ -489,6 +489,9 @@ def build_state(raw_contents, *, now, config=None, registry=None, overrides=None
         if use_video and content['view_count'] is None and content['youtube_video_id'] in views:
             content['view_count'] = views[content['youtube_video_id']].get('view_count')
         content['view_tier'] = view_tier(content['view_count'], config)
+        content['youtube_resolution_status'] = ('FULLY_VERIFIED' if content['view_count'] is not None else
+                                                'IDENTITY_VERIFIED') if content['youtube_video_id'] and (
+                                                video or raw.get('youtube_binding_provenance') == 'USER_CONFIRMED_BINDING') else 'IDENTITY_UNRESOLVED'
         content['title_public'] = content['status'] == 'PUBLISHED'
         counted.append(content)
     counted.sort(key=lambda c: (content_date(c) or datetime.min.replace(tzinfo=timezone.utc), c['content_id']), reverse=True)
@@ -559,6 +562,7 @@ def build_state(raw_contents, *, now, config=None, registry=None, overrides=None
             'content_type': c['content_type'], 'status': c['status'], 'date': iso(content_date(c)),
             'date_basis': 'PUBLISHED_AT' if c['published_at'] else 'COMPLETED_AT' if c['completed_at'] else None,
             'view_tier': c['view_tier'], 'youtube_video_id': c['youtube_video_id'], 'tags': c['tags'],
+            'view_count': c['view_count'], 'youtube_resolution_status': c['youtube_resolution_status'],
             'is_new': bool(content_date(c) and now - content_date(c) <= fresh_poster),
             'evidence': c['evidence']} for c in featured],
         'recent_growth': sorted(contributions, key=lambda c: (c['at'] or '', c['content_id']), reverse=True)[:config['rules']['recent_growth']['limit']],
@@ -569,6 +573,8 @@ def build_state(raw_contents, *, now, config=None, registry=None, overrides=None
                       'district_unlocked': 'MEMBER_DISTRICT' in unlocked},
         'gossip': gossip(config, seed, act['state'], era['id'], counted, cast, crowd['archetypes']),
         'popularity': {'status': (popularity or {}).get('status', 'GATED'), 'recent_top_tier': recent_tier,
+                       'resolution_counts': {status: sum(c['youtube_resolution_status'] == status for c in counted)
+                                             for status in ('FULLY_VERIFIED', 'IDENTITY_VERIFIED', 'IDENTITY_UNRESOLVED')},
                        'tracked_videos': sum(1 for c in counted if c['view_tier'])},
         'visual': {
             'city_variant': f"{era['variant']}-s{info['sublevel'] + 1}",

@@ -39,6 +39,7 @@ electron-shell/release/
 join-keys.json
 
 .preview-runtime/
+.preview-acceptance/
 
 .local-browser/
 

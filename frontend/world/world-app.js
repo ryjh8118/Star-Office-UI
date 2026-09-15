@@ -305,6 +305,10 @@
     hud.append(act);
 
     const featured = card("精選內容", "rw-featured-card");
+    const resolution = state.popularity.resolution_counts;
+    if (state.source === "LIVE" && resolution) {
+      featured.append(node("p", `YouTube：${resolution.FULLY_VERIFIED} 筆完整資料；${resolution.IDENTITY_VERIFIED} 筆觀看次數未提供（unavailable）；${resolution.IDENTITY_UNRESOLVED} 筆身份未確認。`, "rw-note"));
+    }
     if (!state.featured_contents.length) featured.append(node("p", "還沒有完成的內容。第一支片會掛在廣場上。", "rw-note"));
     for (const f of state.featured_contents) {
       const item = node("article", undefined, "rw-poster-card");
@@ -313,6 +317,13 @@
       if (f.is_new) head.append(node("span", "NEW", "rw-new"));
       item.append(head, node("h3", f.title));
       item.append(node("p", `${f.status === "PUBLISHED" ? "上映紀錄" : "完成紀錄"} · ${date(f.date)}${f.date_basis === "COMPLETED_AT" ? "（完成日）" : ""}`, "rw-meta"));
+      if (Number.isInteger(f.view_count) && f.view_count >= 0) {
+        item.append(node("p", `觀看次數：${f.view_count.toLocaleString("zh-TW")}`, "rw-meta"));
+      } else if (f.youtube_resolution_status === "IDENTITY_VERIFIED") {
+        item.append(node("p", "觀看次數：YouTube 未提供（unavailable）", "rw-meta"));
+      } else if (state.source === "LIVE") {
+        item.append(node("p", "YouTube 影片身份尚未確認", "rw-meta"));
+      }
       if (f.youtube_video_id && /^[A-Za-z0-9_-]{11}$/.test(f.youtube_video_id)) {
         const link = node("a", "在 YouTube 觀看", "rw-link");
         link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(f.youtube_video_id);

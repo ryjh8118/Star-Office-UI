@@ -176,6 +176,12 @@ class SafeSync(unittest.TestCase):
             missing = [r for r in rows if r['view_count_status'] == 'PUBLIC_VIEWCOUNT_UNAVAILABLE']
             self.assertEqual(len(missing), 3)
             self.assertTrue(all(r['view_count'] is None and r['popularity_bucket'] is None and r['provenance'] == youtube_adapter.UNAVAILABLE for r in missing))
+            world = engine.build_state(raw, now=datetime.now(timezone.utc), popularity=youtube_adapter.load(tmp), source='LIVE')
+            self.assertEqual(world['popularity']['resolution_counts'], {'FULLY_VERIFIED': 16, 'IDENTITY_VERIFIED': 3, 'IDENTITY_UNRESOLVED': 1})
+            for card in world['featured_contents']:
+                if card['youtube_resolution_status'] == 'IDENTITY_VERIFIED':
+                    self.assertIsNone(card['view_count'])
+                    self.assertIsNone(card['view_tier'])
 
     def test_invalid_present_counts_are_errors_not_declared_unavailable(self):
         for invalid in (None, 0, False, '-1', '1.5', '１２'):
