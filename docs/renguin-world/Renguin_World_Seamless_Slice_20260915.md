@@ -3,7 +3,8 @@
 Status: **DIRECTION = APPROVED, VISUAL_ACCEPTANCE = PROVISIONAL** (user, 2026-09-15).
 The structure is the contract (`Renguin_World_Architecture.md`: composition
 rule, layer stacks, seamless navigation); art upgrades wait for
-`RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2.md`. V1 (`/world`, isometric island) is
+`RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2.md`. The remaining districts were migrated
+afterwards: `Renguin_World_Seamless_Districts_20260915.md`. V1 (`/world`, isometric island) is
 unchanged and remains the Production default until a later gate.
 
 ## What it proves

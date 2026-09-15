@@ -26,3 +26,16 @@ layer contract or seamless navigation, and it may never redraw a character.
 - The cloud sea and descent are functional but sparse between banks.
 - Night is a flat tint; lit windows are not yet separate light sources.
 - Street props (market, stream, construction) are single-state drawings per era.
+- Main-street pebbles and stones cluster in rows: the scene hash mixes a changing
+  suffix poorly (districts already lead with the counter).
+
+## Notes collected during the district migration
+
+- Backdrop rows drift into the neighbouring district near its edges (anchored parallax
+  at depth 0.7); give each district a closing backdrop element.
+- Closed lots all look alike apart from their signboard; each could preview its district.
+- The river harbour is one cross-section; boats are static and the pier is plain.
+- Spotlights, the gate glow and marquee bulbs are flat shapes, not light sources.
+- The crowd is deliberately faceless pawns (NEUTRAL_PLACEHOLDER); any richer crowd must
+  stay non-character.
+- Gossip bubbles are HTML paper cards; a painted speech style would sit better in the scene.
