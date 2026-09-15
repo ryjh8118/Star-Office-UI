@@ -456,7 +456,7 @@
       img.height = 64;
       img.src = `/api/world/character-thumb/${encodeURIComponent(c.character_id)}?s=160`;
       box.append(img);
-    } else box.append(node("span", "🐧", "rw-token"));
+    } else box.append(node("span", "居民", "rw-token"));
     box.append(node("figcaption", c.display_name));
     return box;
   }

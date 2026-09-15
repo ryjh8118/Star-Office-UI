@@ -78,19 +78,6 @@
     [2.2, 0.6],
     [0.6, 2.2],
   ];
-  const BADGES = {
-    NURSE: "#8fd9c0",
-    FACTORY_WORKER: "#f2b66d",
-    DELIVERY_COURIER: "#f28c6d",
-    CONSTRUCTION_ASSISTANT: "#f5d45e",
-    BAKERY_STAFF: "#f7a8c4",
-    CALL_CENTER: "#9db8f2",
-    HOTEL_STAFF: "#c7a3e8",
-    VILLAGER: "#a9d27d",
-    TRAVELER: "#7fc6e0",
-    VENDOR: "#ef9a5a",
-    FESTIVAL_GOER: "#ff7fa8",
-  };
 
   const hash = (text) => {
     let h = 2166136261;
@@ -239,15 +226,12 @@
     </g>`;
   }
 
-  function penguin(x, y, badge, extra = "") {
-    return `<g class="rw-penguin" transform="translate(${r1(x)} ${r1(y)})"${extra}>
+  // The one neutral placeholder: a faceless paper pawn. No face, costume or badge,
+  // so it can never read as a character, a profession or a member.
+  function placeholder(x, y, extra = "") {
+    return `<g class="rw-placeholder" transform="translate(${r1(x)} ${r1(y)})"${extra}>
       <ellipse cy="1" rx="5" ry="1.8" fill="#47644d" opacity=".18"/>
-      <path d="M-4-7C-7-14-1-18 3-14C6-12 4-9 6-5L4-4Q5 1 0 0Q-5 1-4-5L-6-4Z" fill="#526473" stroke="#fffae9" stroke-width=".8"/>
-      <path d="M-2-11Q0-13 2-11L3-4Q0 0-3-4Z" fill="#fff1d6"/>
-      <path d="M-4-9Q0-7 4-9L4-7Q0-5-4-7Z" fill="${badge}"/>
-      <circle cx="-1.3" cy="-12" r=".65" fill="#3c4042"/><circle cx="1.6" cy="-12" r=".65" fill="#3c4042"/>
-      <path d="M-.9-10.8L1.7-10.7L.2-9.4Z" fill="#dba257"/>
-      <path d="M-4 0h3M1 0h3" stroke="#c79859" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M-4.2 0Q-5-8-2.4-10.2A3.6 3.6 0 1 1 2.4-10.2Q5-8 4.2 0Z" fill="#e9e0cf" stroke="#8d8373" stroke-width=".7"/>
     </g>`;
   }
 
@@ -575,9 +559,9 @@
         .join("");
       front.push({ depth: 1, svg: `<g class="rw-bunting">${flagsSvg}</g>` });
     }
-    // Residents: generic penguin civilians walking the roads, badge colour = profession.
-    // They live in the overlay, so walking never repaints the city.
-    const archetypes = (state?.residents?.archetypes || []).length ? state.residents.archetypes : [{ profession: "VILLAGER" }];
+    // Crowd: anonymous neutral placeholders walking the roads. A profession is shown only by
+    // its one official profession character (ASSET-08 forbids duplicating a character), so
+    // the crowd never claims one. They live in the overlay, so walking never repaints the city.
     for (let k = 0; k < L.walkers; k++) {
       const along = k % 2 === 0;
       const start = Math.round((hash("w0" + k) * 2 - 1) * L.radius);
@@ -586,11 +570,9 @@
       const lane = (hash("lane" + k) - 0.5) * 0.5;
       const A = along ? iso(start, lane) : iso(lane, start);
       const B = along ? iso(end, lane) : iso(lane, end);
-      const role = archetypes[k % archetypes.length];
-      const badge = BADGES[role.profession] || "#a9d27d";
       const vars = `--ax:${r1(A[0])};--ay:${r1(A[1])};--bx:${r1(B[0])};--by:${r1(B[1])};--dur:${r1(6 + hash("wd" + k) * 8)}s;--delay:-${r1(hash("wl" + k) * 8)}s`;
       overlay.push(
-        `<div class="rw-walker" style="${vars}" data-profession="${esc(role.profession)}"><div class="rw-bob"><svg class="rw-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${penguin(0, 0, badge)}</svg></div></div>`,
+        `<div class="rw-walker" style="${vars}" data-resolution="NEUTRAL_PLACEHOLDER"><div class="rw-bob"><svg class="rw-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${placeholder(0, 0)}</svg></div></div>`,
       );
     }
     // Characters from the registry: the authority's own image as a small standee,
@@ -624,8 +606,9 @@
       const body =
         c.render_mode === "IMAGE"
           ? `<img src="/api/world/character-thumb/${encodeURIComponent(c.character_id)}?s=96" alt="${esc(c.display_name)}" loading="lazy" decoding="async" draggable="false">`
-          : `<svg class="rw-sprite rw-token-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${penguin(0, 0, "#ffd35e")}</svg><span class="rw-token-tag">職業居民</span>`;
-      return `<div class="rw-o rw-actor is-${esc(pose)}" style="--x:${r1(x)};--y:${r1(y)}" data-character="${esc(c.character_id)}" title="${esc(c.render_mode === "IMAGE" ? c.display_name : "通用職業居民（非真人化身）")}"><div class="rw-standee">${body}</div></div>`;
+          : `<svg class="rw-sprite rw-token-sprite" viewBox="-6 -17 12 19" aria-hidden="true">${placeholder(0, 0)}</svg>`;
+      const label = c.render_mode === "IMAGE" ? (c.resolution === "PROFESSION_CHARACTER" && c.world_role ? `${c.world_role} · 鵝寶居民` : c.display_name) : "居民（尚無正式造型）";
+      return `<div class="rw-o rw-actor is-${esc(pose)}" style="--x:${r1(x)};--y:${r1(y)}" data-character="${esc(c.character_id)}" data-resolution="${esc(c.resolution || (c.render_mode === "IMAGE" ? "CANONICAL_CHARACTER" : "NEUTRAL_PLACEHOLDER"))}" title="${esc(label)}"><div class="rw-standee">${body}</div></div>`;
     });
     overlay.push(...cast);
     // Only the Office entry needs an in-scene label; districts remain in HTML below.

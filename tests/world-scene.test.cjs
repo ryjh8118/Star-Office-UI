@@ -32,7 +32,8 @@ function state(variant, over = {}) {
     ],
     characters: [
       { character_id: "RENGUIN", display_name: "企鵝", render_mode: "IMAGE", district: "CREATOR_DISTRICT", state: "WALKING" },
-      { character_id: "MEMBER_AVATAR_ABC", display_name: "護理師鵝寶", render_mode: "TOKEN", district: "MAIN_CITY", state: "IDLE" },
+      { character_id: "MEMBER_AVATAR_ABC", display_name: "護理師鵝寶", render_mode: "IMAGE", resolution: "PROFESSION_CHARACTER", world_role: "護理師居民", district: "MAIN_CITY", state: "IDLE" },
+      { character_id: "NO_ART_YET", display_name: "無圖居民", render_mode: "TOKEN", resolution: "NEUTRAL_PLACEHOLDER", district: "MAIN_CITY", state: "IDLE" },
     ],
     featured_contents: [{ title: "新片", is_new: true }],
     content: { total: 3 },
@@ -65,7 +66,7 @@ test("the city SVG never animates; walkers, characters and effects live in the o
   assert.ok(!/<animate|rw-walker|rw-firework|rw-actor|rw-cloud/.test(svg));
   assert.equal((overlay.match(/class="rw-walker"/g) || []).length, 20);
   assert.equal((overlay.match(/class="rw-o rw-firework"/g) || []).length, 5);
-  assert.equal((overlay.match(/rw-actor/g) || []).length, 2);
+  assert.equal((overlay.match(/rw-actor/g) || []).length, 3);
   assert.equal(stats.walkers, 20);
   const css = read("frontend/world/world.css");
   const motion = css.slice(css.indexOf("/* Motion lives in the overlay"), css.indexOf("@keyframes rw-walk"));
@@ -116,14 +117,19 @@ test("configured landmarks reach their renderer without early unlocks", () => {
   assert.ok(!S.render(locked).overlay.includes('class="rw-office-entry"'));
 });
 
-test("text from data is escaped and characters render as the authority's image or a token", () => {
+test("text from data is escaped and characters render as the authority's image or one neutral placeholder", () => {
   const s = state("town", { featured_contents: [{ title: '<img src=x onerror="1">', is_new: false }] });
   s.characters[0].display_name = '"><script>';
   const { svg, overlay } = S.render(s);
   assert.ok(!svg.includes("<img src=x") && !overlay.includes("<script>"));
   assert.ok(overlay.includes('src="/api/world/character-thumb/RENGUIN?s=96"'));
-  assert.ok(overlay.includes("rw-token-sprite"), "a private member avatar is a token, never a drawn likeness");
-  assert.ok(!overlay.includes("MEMBER_AVATAR_ABC?s="), "no image request for a token");
+  assert.ok(overlay.includes('src="/api/world/character-thumb/MEMBER_AVATAR_ABC?s=96"'), "a profession resident wears its official profession art");
+  assert.ok(overlay.includes('title="護理師居民 · 鵝寶居民"'), "labelled by profession, never by member name");
+  assert.ok(!overlay.includes("NO_ART_YET?s="), "no image request for a placeholder");
+  const placeholder = overlay.match(/data-character="NO_ART_YET"[\s\S]*?<\/div><\/div>/)[0];
+  assert.ok(placeholder.includes("rw-placeholder") && !/circle|badge/.test(placeholder), "the placeholder has no face or badge");
+  assert.ok(!/data-profession/.test(overlay), "the anonymous crowd never claims a profession");
+  assert.ok(!/fill="#526473"/.test(overlay + svg), "the old generic penguin sprite is gone");
 });
 
 test("an empty world still renders: the lot, the campfire and nothing pretending to be content", () => {

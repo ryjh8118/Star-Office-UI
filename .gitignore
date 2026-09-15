@@ -62,3 +62,6 @@ frontend/renguin-achievements/
 
 # Renguin World runtime: precomputed state cache, local overrides, popularity snapshot.
 .world-runtime/
+
+# Display derivatives of private-identity member avatars: built locally by scripts/build_world_thumbnails.py.
+backend/renguin_world/art/portraits-private/

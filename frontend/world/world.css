@@ -939,9 +939,16 @@ details.rw-card > summary {
   height: 56px;
   object-fit: contain;
 }
+/* Neutral placeholder in the roster: a blank paper chip, never a penguin face. */
 .rw-token {
-  font-size: 34px;
-  line-height: 56px;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e9e0cf;
+  color: #8d8373;
+  font-size: 11px;
 }
 .rw-sim-row {
   display: flex;
