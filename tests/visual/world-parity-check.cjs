@@ -16,6 +16,7 @@ if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(BASE)) throw Error("LOCAL_ONLY");
 const arg = (name) => (process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : null);
 const STATE = arg("--state") ? fs.readFileSync(arg("--state"), "utf8") : null;
 const OUT = arg("--out");
+if (OUT) fs.mkdirSync(OUT, { recursive: true });
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const PORT = 9200 + Math.floor(Math.random() * 90);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

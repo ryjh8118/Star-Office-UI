@@ -1,8 +1,14 @@
 // Real local browser, live data. Screenshots stay in ignored runtime, never Git.
 const {spawn}=require('node:child_process');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+// Live data grows whenever the creator marks content, so the expected world is an input read
+// from Production before the change under test, never a constant:
+//   node world-production-acceptance.cjs <base> <label> --expect 21/75/14/ERA_03 --declared 16/3/2
 const base=process.argv[2],label=process.argv[3]||'preview';
 if(!/^http:\/\/127\.0\.0\.1:\d+$/.test(base))throw Error('LOCAL_ONLY');
+const arg=name=>{const i=process.argv.indexOf(name);if(i<0||!process.argv[i+1])throw Error('MISSING '+name);return process.argv[i+1].split('/');};
+const [total,score,level,era]=arg('--expect'),[fully,verified,unresolved]=arg('--declared').map(Number);
+const expect={total:+total,score:+score,level:+level,era};
 const out=path.resolve(__dirname,'../../.qa-runtime/stable-'+label);fs.mkdirSync(out,{recursive:true});
 const port=9600+Math.floor(Math.random()*100),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const chrome=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new',`--remote-debugging-port=${port}`,`--user-data-dir=${fs.mkdtempSync(path.join(os.tmpdir(),'rw-accept-'))}`,'--no-first-run','about:blank'],{stdio:'ignore',windowsHide:true});
@@ -20,10 +26,10 @@ const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
   for(let i=0;i<100;i++){await sleep(100);if(await js("!!document.querySelector('#rw-stage svg')"))break;}
   await sleep(1300);
   const state=await js("fetch('/api/world/state').then(r=>r.json())");
-  check(width+' live world 20 / 74 / 14 / ERA_03',state.content.total===20&&state.world_score===74&&state.world_level===14&&state.current_era==='ERA_03');
+  check(`${width} live world ${expect.total} / ${expect.score} / ${expect.level} / ${expect.era}`,state.content.total===expect.total&&state.world_score===expect.score&&state.world_level===expect.level&&state.current_era===expect.era);
   const counts=state.popularity.resolution_counts;
-  check(width+' declared 16 / 3 / 1',counts.FULLY_VERIFIED===16&&counts.IDENTITY_VERIFIED===3&&counts.IDENTITY_UNRESOLVED===1);
-  check(width+' unavailable explicitly visible',await js("document.querySelector('.rw-featured-card').textContent.includes('3 筆觀看次數未提供（unavailable）')"));
+  check(`${width} declared ${fully} / ${verified} / ${unresolved}`,counts.FULLY_VERIFIED===fully&&counts.IDENTITY_VERIFIED===verified&&counts.IDENTITY_UNRESOLVED===unresolved&&fully+verified+unresolved<=state.content.total);
+  check(width+' unavailable explicitly visible',await js(`document.querySelector('.rw-featured-card').textContent.includes(${JSON.stringify(`YouTube：${fully} 筆完整資料；${verified} 筆觀看次數未提供（unavailable）；${unresolved} 筆身份未確認。`)})`));
   check(width+' unresolved cannot link',state.featured_contents.filter(c=>c.youtube_resolution_status==='IDENTITY_UNRESOLVED').every(c=>!c.youtube_video_id));
   check(width+' null is never zero',state.featured_contents.filter(c=>c.youtube_resolution_status==='IDENTITY_VERIFIED').every(c=>c.view_count===null&&c.view_tier===null));
   check(width+' no overflow or broken images',await js("document.documentElement.scrollWidth<=innerWidth+1 && [...document.querySelectorAll('#rw-stage img')].every(i=>i.complete&&i.naturalWidth>0)"));
@@ -42,7 +48,7 @@ const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
   await js("document.querySelector('.rw-roster-card').open=true");await sleep(800);
   check(width+' roster loads on demand',events.some(e=>e.method==='Network.requestWillBeSent'&&e.params.request.url.includes('/api/world/characters')));
   await js("document.querySelector('#rw-refresh').click()");await sleep(700);
-  check(width+' refresh retains real world',await js("!!document.querySelector('#rw-stage svg') && document.querySelector('.rw-era-card').textContent.includes('14')"));
+  check(width+' refresh retains real world',await js(`!!document.querySelector('#rw-stage svg') && document.querySelector('.rw-era-card').textContent.includes('${expect.level}')`));
   check(width+' zero console exceptions',!events.some(e=>e.method==='Runtime.exceptionThrown'||e.method==='Runtime.consoleAPICalled'&&e.params.type==='error'));
  }
  ws.close();fs.writeFileSync(path.join(out,'checks.json'),JSON.stringify(checks,null,2));
