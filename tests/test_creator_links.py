@@ -38,7 +38,11 @@ class LinkTests(unittest.TestCase):
             client = app.test_client()
             source = {'project_id':'P1','project_name':'Source','classification':'REGISTERED','timeline':[]}
             original = copy.deepcopy(source)
-            with patch('renguin_boundary.projects', return_value={'projection':{'projects':[source]}}), patch('creator_history.snapshot', return_value=(None,[],{})):
+            from renguin_world.youtube_adapter import parse_item
+            verified = parse_item({'id': 'M7lc1UVf-VE', 'snippet': {'publishedAt': '2025-01-01T00:00:00Z'}, 'statistics': {'viewCount': '10'}})
+            with patch('renguin_boundary.projects', return_value={'projection':{'projects':[source]}}), patch('creator_history.snapshot', return_value=(None,[],{})), \
+                 patch('renguin_world.youtube_adapter.validate_video', return_value=verified), \
+                 patch('creator_youtube.reserve_verified_legacy'), patch('renguin_world.service.live_state'):
                 data = client.get('/api/creator/presentation').json
                 revision = data['revision']
                 def save(url, revision):

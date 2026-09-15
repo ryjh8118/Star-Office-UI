@@ -30,7 +30,10 @@ def normalize(value):
             video = segments[0]
         elif host in ('youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com', 'www.youtube-nocookie.com'):
             if parts.path == '/watch':
-                video = query.get('v', [''])[0]
+                values = query.get('v', [])
+                if len(values) > 1:
+                    raise ValueError('網址包含多個影片 ID，請貼上單一影片連結。')
+                video = values[0] if values else None
             elif len(segments) == 2 and segments[0] in ('embed', 'shorts', 'live'):
                 video = segments[1]
     if video and re.fullmatch(r'[A-Za-z0-9_-]{11}', video):

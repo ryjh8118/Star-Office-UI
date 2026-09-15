@@ -186,6 +186,11 @@ def collect(presentation_root, *, include_canonical=True):
     canonical, canonical_report = canonical_contents() if include_canonical else ([], {'id': 'CONTENT_OS_LEDGER', 'status': 'SKIPPED', 'count': 0})
     office, office_report = office_contents(presentation_root)
     items, duplicates = merge(canonical, office)
+    from creator_youtube import enrich_contents
+    try:
+        items = enrich_contents(items, _read_store(presentation_root))
+    except (OSError, sqlite3.Error, ValueError):
+        office_report.update(status='ERROR', detail='BINDING_STORE_UNAVAILABLE')
     office_report['excluded']['duplicate'] = duplicates
     return items, [canonical_report, office_report]
 

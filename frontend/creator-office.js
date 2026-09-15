@@ -285,8 +285,12 @@
       const error = await r.json().catch(() => null);
       throw Error(error?.error || "輸入內容無效，請確認後再試。");
     }
-    const refusal = r.status === 409 ? await r.json().catch(() => null) : null;
-    if (refusal?.error) throw Error(refusal.error);
+    const refusal = [409, 422].includes(r.status) ? await r.json().catch(() => null) : null;
+    if (refusal?.error) {
+      const error = Error(refusal.error);
+      Object.assign(error, { code: refusal.code, conflict_owner: refusal.conflict_owner, revision: refusal.revision });
+      throw error;
+    }
     if (!r.ok)
       throw Error(
         r.status === 409
@@ -308,6 +312,7 @@
     try {
       presentation = await json("/api/creator/" + path, {
         method: "POST",
+        ...(path === "project-link" ? { signal: AbortSignal.timeout(35000) } : {}),
         ...(form
           ? { body: value }
           : {
@@ -322,6 +327,11 @@
       render();
       return true;
     } catch (e) {
+      if (path === "project-link" && e.code === "YOUTUBE_BINDING_CONFLICT" && !value.rebind_confirmed &&
+          window.confirm(e.message)) {
+        return await performSave(path, { ...value, rebind_confirmed: true,
+          conflict_owner: e.conflict_owner, revision: e.revision }, false);
+      }
       toast(e.message);
       return false;
     } finally {
@@ -1668,7 +1678,7 @@
     input.value = link?.url || "";
     input.setAttribute("aria-label", "專案網址");
     label.append(input);
-    const hint = node("p", "YouTube 影片可在封面播放；其他網址會另開分頁。", "co-muted");
+    const hint = node("p", "YouTube 連結儲存時會驗證影片並更新專案資料；官方未提供的觀看數會保留未知。", "co-muted");
     const submit = button("儲存連結", () => {} , "co-button primary");
     submit.type = "submit";
     form.addEventListener("submit", async (event) => {
@@ -1680,11 +1690,13 @@
         return;
       }
       submit.disabled = true;
+      submit.textContent = "正在驗證並更新…";
       if (await save("project-link", { project_id: p.project_id, url: input.value, revision: presentation.revision })) {
         d.close();
         toast("連結已儲存");
       }
       submit.disabled = false;
+      submit.textContent = "儲存連結";
     });
     input.addEventListener("input", () => input.setCustomValidity(""));
     form.append(label, hint, submit);

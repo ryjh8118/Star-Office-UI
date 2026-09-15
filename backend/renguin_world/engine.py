@@ -113,6 +113,10 @@ def apply_overrides(raw_contents, overrides):
         patch = patches.get(key)
         if isinstance(patch, dict):
             fields = {k: v for k, v in patch.items() if k in OVERRIDE_FIELDS}
+            if raw.get('youtube_binding_provenance') == 'USER_CONFIRMED_BINDING':
+                # Explicit user decisions (including unlink) outrank inferred
+                # URL/date/count overrides. Growth/classification rules stay intact.
+                fields = {k: v for k, v in fields.items() if k not in {'youtube_video_id', 'published_at', 'view_count'}}
             if fields.get('exclude') is True:
                 applied.append({'content_id': key, 'fields': ['exclude']})
                 continue
@@ -467,6 +471,13 @@ def build_state(raw_contents, *, now, config=None, registry=None, overrides=None
         if content['status'] not in config['rules']['growth']['counted_statuses']:
             skipped.append({'content_id': content['content_id'], 'reason': 'STATUS_' + (content['status'] or 'NONE')})
             continue
+        video = views.get(content['youtube_video_id']) or {}
+        use_video = raw.get('youtube_binding_provenance') != 'USER_CONFIRMED_BINDING' or (
+            parse_time((popularity or {}).get('synced_at')) is not None and
+            parse_time((popularity or {})['synced_at']) >= (parse_time(raw.get('youtube_metadata_verified_at')) or now))
+        if use_video and video.get('published_at'):
+            content['published_at'] = iso(parse_time(video['published_at']))
+            content['view_count'] = video.get('view_count')
         stamp = content_date(content)
         if stamp and stamp > now:
             skipped.append({'content_id': content['content_id'], 'reason': 'FUTURE_DATED'})
@@ -475,7 +486,7 @@ def build_state(raw_contents, *, now, config=None, registry=None, overrides=None
             skipped.append({'content_id': content['content_id'], 'reason': 'DUPLICATE_ID'})
             continue
         seen.add(content['content_id'])
-        if content['view_count'] is None and content['youtube_video_id'] in views:
+        if use_video and content['view_count'] is None and content['youtube_video_id'] in views:
             content['view_count'] = views[content['youtube_video_id']].get('view_count')
         content['view_tier'] = view_tier(content['view_count'], config)
         content['title_public'] = content['status'] == 'PUBLISHED'

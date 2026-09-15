@@ -22,6 +22,55 @@ ATTEMPT_FILE = 'youtube_sync_attempt.json'
 STALE_SECONDS = 7 * 86400
 VIDEO_ID = re.compile(r'^[A-Za-z0-9_-]{11}$')
 ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos'
+DECLARED = 'OK_WITH_DECLARED_UNAVAILABLE_DATA'
+UNAVAILABLE = 'YouTube API did not provide public viewCount'
+
+
+class VideoValidationError(ValueError):
+    """Only fixed, non-secret reason codes cross the API boundary."""
+
+
+def parse_item(item):
+    snippet = item.get('snippet') or {}
+    published = datetime.fromisoformat(str(snippet.get('publishedAt')).replace('Z', '+00:00'))
+    if published.tzinfo is None:
+        raise ValueError('PUBLISH_DATE_WITHOUT_TIMEZONE')
+    stats = item.get('statistics', {})
+    if not isinstance(stats, dict):
+        raise ValueError('INVALID_STATISTICS')
+    count = stats.get('viewCount')
+    if 'viewCount' in stats and (not isinstance(count, str) or not count.isascii() or not count.isdigit()):
+        raise ValueError('INVALID_VIEW_COUNT')
+    return {'youtube_video_id': item['id'], 'title': snippet.get('title'),
+            'channel_id': snippet.get('channelId'),
+            'view_count': int(count) if count is not None else None,
+            'published_at': published.astimezone(timezone.utc).isoformat(),
+            'resolution_status': 'FULLY_VERIFIED' if count is not None else 'IDENTITY_VERIFIED',
+            'view_count_status': 'AVAILABLE' if count is not None else 'PUBLIC_VIEWCOUNT_UNAVAILABLE',
+            'view_count_provenance': 'YouTube Data API statistics.viewCount' if count is not None else UNAVAILABLE}
+
+
+def validate_video(video_id, *, api_key=None, fetch=None):
+    if not isinstance(video_id, str) or not VIDEO_ID.fullmatch(video_id):
+        raise VideoValidationError('INVALID_VIDEO_ID')
+    key = api_key or os.environ.get('YOUTUBE_API_KEY')
+    if not key:
+        raise VideoValidationError('YOUTUBE_API_KEY_NOT_CONFIGURED')
+    try:
+        query = urllib.parse.urlencode({'part': 'snippet,statistics', 'id': video_id, 'key': key})
+        data = (fetch or _fetch)(ENDPOINT + '?' + query)
+        if not isinstance(data, dict) or 'error' in data or not isinstance(data.get('items'), list):
+            raise ValueError('INVALID_RESPONSE')
+        if len(data['items']) != 1 or data['items'][0].get('id') != video_id:
+            raise VideoValidationError('VIDEO_NOT_UNIQUELY_FOUND')
+        result = parse_item(data['items'][0])
+        if not result['title'] or not result['channel_id']:
+            raise ValueError('CANONICAL_METADATA_MISSING')
+        return result
+    except VideoValidationError:
+        raise
+    except Exception:
+        raise VideoValidationError('YOUTUBE_VALIDATION_FAILED') from None
 
 
 def load(runtime_root, *, now=None):
@@ -42,14 +91,21 @@ def load(runtime_root, *, now=None):
         return result
     try:
         data = json.loads(path.read_text(encoding='utf-8'))
-        videos = {k: v for k, v in (data.get('videos') or {}).items()
-                  if VIDEO_ID.match(k) and isinstance(v.get('view_count'), int)}
+        videos = data.get('videos') or {}
+        for k, v in videos.items():
+            if not VIDEO_ID.fullmatch(k) or not isinstance(v, dict):
+                raise ValueError('INVALID_VIDEO_RECORD')
+            count = v.get('view_count')
+            if not (type(count) is int and count >= 0) and not (
+                    count is None and v.get('view_count_status') == 'PUBLIC_VIEWCOUNT_UNAVAILABLE'
+                    and v.get('view_count_provenance') == UNAVAILABLE):
+                raise ValueError('UNDECLARED_MISSING_COUNT')
         synced = datetime.fromisoformat(str(data['synced_at']).replace('Z', '+00:00'))
-    except (OSError, ValueError, KeyError, AttributeError):
+    except (OSError, ValueError, KeyError, AttributeError, TypeError):
         return {'status': 'ERROR', 'videos': {}, 'synced_at': None, 'reason': 'POPULARITY_FILE_INVALID'}
     now = now or datetime.now(timezone.utc)
     stale = (now - synced).total_seconds() > STALE_SECONDS
-    status, reason = ('STALE' if stale else 'OK'), None
+    status, reason = ('STALE' if stale else data.get('status', 'OK')), None
     attempt_path = Path(runtime_root) / ATTEMPT_FILE
     if attempt_path.exists():
         try:
@@ -57,9 +113,9 @@ def load(runtime_root, *, now=None):
             attempted_at = datetime.fromisoformat(attempt['attempted_at'])
             if attempted_at >= synced and attempt['status'] != 'OK':
                 status = 'STALE' if stale else attempt['status']
-                if status not in ('GATED', 'PARTIAL', 'ERROR', 'STALE'):
+                if status not in ('GATED', 'PARTIAL', 'ERROR', 'STALE', DECLARED):
                     raise ValueError('UNKNOWN_SYNC_STATUS')
-                reason = 'LATEST_SYNC_NOT_COMPLETE'
+                reason = 'DECLARED_UNAVAILABLE_DATA' if status == DECLARED else 'LATEST_SYNC_NOT_COMPLETE'
         except (OSError, ValueError, KeyError, TypeError):
             status, reason = 'ERROR', 'SYNC_ATTEMPT_INVALID'
     return {'status': status, 'videos': videos, 'synced_at': data['synced_at'], 'reason': reason}
@@ -72,7 +128,7 @@ def record_attempt(runtime_root, result):
     status, timestamp and counts, never request URLs, IDs, exception text or keys.
     """
     status = result.get('status')
-    if status not in ('OK', 'GATED', 'PARTIAL', 'ERROR'):
+    if status not in ('OK', 'GATED', 'PARTIAL', 'ERROR', DECLARED):
         status = 'ERROR'
     data = {'status': status, 'attempted_at': datetime.now(timezone.utc).isoformat()}
     for field in ('synced', 'received', 'requested', 'eligible_contents', 'unmapped_contents'):
@@ -109,15 +165,11 @@ def sync(runtime_root, video_ids, *, api_key=None, fetch=_fetch, now=None):
             if not isinstance(data, dict) or 'error' in data or not isinstance(data.get('items'), list):
                 raise ValueError('INVALID_YOUTUBE_RESPONSE')
             for item in data['items']:
-                stats = item.get('statistics') or {}
-                published = (item.get('snippet') or {}).get('publishedAt')
-                if item.get('id') not in batch or not str(stats.get('viewCount', '')).isascii() or not str(stats.get('viewCount', '')).isdigit():
+                if item.get('id') not in batch:
                     continue
-                stamp = datetime.fromisoformat(str(published).replace('Z', '+00:00'))
-                if stamp.tzinfo is None:
-                    raise ValueError('PUBLISH_DATE_WITHOUT_TIMEZONE')
-                videos[item['id']] = {'view_count': int(stats['viewCount']),
-                                      'published_at': stamp.astimezone(timezone.utc).isoformat()}
+                if item['id'] in videos:
+                    raise ValueError('DUPLICATE_RESPONSE_ID')
+                videos[item['id']] = parse_item(item)
         except Exception:
             # urllib / injected clients may put the complete credential-bearing
             # URL in exception messages. Never log or propagate those messages.
@@ -131,6 +183,9 @@ def sync(runtime_root, video_ids, *, api_key=None, fetch=_fetch, now=None):
     path = Path(runtime_root)
     path.mkdir(parents=True, exist_ok=True)
     temp = path / (FILE + '.tmp')
-    temp.write_text(json.dumps({'synced_at': stamp, 'videos': videos}, ensure_ascii=False, indent=1), encoding='utf-8')
+    unavailable = sum(v['view_count'] is None for v in videos.values())
+    status = DECLARED if unavailable else 'OK'
+    temp.write_text(json.dumps({'synced_at': stamp, 'status': status, 'videos': videos}, ensure_ascii=False, indent=1), encoding='utf-8')
     temp.replace(path / FILE)
-    return {'status': 'OK', 'synced': len(videos), 'requested': len(ids)}
+    return {'status': status, 'synced': len(videos), 'requested': len(ids),
+            'fully_verified': len(videos) - unavailable, 'public_viewcount_unavailable': unavailable}

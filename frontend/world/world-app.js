@@ -55,6 +55,8 @@
   };
   const STATUS = {
     OK: "正常",
+    OK_WITH_DECLARED_UNAVAILABLE_DATA: "已同步，部分資料未提供",
+    PARTIAL: "同步未完整完成",
     SYNC_ERROR: "無法確認",
     GATED: "待授權",
     NONE: "未設定",

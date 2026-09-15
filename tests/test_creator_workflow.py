@@ -141,7 +141,12 @@ class WorkflowTests(unittest.TestCase):
         self.source('AI_ROUGH_CUT')
         self.get()
         self.client.post('/api/creator/project',json={'project_id':'TEST-1','display_name':'機場REEL'})
-        self.client.post('/api/creator/project-link',json={'project_id':'TEST-1','url':'https://youtu.be/dQw4w9WgXcQ','revision':self.get()['revision']})
+        from renguin_world.youtube_adapter import parse_item
+        verified = parse_item({'id': 'dQw4w9WgXcQ', 'snippet': {'publishedAt': '2025-01-01T00:00:00Z'}, 'statistics': {'viewCount': '10'}})
+        with patch('renguin_world.youtube_adapter.validate_video', return_value=verified), \
+             patch('creator_youtube.reserve_verified_legacy'), patch('renguin_world.service.live_state'):
+            result = self.client.post('/api/creator/project-link',json={'project_id':'TEST-1','url':'https://youtu.be/dQw4w9WgXcQ','revision':self.get()['revision']})
+            self.assertEqual(result.status_code, 200)
         before = copy.deepcopy(self.get()['projects']['TEST-1'])
         data = self.copy_short().json
         pid = next(iter(data['local_projects']))

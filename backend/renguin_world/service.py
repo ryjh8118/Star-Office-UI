@@ -60,6 +60,9 @@ def build_live(presentation_root, frontend_dir, *, now=None):
     contents, sources = content_adapter.collect(presentation_root)
     overrides, override_report = load_overrides(runtime)
     popularity = youtube_adapter.load(runtime)
+    if override_report['status'] != 'ERROR' and not any(s['status'] in ('ERROR', 'SYNC_ERROR') for s in sources):
+        merged, _ = engine.apply_overrides(contents, overrides)
+        write_resolutions(runtime, merged, popularity, config, now=now)
     reg = registry(frontend_dir, config)
     sources = sources + [override_report,
                          {'id': 'YOUTUBE_POPULARITY', 'status': popularity['status'], 'count': len(popularity['videos']),
@@ -68,6 +71,55 @@ def build_live(presentation_root, frontend_dir, *, now=None):
     return engine.build_state(contents, now=now or datetime.now(timezone.utc),
                               config=config, registry=reg, overrides=overrides, popularity=popularity,
                               sources=sources, source='LIVE')
+
+
+def write_resolutions(runtime, contents, popularity, config, *, now=None):
+    """Derived status, including immediate manual bindings and intentional unlink.
+
+    Never upgrade an absent API video to verified. Keep reconciliation evidence
+    when rewriting this disposable projection after a project URL changes.
+    """
+    from uuid import uuid4
+    now = now or datetime.now(timezone.utc)
+    target = Path(runtime) / 'youtube_resolutions.json'
+    try:
+        previous = json.loads(target.read_text(encoding='utf-8')).get('contents', {})
+    except (OSError, ValueError):
+        previous = {}
+    rows = {}
+    for raw in contents:
+        c = engine.normalize_content(raw, config)
+        if c is None or c['status'] not in config['rules']['growth']['counted_statuses']:
+            continue
+        v = (popularity.get('videos') or {}).get(c['youtube_video_id'])
+        manual = raw.get('youtube_binding_provenance') == 'USER_CONFIRMED_BINDING'
+        snapshot_time = engine.parse_time(popularity.get('synced_at'))
+        if manual and (not snapshot_time or snapshot_time < (engine.parse_time(raw.get('youtube_metadata_verified_at')) or now)):
+            v = {'view_count': raw.get('view_count'), 'published_at': raw.get('published_at'),
+                 'resolution_status': raw.get('youtube_resolution_status'),
+                 'view_count_status': raw.get('view_count_status'),
+                 'view_count_provenance': raw.get('view_count_provenance')} if c['youtube_video_id'] else None
+        stamp = engine.parse_time(v.get('published_at')) if v else engine.content_date(c)
+        if stamp and stamp > now:
+            continue
+        row = {'youtube_video_id': c['youtube_video_id'],
+               'resolution_status': v['resolution_status'] if v else 'IDENTITY_UNRESOLVED',
+               'view_count': v['view_count'] if v else None,
+               'view_count_status': v['view_count_status'] if v else 'IDENTITY_UNRESOLVED',
+               'provenance': v['view_count_provenance'] if v else 'CANONICAL_PROJECT_IDENTITY_V2_RECONCILIATION_REQUIRED',
+               'popularity_bucket': engine.view_tier(v['view_count'], config) if v else None,
+               'statistics_snapshot_status': popularity['status'],
+               'binding_provenance': raw.get('youtube_binding_provenance'),
+               'published_at': v.get('published_at') if v else None}
+        evidence = previous.get(c['content_id'], {}).get('identity_evidence')
+        if evidence:
+            row['identity_evidence'] = evidence
+        rows[c['content_id']] = row
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temp = target.with_suffix('.' + uuid4().hex + '.tmp')
+    temp.write_text(json.dumps({'contents': rows}, ensure_ascii=False, indent=1), encoding='utf-8')
+    temp.replace(target)
+    return rows
 
 
 def sync_youtube(presentation_root):
@@ -104,8 +156,17 @@ def sync_youtube(presentation_root):
     ids = [c['youtube_video_id'] for c in eligible]
     unmapped = sum(not isinstance(v, str) or not youtube_adapter.VIDEO_ID.fullmatch(v) for v in ids)
     result = youtube_adapter.sync(runtime, ids)
-    if result['status'] == 'OK' and unmapped:
-        result = {**result, 'status': 'PARTIAL', 'reason': 'UNMAPPED_CONTENTS', 'snapshot_saved': True}
+    if result['status'] in ('OK', youtube_adapter.DECLARED):
+        snapshot = youtube_adapter.load(runtime)
+        expected = {v for v in ids if isinstance(v, str) and youtube_adapter.VIDEO_ID.fullmatch(v)}
+        if not expected or not expected.issubset(snapshot['videos']):
+            return finish({'status': 'ERROR', 'reason': 'VERIFIED_SNAPSHOT_MISSING', 'synced': 0,
+                           'eligible_contents': len(eligible), 'unmapped_contents': unmapped})
+        write_resolutions(runtime, merged, snapshot, config)
+        if unmapped or result['status'] == youtube_adapter.DECLARED:
+            result = {**result, 'status': youtube_adapter.DECLARED,
+                      'data_integrity_status': 'PASS_WITH_DECLARED_UNAVAILABLE_DATA',
+                      'reason': 'DECLARED_UNAVAILABLE_DATA', 'snapshot_saved': True}
     return finish({**result, 'eligible_contents': len(eligible), 'unmapped_contents': unmapped})
 
 

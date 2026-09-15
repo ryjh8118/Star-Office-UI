@@ -95,7 +95,7 @@ Schema `RENGUIN_WORLD_STATE_V1`. Everything the spec asks for, plus provenance:
   "residents": { "crowd_density": "", "capacity": 0, "visible": 0, "render_cap": { "desktop": 28, "mobile": 14 }, "archetypes": [] },
   "goosebaby": { "population": { "total": 0, "by_tier": {} }, "named_avatars": 0, "district_unlocked": false },
   "gossip": [{ "id": "", "category": "", "text": "", "speaker": { "type": "", "id": "", "label": "" } }],
-  "popularity": { "status": "GATED | PARTIAL | OK | STALE | ERROR | MOCK", "recent_top_tier": null, "tracked_videos": 0 },
+  "popularity": { "status": "GATED | PARTIAL | OK | OK_WITH_DECLARED_UNAVAILABLE_DATA | STALE | ERROR | MOCK", "recent_top_tier": null, "tracked_videos": 0 },
   "visual": { "city_variant": "riverside-s4", "art_theme_version": "renguin-iso-v1", "era_variant": "riverside", "city_radius": 3, "buildings": 12, "building_height": 1, "roads": "", "landmarks": [], "landmark_count": 0, "construction": "", "grass_level": 0, "lights_level": 0, "shops_open": 1, "future_gate": "LOCKED | PREVIEW | UNLOCKED" },
   "sources": [{ "id": "", "status": "", "count": 0 }],
   "overrides_applied": [], "skipped": [],

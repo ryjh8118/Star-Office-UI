@@ -283,16 +283,64 @@ def project_link():
         link = normalize(value.get('url'))
     except ValueError as error:
         return jsonify({'error': str(error)}), 400
+    current = read()
+    if value.get('revision') != current['revision']:
+        abort(409)
+    metadata = None
+    if link and link.get('youtube_id'):
+        from renguin_world.youtube_adapter import validate_video, VideoValidationError
+        try:
+            metadata = validate_video(link['youtube_id'])
+        except VideoValidationError as error:
+            return jsonify({'error': 'YouTube 影片驗證失敗，原連結未變更，請稍後再試。',
+                            'code': str(error)}), 422
+    elif link and (urlsplit(link['url']).hostname or '').lower() in (
+            'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com',
+            'youtu.be', 'www.youtu.be', 'youtube-nocookie.com', 'www.youtube-nocookie.com'):
+        return jsonify({'error': '請貼上有效且唯一的 YouTube 影片網址。'}), 400
     def update(data):
         if value.get('revision') != data['revision']:
             abort(409)
         meta = data['projects'].setdefault(pid, {})
         if meta.get('hidden'):
             abort(409)
+        from creator_youtube import apply, canonical_id, FIELD, reserve_verified_legacy
+        from renguin_world import service
+        try:
+            reserve_verified_legacy(data, service.runtime_root(current_app.config['USER_PRESENTATION_ROOT']))
+        except ValueError as error:
+            if str(error) != 'LEGACY_BINDING_RECONCILIATION_REQUIRED':
+                raise
+            abort(make_response(jsonify(error='既有影片連結需要先完成資料驗證，原連結未變更。', code=str(error)), 503))
+        if metadata is not None:
+            apply(data, pid, metadata, confirmed_owner=value.get('conflict_owner') if value.get('rebind_confirmed') is True else None)
+        elif link is None:
+            cid = canonical_id(data, pid)
+            old_video = (data.get(FIELD, {}).get(cid) or {}).get('youtube_video_id')
+            apply(data, pid, None)
+            for other_pid, other in data['projects'].items():
+                if old_video and canonical_id(data, other_pid) == cid and (other.get('link') or {}).get('youtube_id') == old_video:
+                    other['link'] = None
+        elif (data.get(FIELD, {}).get(canonical_id(data, pid)) or {}).get('youtube_video_id'):
+            abort(409, description='REMOVE_YOUTUBE_LINK_FIRST')
         if meta.get('link') != link:
             meta['link'] = link
             meta.setdefault('history', []).append({'type':'PROJECT_LINK','timestamp':now(),'source':'USER','text':'你更新了專案連結' if link else '你移除了專案連結'})
-    return change(update)
+    from creator_youtube import BindingConflict
+    try:
+        result = change(update)
+    except BindingConflict as conflict:
+        return jsonify({'error': '這支 YouTube 影片目前已連結到另一個專案，要改成目前專案嗎？',
+                        'code': 'YOUTUBE_BINDING_CONFLICT', 'conflict_owner': conflict.owner,
+                        'revision': read()['revision']}), 409
+    if metadata is not None or link is None:
+        # The response contains the refreshed metadata. Recalculate World now;
+        # the user never needs to press a separate sync button after binding.
+        from renguin_world import service
+        runtime = service.runtime_root(current_app.config['USER_PRESENTATION_ROOT'])
+        (runtime / 'cache' / 'world_state.json').unlink(missing_ok=True)
+        service.live_state(current_app.config['USER_PRESENTATION_ROOT'], current_app.static_folder, refresh=True)
+    return result
 
 @bp.post('/api/creator/cover/remove')
 def remove_cover():

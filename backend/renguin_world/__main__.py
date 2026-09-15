@@ -49,7 +49,7 @@ def main(argv=None):
         output = service.sync_youtube(args.presentation_root)
     json.dump(output, sys.stdout, ensure_ascii=False, indent=1)
     print()
-    return 0 if args.command != 'youtube-sync' or output['status'] == 'OK' else 1
+    return 0 if args.command != 'youtube-sync' or output['status'] in ('OK', 'OK_WITH_DECLARED_UNAVAILABLE_DATA') else 1
 
 
 if __name__ == '__main__':

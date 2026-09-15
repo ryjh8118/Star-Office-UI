@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'backend'))
 from renguin_world import engine, service, youtube_adapter
 from renguin_world.__main__ import main
+original = youtube_adapter.sync
 
 
 def item(i, **extra):
@@ -74,7 +75,7 @@ class SafeSync(unittest.TestCase):
             overrides = {'contents': {'test-0': {'exclude': True}, 'test-99': {'youtube_video_id': 'v0000000099'}}}
             with patch.object(service.content_adapter, 'collect', return_value=(raw, [])), \
                  patch.object(service, 'load_overrides', return_value=(overrides, {'status': 'OK'})), \
-                 patch.object(youtube_adapter, 'sync', return_value={'status': 'OK', 'synced': 20}) as sync:
+                 patch.object(youtube_adapter, 'sync', side_effect=lambda rt, ids: original(rt, ids, api_key='fixture', fetch=lambda _: response(ids))) as sync:
                 result = service.sync_youtube('fixture')
             ids = sync.call_args.args[1]
             self.assertEqual(len(ids), 20)
@@ -152,9 +153,36 @@ class SafeSync(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'RENGUIN_WORLD_RUNTIME_ROOT': tmp}), \
              patch.object(service.content_adapter, 'collect', return_value=([item(0), item(1, youtube_video_id=None)], [])), \
              patch.object(service, 'load_overrides', return_value=({}, {'status': 'NONE'})), \
-             patch.object(youtube_adapter, 'sync', return_value={'status': 'OK', 'synced': 1}):
+             patch.object(youtube_adapter, 'sync', side_effect=lambda rt, ids: original(rt, ids, api_key='fixture', fetch=lambda _: response(['v0000000000']))):
             result = service.sync_youtube('fixture')
-            self.assertEqual((result['status'], result['unmapped_contents'], result['snapshot_saved']), ('PARTIAL', 1, True))
+            self.assertEqual((result['status'], result['unmapped_contents'], result['snapshot_saved']), (youtube_adapter.DECLARED, 1, True))
+            self.assertEqual(result['data_integrity_status'], 'PASS_WITH_DECLARED_UNAVAILABLE_DATA')
+
+    def test_twenty_explicit_resolutions_and_missing_count_is_not_zero(self):
+        raw = [item(i) for i in range(19)] + [item(19, youtube_video_id=None)]
+        payload = response([r['youtube_video_id'] for r in raw[:19]])
+        for row in payload['items'][16:]:
+            row['statistics'].pop('viewCount')
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'RENGUIN_WORLD_RUNTIME_ROOT': tmp}), \
+             patch.object(service.content_adapter, 'collect', return_value=(raw, [])), \
+             patch.object(service, 'load_overrides', return_value=({}, {'status': 'NONE'})), \
+             patch.object(youtube_adapter, 'sync', wraps=lambda rt, ids: original(rt, ids, api_key='fixture', fetch=lambda _: payload)):
+            result = service.sync_youtube('fixture')
+            rows = list(json.loads((Path(tmp) / 'youtube_resolutions.json').read_text())['contents'].values())
+            self.assertEqual(result['status'], youtube_adapter.DECLARED)
+            self.assertEqual(len(rows), 20)
+            self.assertEqual(sum(r['resolution_status'] == 'FULLY_VERIFIED' for r in rows), 16)
+            self.assertEqual(sum(r['resolution_status'] == 'IDENTITY_UNRESOLVED' for r in rows), 1)
+            missing = [r for r in rows if r['view_count_status'] == 'PUBLIC_VIEWCOUNT_UNAVAILABLE']
+            self.assertEqual(len(missing), 3)
+            self.assertTrue(all(r['view_count'] is None and r['popularity_bucket'] is None and r['provenance'] == youtube_adapter.UNAVAILABLE for r in missing))
+
+    def test_invalid_present_counts_are_errors_not_declared_unavailable(self):
+        for invalid in (None, 0, False, '-1', '1.5', '１２'):
+            payload = response(['v0000000001'])
+            payload['items'][0]['statistics']['viewCount'] = invalid
+            with self.subTest(invalid=invalid), tempfile.TemporaryDirectory() as tmp:
+                self.assertEqual(youtube_adapter.sync(tmp, ['v0000000001'], api_key='fixture', fetch=lambda _: payload)['status'], 'ERROR')
 
     def test_cli_uses_environment_root_and_nonzero_exit_on_gate(self):
         with patch.dict('os.environ', {'RENGUIN_PRESENTATION_ROOT': 'isolated-fixture'}), \
