@@ -584,7 +584,8 @@ a:focus-visible,
   .sw-swipe-hint {
     display: block;
     position: absolute;
-    z-index: 8;
+    /* Sections create no stacking context: the hint shares the world's stack, so it sits above the cable (CABLE_Z) and every layer. */
+    z-index: 90;
     left: 50%;
     top: calc(380 * var(--u));
     translate: -50% 0;

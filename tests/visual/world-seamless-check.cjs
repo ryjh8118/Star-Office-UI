@@ -12,6 +12,7 @@ const fs = require("node:fs");
 const BASE = (process.argv[2] || "http://127.0.0.1:19119").replace(/\/$/, "");
 if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(BASE)) throw Error("LOCAL_ONLY");
 const OUT = process.argv.includes("--out") ? process.argv[process.argv.indexOf("--out") + 1] : null;
+if (OUT) fs.mkdirSync(OUT, { recursive: true });
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const PORT = 9300 + Math.floor(Math.random() * 90);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -228,6 +229,9 @@ async function main() {
     await sleep(1500);
     const phoneCity = await js("({zone: window.RenguinSeamlessWorld.debug().zone, sizes: [...document.querySelectorAll('.sw-city [data-layer=residents] .sw-actor')].filter(a=>{const r=a.getBoundingClientRect(); return r.right>0&&r.left<innerWidth}).map(a=>Math.round(a.querySelector('img').getBoundingClientRect().height)), left: document.querySelector('.sw-street-scroll').scrollLeft})");
     check("Phone: arrives in the city with readable residents (>= 95 px)", phoneCity.zone === "city" && phoneCity.sizes.length && phoneCity.sizes.every((h) => h >= 95), phoneCity);
+    // The hint, cable and gondola ignore the pointer, so hit-test them with it switched on for one synchronous read.
+    const hint = await js("(()=>{const hint=document.querySelector('.sw-swipe-hint');const probe=[hint,document.querySelector('.sw-cable'),document.querySelector('.sw-gondola')];probe.forEach(e=>e.style.pointerEvents='auto');const r=hint.getBoundingClientRect();const over=[];for(let fx=0.03;fx<1;fx+=0.03)for(const fy of [0.25,0.5,0.75]){const t=document.elementFromPoint(r.left+r.width*fx,r.top+r.height*fy);if(t&&t!==hint&&!hint.contains(t))over.push(typeof t.className==='string'?t.className:t.tagName)}probe.forEach(e=>e.style.pointerEvents='');return {shown:getComputedStyle(hint).display!=='none'&&r.width>0,covered:[...new Set(over)]}})()");
+    check("Phone: nothing in the world (cable, gondola, layers) is painted over the swipe hint", hint.shown && hint.covered.length === 0, hint);
     await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 330, y: 560 }] });
     for (let j = 1; j <= 12; j++) {
       await send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 330 - j * 24, y: 560 }] });

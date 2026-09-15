@@ -122,6 +122,11 @@ test("B. layer architecture: Renguin City is a stack of independent layers, neve
   const descent = scene.sections.find((s) => s.zone === "descent").layers;
   assert.ok(descent.find((l) => l.name === "clouds-near").z > scene.cable_z && descent.find((l) => l.name === "cloud-sea").z < scene.cable_z, "the cable passes between cloud layers");
   assert.ok(z.buildings < scene.cable_z && scene.cable_z < z.residents, "the gondola docks above the station, below residents");
+  // Sections create no stacking context, so text the page lays over the world shares the cable's stack.
+  const css = read("frontend/world/seamless.css");
+  const hintZ = Math.max(...[...css.matchAll(/\.sw-swipe-hint \{[^}]*?z-index: (\d+)/g)].map((m) => +m[1]));
+  const top = Math.max(scene.cable_z, ...scene.sections.flatMap((s) => s.layers.map((l) => l.z)));
+  assert.ok(hintZ > top, `the swipe hint (z ${hintZ}) is painted above the cable and every world layer (z ${top})`);
 });
 
 test("growth is visible on the street: more buildings, a construction site, the newest poster", () => {
