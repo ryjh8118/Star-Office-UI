@@ -132,6 +132,8 @@ test("growth is visible on the street: more buildings, a construction site, the 
   assert.ok(!Art.city(state("riverside", { visual: { ...state().visual, construction: "COMPLETE" } })).layers.buildings.includes("sw-construction"));
   const empty = Art.city(state("camp", { featured_contents: [], content: { total: 0 }, visual: { ...state().visual, era_variant: "camp", buildings: 0 } }));
   assert.equal(empty.stats.poster, false);
+  const tufts = (s) => (Art.city(s).layers.foreground.match(/sw-tuft/g) || []).length;
+  assert.ok(tufts(state("riverside", { visual: { ...state().visual, grass_level: 3 } })) > tufts(state()), "a dormant city grows tall grass, as in V1");
   assert.equal(empty.stats.front_houses, 0);
 });
 

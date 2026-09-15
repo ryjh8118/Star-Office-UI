@@ -523,6 +523,9 @@
     for (const x of [30, 500, 790, 1100, 1350, 1600, 1860, 2140, 2400, 2760]) fg += use("sw-tuft", x, base + 70, 1.2) + use("sw-tuft", x + 26, base + 72, 0.9);
     for (const x of [250, 1060, 1590, 2380]) fg += use("sw-flowers", x, base + 72, 1.1);
     fg += use("sw-bush", 20, base + 96, 1.5) + use("sw-bush", W - 30, base + 96, 1.6) + use("sw-fence", 2560, base + 70, 1);
+    // A dormant city grows tall grass (V1's grass_level); nothing is taken away.
+    const grass = visual.grass_level || 0;
+    if (grass >= 2) for (let k = 0; k < W / 120; k++) fg += use("sw-tuft", 30 + k * 120 + hash(k + "|tallgrass") * 40, base + 66, 1.5 + grass * 0.25);
 
     // Effects: descriptors only; the page draws them in its own layer.
     const effects = [];
@@ -542,7 +545,7 @@
         foreground: svg("sw-city-foreground", fg),
       },
       effects,
-      stats: { variant, front_houses: frontCount, back_houses: backCount, river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
+      stats: { variant, grass, front_houses: frontCount, back_houses: backCount, river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
     };
   }
 
