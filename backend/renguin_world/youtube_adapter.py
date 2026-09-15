@@ -18,6 +18,7 @@ import urllib.parse
 import urllib.request
 
 FILE = 'youtube_popularity.json'
+ATTEMPT_FILE = 'youtube_sync_attempt.json'
 STALE_SECONDS = 7 * 86400
 VIDEO_ID = re.compile(r'^[A-Za-z0-9_-]{11}$')
 ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos'
@@ -27,8 +28,18 @@ def load(runtime_root, *, now=None):
     path = Path(runtime_root) / FILE
     has_key = bool(os.environ.get('YOUTUBE_API_KEY'))
     if not path.is_file():
-        return {'status': 'READY_TO_SYNC' if has_key else 'GATED', 'videos': {}, 'synced_at': None,
-                'reason': None if has_key else 'YOUTUBE_API_KEY_NOT_CONFIGURED'}
+        result = {'status': 'READY_TO_SYNC' if has_key else 'GATED', 'videos': {}, 'synced_at': None,
+                  'reason': None if has_key else 'YOUTUBE_API_KEY_NOT_CONFIGURED'}
+        attempt_path = Path(runtime_root) / ATTEMPT_FILE
+        if attempt_path.exists():
+            try:
+                status = json.loads(attempt_path.read_text(encoding='utf-8'))['status']
+                if status not in ('GATED', 'PARTIAL', 'ERROR'):
+                    raise ValueError('NO_SNAPSHOT_FOR_SUCCESS')
+                result.update(status=status, reason='LATEST_SYNC_NOT_COMPLETE')
+            except (OSError, ValueError, KeyError, TypeError):
+                result.update(status='ERROR', reason='SYNC_ATTEMPT_INVALID')
+        return result
     try:
         data = json.loads(path.read_text(encoding='utf-8'))
         videos = {k: v for k, v in (data.get('videos') or {}).items()
@@ -38,7 +49,41 @@ def load(runtime_root, *, now=None):
         return {'status': 'ERROR', 'videos': {}, 'synced_at': None, 'reason': 'POPULARITY_FILE_INVALID'}
     now = now or datetime.now(timezone.utc)
     stale = (now - synced).total_seconds() > STALE_SECONDS
-    return {'status': 'STALE' if stale else 'OK', 'videos': videos, 'synced_at': data['synced_at'], 'reason': None}
+    status, reason = ('STALE' if stale else 'OK'), None
+    attempt_path = Path(runtime_root) / ATTEMPT_FILE
+    if attempt_path.exists():
+        try:
+            attempt = json.loads(attempt_path.read_text(encoding='utf-8'))
+            attempted_at = datetime.fromisoformat(attempt['attempted_at'])
+            if attempted_at >= synced and attempt['status'] != 'OK':
+                status = 'STALE' if stale else attempt['status']
+                if status not in ('GATED', 'PARTIAL', 'ERROR', 'STALE'):
+                    raise ValueError('UNKNOWN_SYNC_STATUS')
+                reason = 'LATEST_SYNC_NOT_COMPLETE'
+        except (OSError, ValueError, KeyError, TypeError):
+            status, reason = 'ERROR', 'SYNC_ATTEMPT_INVALID'
+    return {'status': status, 'videos': videos, 'synced_at': data['synced_at'], 'reason': reason}
+
+
+def record_attempt(runtime_root, result):
+    """A failed/partial CLI run must not leave the World claiming full live sync.
+
+    Retain the last good snapshot separately. This record contains only enum
+    status, timestamp and counts, never request URLs, IDs, exception text or keys.
+    """
+    status = result.get('status')
+    if status not in ('OK', 'GATED', 'PARTIAL', 'ERROR'):
+        status = 'ERROR'
+    data = {'status': status, 'attempted_at': datetime.now(timezone.utc).isoformat()}
+    for field in ('synced', 'received', 'requested', 'eligible_contents', 'unmapped_contents'):
+        value = result.get(field)
+        if type(value) is int and value >= 0:
+            data[field] = value
+    path = Path(runtime_root)
+    path.mkdir(parents=True, exist_ok=True)
+    temp = path / (ATTEMPT_FILE + '.tmp')
+    temp.write_text(json.dumps(data, indent=1), encoding='utf-8')
+    temp.replace(path / ATTEMPT_FILE)
 
 
 def _fetch(url):

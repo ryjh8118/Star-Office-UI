@@ -77,10 +77,18 @@ def sync_youtube(presentation_root):
     growth inputs are rewritten by this statistics operation.
     """
     runtime = runtime_root(presentation_root)
+
+    def finish(result):
+        youtube_adapter.record_attempt(runtime, result)
+        # Invalidate the disposable state after any attempt: an older cached
+        # OK result must not mask a newly detected incomplete or failed sync.
+        (runtime / 'cache' / 'world_state.json').unlink(missing_ok=True)
+        return result
+
     raw, sources = content_adapter.collect(presentation_root)
     overrides, report = load_overrides(runtime)
     if report['status'] == 'ERROR' or any(s['status'] in ('ERROR', 'SYNC_ERROR') for s in sources):
-        return {'status': 'GATED', 'reason': 'CONTENT_SOURCE_OR_OVERRIDES_INVALID', 'synced': 0}
+        return finish({'status': 'GATED', 'reason': 'CONTENT_SOURCE_OR_OVERRIDES_INVALID', 'synced': 0})
     merged, _ = engine.apply_overrides(raw, overrides)
     config = engine.load_config()
     now = datetime.now(timezone.utc)
@@ -96,13 +104,9 @@ def sync_youtube(presentation_root):
     ids = [c['youtube_video_id'] for c in eligible]
     unmapped = sum(not isinstance(v, str) or not youtube_adapter.VIDEO_ID.fullmatch(v) for v in ids)
     result = youtube_adapter.sync(runtime, ids)
-    if result['status'] == 'OK':
-        # Make the next World request rebuild from the new snapshot, even
-        # inside the ordinary TTL. This touches only its disposable cache.
-        (runtime / 'cache' / 'world_state.json').unlink(missing_ok=True)
-        if unmapped:
-            result = {**result, 'status': 'PARTIAL', 'reason': 'UNMAPPED_CONTENTS', 'snapshot_saved': True}
-    return {**result, 'eligible_contents': len(eligible), 'unmapped_contents': unmapped}
+    if result['status'] == 'OK' and unmapped:
+        result = {**result, 'status': 'PARTIAL', 'reason': 'UNMAPPED_CONTENTS', 'snapshot_saved': True}
+    return finish({**result, 'eligible_contents': len(eligible), 'unmapped_contents': unmapped})
 
 
 def live_state(presentation_root, frontend_dir, *, refresh=False):

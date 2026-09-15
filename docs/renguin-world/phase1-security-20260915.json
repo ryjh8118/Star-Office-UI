@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "files_checked": 755,
+  "credential_pattern_or_exact_key_hits": 0,
+  "diff_and_staged_checked": true,
+  "oauth_flow_started": false,
+  "oauth_secrets_read": false,
+  "member_authority_writes": 0,
+  "scope": "current tracked files in both worktrees, current diffs and index, phase1 evidence; no secrets found requiring history remediation"
+}

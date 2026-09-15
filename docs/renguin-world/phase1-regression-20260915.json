@@ -1,0 +1,23 @@
+[
+  {
+    "test": "tests/test_world_engine.py",
+    "exit_code": 0,
+    "output": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.273s\n\nOK\n"
+  },
+  {
+    "test": "tests/test_world_sources.py",
+    "exit_code": 0,
+    "output": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.306s\n\nOK\n"
+  },
+  {
+    "test": "tests/test_world_youtube_sync.py",
+    "exit_code": 0,
+    "output": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.071s\n\nOK\n",
+    "initial_fixture_error_fixed": "mock registry required sources=[]"
+  },
+  {
+    "test": "tests/world-scene.test.cjs",
+    "exit_code": 0,
+    "output": "\u2714 every era uses the same camera, island and outline, and differs only in what stands on it (15.589ms)\n\u2714 the city SVG never animates; walkers, characters and effects live in the overlay (1.9243ms)\n\u2714 resident density follows the preset and the render cap, tighter on phones (2.7275ms)\n\u2714 growth only adds buildings; quiet only dims them (7.9331ms)\n\u2714 the space gate is hidden, then scaffolded, then lit (2.4217ms)\n\u2714 configured landmarks reach their renderer without early unlocks (2.5545ms)\n\u2714 text from data is escaped and characters render as the authority's image or a token (0.6171ms)\n\u2714 an empty world still renders: the lot, the campfire and nothing pretending to be content (0.3666ms)\n\u2714 the Office never loads the world: only a link points at /world (38.5009ms)\n\u2139 tests 9\n\u2139 suites 0\n\u2139 pass 9\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 160.9753\n"
+  }
+]

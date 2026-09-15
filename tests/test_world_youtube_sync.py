@@ -83,7 +83,7 @@ class SafeSync(unittest.TestCase):
             self.assertEqual(result['unmapped_contents'], 0)
             self.assertFalse(cache.exists())
 
-    def test_failed_sync_leaves_cache_and_inputs_untouched(self):
+    def test_failed_sync_invalidates_old_success_cache_but_preserves_inputs(self):
         with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'RENGUIN_WORLD_RUNTIME_ROOT': tmp}):
             cache = Path(tmp) / 'cache' / 'world_state.json'
             cache.parent.mkdir()
@@ -95,8 +95,58 @@ class SafeSync(unittest.TestCase):
                  patch.object(youtube_adapter, 'sync', return_value={'status': 'GATED', 'synced': 0}):
                 result = service.sync_youtube('fixture')
             self.assertEqual(result['unmapped_contents'], 1)
-            self.assertEqual(cache.read_text(), 'original')
+            self.assertFalse(cache.exists())
+            self.assertEqual(youtube_adapter.load(tmp)['status'], 'GATED')
             self.assertEqual(json.dumps(raw), before)
+
+    def test_partial_latest_attempt_is_not_hidden_by_fresh_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            youtube_adapter.sync(tmp, ['v0000000001'], api_key='fixture', fetch=lambda _: response(['v0000000001']))
+            saved = (Path(tmp) / youtube_adapter.FILE).read_bytes()
+            youtube_adapter.record_attempt(tmp, {'status': 'PARTIAL', 'eligible_contents': 20, 'unmapped_contents': 19})
+            loaded = youtube_adapter.load(tmp)
+            self.assertEqual(loaded['status'], 'PARTIAL')
+            self.assertEqual(loaded['videos']['v0000000001']['view_count'], 100000)
+            self.assertEqual((Path(tmp) / youtube_adapter.FILE).read_bytes(), saved)
+
+    def test_quota_error_cannot_leak_request_or_masquerade_as_live(self):
+        from urllib.error import HTTPError
+        with tempfile.TemporaryDirectory() as tmp:
+            def fail(url):
+                raise HTTPError(url, 403, 'quotaExceeded secret-fixture', {}, None)
+            result = youtube_adapter.sync(tmp, ['v0000000001'], api_key='secret-fixture', fetch=fail)
+            youtube_adapter.record_attempt(tmp, result)
+            self.assertEqual(result['status'], 'ERROR')
+            self.assertEqual(youtube_adapter.load(tmp)['status'], 'ERROR')
+            self.assertNotIn('secret-fixture', json.dumps(result) + (Path(tmp) / youtube_adapter.ATTEMPT_FILE).read_text())
+
+    def test_stale_snapshot_never_claims_live_success(self):
+        from datetime import timedelta
+        with tempfile.TemporaryDirectory() as tmp:
+            past = datetime.now(timezone.utc) - timedelta(days=8)
+            youtube_adapter.sync(tmp, ['v0000000001'], api_key='fixture', fetch=lambda _: response(['v0000000001']), now=past)
+            self.assertEqual(youtube_adapter.load(tmp)['status'], 'STALE')
+
+    def test_later_success_recovers_after_failed_attempt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            youtube_adapter.record_attempt(tmp, {'status': 'ERROR'})
+            youtube_adapter.sync(tmp, ['v0000000001'], api_key='fixture', fetch=lambda _: response(['v0000000001']))
+            youtube_adapter.record_attempt(tmp, {'status': 'OK', 'synced': 1})
+            self.assertEqual(youtube_adapter.load(tmp)['status'], 'OK')
+
+    def test_world_service_exposes_partial_attempt_without_changing_growth(self):
+        raw = [item(i) for i in range(20)]
+        now = datetime(2026, 9, 15, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'RENGUIN_WORLD_RUNTIME_ROOT': tmp}):
+            youtube_adapter.sync(tmp, ['v0000000001'], api_key='fixture', fetch=lambda _: response(['v0000000001']))
+            youtube_adapter.record_attempt(tmp, {'status': 'PARTIAL', 'eligible_contents': 20, 'unmapped_contents': 19})
+            with patch.object(service.content_adapter, 'collect', return_value=(raw, [])), \
+                 patch.object(service, 'registry', return_value={'sources': []}):
+                state = service.build_live('fixture', ROOT / 'frontend', now=now)
+            self.assertEqual(state['popularity']['status'], 'PARTIAL')
+            baseline = engine.build_state(raw, now=now)
+            self.assertEqual((state['world_score'], state['world_level'], state['current_era']),
+                             (baseline['world_score'], baseline['world_level'], baseline['current_era']))
 
     def test_successful_mapped_subset_does_not_claim_full_coverage(self):
         with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'RENGUIN_WORLD_RUNTIME_ROOT': tmp}), \
