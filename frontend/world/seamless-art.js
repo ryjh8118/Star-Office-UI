@@ -68,6 +68,7 @@
   };
   // The sky cable sits between the cloud sea and the near clouds, above street buildings.
   const CABLE_Z = 55;
+  const depthOf = (zone, name) => LAYER_STACKS[zone].find((l) => l.name === name).depth;
   const TYPE_LABEL = { MAIN_CHARACTER: "主角", SUPPORTING_CHARACTER: "主要配角", SPECIAL_GUEST: "特別來賓", GOOSEBABY: "鵝寶" };
   const SOURCE_LABEL = { "ASSET-01": "角色聖經", "ASSET-08": "會員角色庫" };
 
@@ -78,25 +79,42 @@
 
   // ---------- who stands where (references only; never a drawn likeness) ----------
   const shown = (c) => c.render_mode === "IMAGE" && (!c.resolution || c.resolution === "CANONICAL_CHARACTER" || c.resolution === "PROFESSION_CHARACTER");
+  const Districts = () => root.RenguinSeamlessDistricts || (typeof require === "function" ? require("./seamless-districts.js") : null);
 
-  function cast(state) {
+  // The island holds up to three Star Office crew. Everyone else stands in the district the
+  // engine placed them in when that district is open on the street, otherwise on the main street.
+  function cast(state, plan = Districts().layout(state)) {
     const rows = (state?.characters || []).filter(shown);
     const crew = rows
       .filter((c) => c.district === "CREATOR_DISTRICT" && (c.character_type === "MAIN_CHARACTER" || c.character_type === "SUPPORTING_CHARACTER"))
       .sort((a, b) => (a.character_type === "MAIN_CHARACTER" ? -1 : 0) - (b.character_type === "MAIN_CHARACTER" ? -1 : 0))
       .slice(0, 3);
     const rank = (c) => (c.resolution === "PROFESSION_CHARACTER" ? 0 : c.character_type === "GOOSEBABY" ? 1 : c.character_type === "SUPPORTING_CHARACTER" ? 2 : 3);
-    const street = rows
+    const rest = rows
       .filter((c) => !crew.includes(c))
       .map((c, i) => [c, i])
       .sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1])
-      .map(([c]) => c)
-      .slice(0, Math.min(7, 10 - crew.length));
-    // Spread the street cast over the spots, keeping the arrival platform and the plaza lively.
+      .map(([c]) => c);
+    const open = new Map(plan.districts.filter((d) => d.status === "UNLOCKED").map((d) => [d.id, d]));
+    // The main street keeps the slice's density; a district holds as many as it has spots.
+    const limit = (id) => (id === "MAIN_CITY" ? Math.min(7, 10 - crew.length) : open.get(id).spots.length);
+    // Spread the main-street cast over its spots, keeping the arrival platform and the plaza lively.
     const order = [0, 3, 5, 1, 7, 4, 6, 2, 8];
+    const used = new Map();
+    const city = [];
+    for (const c of rest) {
+      let id = c.district !== "MAIN_CITY" && open.has(c.district) ? c.district : "MAIN_CITY";
+      if ((used.get(id) || 0) >= limit(id)) {
+        if (id === "MAIN_CITY" || (used.get("MAIN_CITY") || 0) >= limit("MAIN_CITY")) continue;
+        id = "MAIN_CITY";
+      }
+      const n = used.get(id) || 0;
+      used.set(id, n + 1);
+      city.push({ ...c, stand: id, spot: id === "MAIN_CITY" ? GEOMETRY.city.spots[order[n]] : open.get(id).spots[n] });
+    }
     return {
-      island: crew.map((c, i) => ({ ...c, spot: GEOMETRY.island.spots[i] })),
-      city: street.map((c, i) => ({ ...c, spot: GEOMETRY.city.spots[order[i]] })),
+      island: crew.map((c, i) => ({ ...c, stand: "ISLAND", spot: GEOMETRY.island.spots[i] })),
+      city,
     };
   }
 
@@ -338,7 +356,19 @@
   }
 
   // ---------- C. one street of Renguin City ----------
-  function city(state) {
+  // Far layers lag behind the street, so they only need to reach as far as the slowest pan shows.
+  // Past the main street they repeat as mirrored copies: each copy's edge meets the previous one's.
+  function tile(cls, body, total, depth) {
+    const W = GEOMETRY.city.width,
+      H = GEOMETRY.city.height;
+    const need = Math.min(total, Math.ceil(total * depth + 3800));
+    const copies = Math.max(0, Math.ceil(need / W) - 1);
+    let s = copies ? `<g id="${cls}-seg">${body}</g>` : body;
+    for (let k = 1; k <= copies; k++) s += `<use href="#${cls}-seg" transform="${k % 2 ? `translate(${W * (k + 1)} 0) scale(-1 1)` : `translate(${W * k} 0)`}"/>`;
+    return `<svg class="sw-art ${cls}" viewBox="0 0 ${Math.max(W, total)} ${H}" width="${Math.max(W, total)}" height="${H}" aria-hidden="true" focusable="false">${s}</svg>`;
+  }
+
+  function city(state, streetWidth = GEOMETRY.city.width) {
     const idx = eraIndex(state);
     const variant = VARIANTS[idx];
     const st = STYLES[variant];
@@ -499,10 +529,13 @@
     if (idx < 3) effects.push({ kind: "flame", x: 1300, y: base - 24 });
     if ((activity.event_flags || []).some((f) => f === "FIREWORKS" || f === "SMALL_FIREWORKS"))
       for (let k = 0; k < 4; k++) effects.push({ kind: "firework", x: 900 + k * 260, y: 180 + (k % 2) * 90, color: ["#ffd35e", "#ff7fa8", "#7fd6c2", "#9db8f2"][k], delay: k * 0.6 });
+    // Confetti over the plaza when the city celebrates (V1 shows it on CONFETTI or FIREWORKS).
+    if ((activity.event_flags || []).some((f) => f === "CONFETTI" || f === "FIREWORKS"))
+      for (let k = 0; k < 14; k++) effects.push({ kind: "confetti", x: Math.round(1040 + hash("cf" + k) * 520), y: 300 + Math.round(hash("cfy" + k) * 80), color: ["#ff7fa8", "#ffd35e", "#7fd6c2", "#9db8f2", "#ffb347"][k % 5], delay: +(hash("cfd" + k) * 2.4).toFixed(2) });
     return {
       layers: {
-        sky: svg("sw-city-sky", sky),
-        distant: svg("sw-city-distant", bg),
+        sky: tile("sw-city-sky", sky, streetWidth, depthOf("city", "sky")),
+        distant: tile("sw-city-distant", bg, streetWidth, depthOf("city", "distant")),
         backdrop: svg("sw-city-backdrop", backRow),
         buildings: svg("sw-city-buildings", mid),
         street: svg("sw-city-street", ground),
@@ -513,12 +546,44 @@
     };
   }
 
-  function scene(state) {
+  function scene(state, options = {}) {
     const fill = (zone, painted) => LAYER_STACKS[zone].map((spec) => ({ ...spec, svg: spec.kind === "svg" ? painted[spec.name] : null }));
+    const D = Districts();
+    const plan = D.layout(state);
     const top = island(state);
-    const town = city(state);
-    const people = cast(state);
+    const town = city(state, plan.width);
+    const people = cast(state, plan);
     const half = GEOMETRY.island.width / 2;
+    const G = GEOMETRY.city;
+    // The main street is the first stretch; every other district follows it on the same street.
+    const main = {
+      id: "MAIN_CITY",
+      x: 0,
+      width: G.width,
+      layers: town.layers,
+      effects: town.effects,
+      hotspots: [{ id: "MAIN_CITY.DISTRICT", district: "MAIN_CITY", key: "DISTRICT", label: "主城區", tip: "主城區", box: [960, 570, 130, 56] }],
+    };
+    const stretches = [main, ...D.paint(state, plan)];
+    const street = plan.districts.map((d) => ({
+      id: d.id,
+      name: d.name,
+      status: d.status,
+      x: d.x,
+      width: d.width,
+      crowd_density: d.row?.crowd_density || null,
+      content_count: d.row?.content_count ?? null,
+      recent_count: d.row?.recent_count ?? null,
+      active_hotspots: d.row?.active_hotspots || [],
+      unlock_hint: d.row?.unlock_hint || null,
+      summary: d.row?.summary || null,
+    }));
+    // Street layers are painted per district (chunks), so each stretch can be culled and anchored on its own.
+    const cityLayers = LAYER_STACKS.city.map((spec) => {
+      if (spec.kind !== "svg") return { ...spec, svg: null };
+      if (spec.host === "section") return { ...spec, svg: town.layers[spec.name] };
+      return { ...spec, svg: null, chunks: stretches.map((d) => ({ district: d.id, x: d.x, width: d.width, svg: d.layers[spec.name] })) };
+    });
     return {
       cable_z: CABLE_Z,
       sections: [
@@ -541,18 +606,22 @@
         {
           zone: "city",
           anchor: "bottom",
-          height: GEOMETRY.city.height,
-          street: { width: GEOMETRY.city.width },
-          layers: fill("city", town.layers),
-          residents: people.city.map((c) => ({ character: c, x: c.spot, y: GEOMETRY.city.feet, spot: c.spot })),
-          effects: town.effects,
-          stats: town.stats,
+          height: G.height,
+          street: { width: plan.width, districts: street },
+          layers: cityLayers,
+          residents: people.city.map((c) => ({ character: c, district: c.stand, x: c.spot, y: G.feet, spot: c.spot })),
+          effects: stretches.flatMap((d) => d.effects.map((fx) => ({ ...fx, district: d.id }))),
+          hotspots: stretches.flatMap((d) => d.hotspots),
+          crowd: D.crowd(state, plan, options.crowdCap ?? state?.residents?.render_cap?.desktop ?? 28),
+          // Where residents' gossip is spoken: above each open district's signpost.
+          talk: plan.districts.filter((d) => d.status === "UNLOCKED").map((d) => ({ district: d.id, x: d.id === "MAIN_CITY" ? 1025 : d.x + 60, y: 540 })),
+          stats: { ...town.stats, street_width: plan.width, districts: stretches.map((d) => ({ id: d.id, status: d.status || "UNLOCKED", ...(d.stats || {}) })) },
         },
       ],
     };
   }
 
-  const api = { GEOMETRY, LAYER_STACKS, CABLE_Z, scene, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, facade, eraIndex };
+  const api = { GEOMETRY, LAYER_STACKS, CABLE_Z, kit: { OUT, r1, shade, pts, poly, rect, use, facade }, scene, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, facade, eraIndex };
   root.RenguinSeamlessArt = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

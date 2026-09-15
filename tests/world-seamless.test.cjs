@@ -7,7 +7,16 @@ const Art = require("../frontend/world/seamless-art.js");
 const Cam = require("../frontend/world/world-camera.js");
 const Compose = require("../frontend/world/world-composition.js");
 
+const Districts = require("../frontend/world/seamless-districts.js");
+
 const read = (...parts) => fs.readFileSync(path.join(__dirname, "..", ...parts), "utf8");
+const DISTRICT_NAMES = { MAIN_CITY: "主城區", CREATOR_DISTRICT: "創作者街區", TRAVEL_DISTRICT: "旅行港區", VIDEO_HALL: "影片大廳", MEMBER_DISTRICT: "鵝寶會員區", ENTERTAINMENT_DISTRICT: "娛樂夜市區", FUTURE_GATE: "星港之門" };
+// District rows shaped like engine.districts(): pass one status for all, or a map of id -> status.
+const districtRows = (status = "UNLOCKED") =>
+  Object.entries(DISTRICT_NAMES).map(([id, name]) => {
+    const s = id === "MAIN_CITY" ? "UNLOCKED" : typeof status === "string" ? status : status[id] || "LOCKED";
+    return { id, name, status: s, unlocked: s === "UNLOCKED", crowd_density: s === "UNLOCKED" ? "BUSY" : "EMPTY", content_count: 6, recent_count: 2, active_hotspots: s === "UNLOCKED" ? ["STUDIO", "HARBOR", "PREMIERE", "STAGE"] : [], unlock_hint: s === "UNLOCKED" ? null : "進入「繁榮城鎮」解鎖", summary: name };
+  });
 const person = (id, over = {}) => ({ character_id: id, display_name: id, render_mode: "IMAGE", resolution: "CANONICAL_CHARACTER", character_type: "SPECIAL_GUEST", district: "MAIN_CITY", state: "IDLE", source_authority: "ASSET-01", ...over });
 
 function state(variant = "riverside", over = {}) {
@@ -63,8 +72,8 @@ test("labels come from the authority: profession residents by profession, never 
 test("the art never draws a character, reuses one paper kit and carries the era", () => {
   const defs = Art.defs();
   for (const id of ["sw-cloud-a", "sw-tree", "sw-lamp", "sw-cobble"]) assert.ok(defs.includes(`id="${id}"`), id);
-  const scene = Art.scene(state());
-  const painted = scene.sections.flatMap((s) => s.layers.map((l) => l.svg || "")).join("");
+  const scene = Art.scene(state("riverside", { districts: districtRows("UNLOCKED") }));
+  const painted = scene.sections.flatMap((s) => s.layers.flatMap((l) => [l.svg || "", ...(l.chunks || []).map((c) => c.svg)])).join("");
   assert.ok(!/<image|<img|character-thumb|MEMBER_AVATAR/.test(painted), "residents are placed by the page, not painted into the scenery");
   assert.ok(!/fill="#526473"/.test(painted), "no generic penguin sprite");
   const island = scene.sections[0].layers;
@@ -90,12 +99,14 @@ test("B. layer architecture: Renguin City is a stack of independent layers, neve
   assert.ok(Object.values(z).every((v) => v % 10 === 0), "z steps of ten leave room for future layers");
   for (const l of city.layers) {
     assert.ok(["svg", "dom"].includes(l.kind) && ["section", "street"].includes(l.host) && l.depth > 0, l.name);
-    if (l.kind === "svg") assert.ok(/^<svg class="sw-art sw-city-/.test(l.svg), `${l.name} is its own drawing`);
+    if (l.kind === "svg" && l.host === "section") assert.ok(/^<svg class="sw-art sw-city-/.test(l.svg), `${l.name} is its own drawing`);
+    // Street layers are painted per district: each chunk is its own drawing of that one layer.
+    if (l.kind === "svg" && l.host === "street") assert.ok(l.chunks.length && l.chunks.every((c) => c.svg.startsWith(`<svg class="sw-art sw-city-${l.name}"`)), `${l.name} chunks are drawings of that layer`);
   }
   assert.ok(["sky", "distant"].every((n) => city.layers.find((l) => l.name === n).host === "section"), "far layers live outside the street so they may rise into the clouds");
   assert.ok(["buildings", "street", "residents"].every((n) => city.layers.find((l) => l.name === n).depth === 1), "the playfield does not drift");
-  const buildings = city.layers.find((l) => l.name === "buildings").svg;
-  const street = city.layers.find((l) => l.name === "street").svg;
+  const buildings = city.layers.find((l) => l.name === "buildings").chunks[0].svg;
+  const street = city.layers.find((l) => l.name === "street").chunks[0].svg;
   assert.ok(buildings.includes("sw-house") && !buildings.includes('fill="#dcc7a0"'), "buildings carry no road");
   assert.ok(!street.includes("sw-house"), "the street carries no building");
   assert.ok(city.effects.some((e) => e.kind === "firework") && city.effects.some((e) => e.kind === "flame"), "effects are descriptors for their own layer");
@@ -173,7 +184,8 @@ test("the slice is its own page: V1 keeps its route, bundle and budget", () => {
   const routes = read("backend/renguin_world/routes.py");
   assert.ok(routes.includes("@bp.get('/world')") && routes.includes("@bp.get('/world/seamless')"));
   const shell = read("frontend/world/seamless.html");
-  for (const f of ["world-scene.js", "world-camera.js", "world-composition.js", "seamless-art.js", "seamless-app.js", "seamless.css"]) assert.ok(shell.includes(`/static/world/${f}?v={{WORLD_VERSION}}`), f);
+  for (const f of ["world-scene.js", "world-camera.js", "world-composition.js", "seamless-art.js", "seamless-districts.js", "seamless-app.js", "seamless.css"]) assert.ok(shell.includes(`/static/world/${f}?v={{WORLD_VERSION}}`), f);
+  assert.ok(shell.indexOf("seamless-art.js") < shell.indexOf("seamless-districts.js") && shell.indexOf("seamless-districts.js") < shell.indexOf("seamless-app.js"), "districts load after the art kit and before the page");
   assert.ok(shell.includes('href="/world"'), "V1 stays one click away for comparison");
   const v1 = read("frontend/world/index.html");
   assert.ok(!/seamless/.test(v1), "V1 does not load the slice");
@@ -206,3 +218,114 @@ test("C. seamless navigation: one page, one continuous sky, every jump is a scro
   assert.ok(/\.sw-world \{[^}]*overflow: clip/.test(css) && !/\.sw-section \{[^}]*(transform|opacity|filter|z-index)/.test(css), "sections stack without their own stacking context, so the cable crosses them");
 });
 
+
+test("districts: the street grows outward in unlock order; closed districts are short lots that say what opens them", () => {
+  const young = Districts.layout(state("riverside", { districts: districtRows({ CREATOR_DISTRICT: "UNLOCKED", TRAVEL_DISTRICT: "UNLOCKED", FUTURE_GATE: "PREVIEW" }) }));
+  assert.deepEqual(young.districts.map((d) => d.id), Districts.ORDER, "every registry district is on the street, in unlock order");
+  let x = 0;
+  for (const d of young.districts) {
+    assert.equal(d.x, x, `${d.id} starts where the previous district ends`);
+    x += d.width;
+    assert.equal(d.width, d.status === "UNLOCKED" ? Districts.OPEN_WIDTH[d.id] : Districts.CLOSED_WIDTH);
+    if (d.status !== "UNLOCKED") assert.equal(d.spots.length, 0, "nobody stands in a closed lot");
+  }
+  assert.equal(young.width, x);
+  const old = Districts.layout(state("starport", { districts: districtRows("UNLOCKED") }));
+  assert.ok(old.width > young.width, "an older city has a longer street");
+  // Without district rows (older states, fixtures) the street is exactly the main street.
+  assert.deepEqual(Districts.layout(state()).districts.map((d) => [d.id, d.width]), [["MAIN_CITY", 2800]]);
+  // A district the registry adds later still gets a stretch of street with its name.
+  const extra = state("riverside", { districts: [...districtRows("UNLOCKED"), { id: "SPORTS_DISTRICT", name: "運動街區", status: "UNLOCKED", crowd_density: "NORMAL" }] });
+  const sports = Districts.paint(extra).find((d) => d.id === "SPORTS_DISTRICT");
+  assert.ok(sports && sports.layers.buildings.includes("運動街區") && sports.stats.kind === "generic");
+  const lots = Districts.paint(state("riverside", { districts: districtRows({ VIDEO_HALL: "PREVIEW" }) }));
+  const hall = lots.find((d) => d.id === "VIDEO_HALL");
+  assert.ok(hall.stats.kind === "lot" && hall.layers.buildings.includes("施工預告") && hall.layers.buildings.includes("進入「繁榮城鎮」解鎖"));
+  assert.ok(lots.find((d) => d.id === "MEMBER_DISTRICT").layers.buildings.includes("未解鎖"));
+});
+
+test("districts carry their own data: boats per trip, posters from featured contents, member population as a count only", () => {
+  const rows = districtRows("UNLOCKED");
+  rows.find((d) => d.id === "TRAVEL_DISTRICT").content_count = 4;
+  const painted = Districts.paint(state("town", { districts: rows, visual: { ...state().visual, era_variant: "town", landmarks: ["VIDEO_HALL_DOME"] }, featured_contents: [{ title: "a", is_new: true }, { title: "b" }], goosebaby: { population: { total: 148, by_tier: { BRONZE: 138, SILVER: 5, GOLD: 4, PLATINUM: 1 } } } }));
+  const by = Object.fromEntries(painted.map((d) => [d.id, d]));
+  assert.equal(by.TRAVEL_DISTRICT.stats.boats, 4);
+  assert.equal((by.TRAVEL_DISTRICT.layers.street.match(/class="sw-boat"/g) || []).length, 4);
+  assert.equal(by.TRAVEL_DISTRICT.stats.bridge, "stone", "the town era builds a stone bridge");
+  assert.equal(by.VIDEO_HALL.stats.posters, 2);
+  assert.ok(by.VIDEO_HALL.stats.dome);
+  assert.deepEqual(by.MEMBER_DISTRICT.stats.tiers, [138, 5, 4, 1]);
+  const text = painted.map((d) => Object.values(d.layers).join("")).join("");
+  assert.ok(!/<image|<img|character-thumb|MEMBER_AVATAR/.test(text), "no district paints a character");
+  for (const d of painted) for (const layer of ["backdrop", "buildings", "street", "foreground"]) assert.ok(d.layers[layer].startsWith(`<svg class="sw-art sw-city-${layer}" viewBox="${d.x} 0 ${d.width} 1080"`), `${d.id}.${layer} is drawn in its own stretch`);
+});
+
+test("residents stand in their own open district, never in a closed one, never on a hotspot", () => {
+  const people = [
+    person("RENGUIN", { character_type: "MAIN_CHARACTER", district: "CREATOR_DISTRICT" }),
+    person("DOLA", { character_type: "SUPPORTING_CHARACTER", district: "CREATOR_DISTRICT" }),
+    person("XUEBAO", { character_type: "SUPPORTING_CHARACTER", district: "CREATOR_DISTRICT" }),
+    person("ERIC", { character_type: "SUPPORTING_CHARACTER", district: "CREATOR_DISTRICT" }),
+    person("GUO", { district: "TRAVEL_DISTRICT" }),
+    person("HOTEL", { character_type: "GOOSEBABY", resolution: "PROFESSION_CHARACTER", world_role: "飯店客服居民", district: "TRAVEL_DISTRICT" }),
+    person("SUPREME", { character_type: "GOOSEBABY", district: "VIDEO_HALL" }),
+    person("XIAO_V", { district: "ENTERTAINMENT_DISTRICT" }),
+    person("CAMILLA"),
+  ];
+  const open = state("riverside", { characters: people, districts: districtRows({ CREATOR_DISTRICT: "UNLOCKED", TRAVEL_DISTRICT: "UNLOCKED" }) });
+  const plan = Districts.layout(open);
+  const cast = Art.cast(open, plan);
+  const where = Object.fromEntries(cast.city.map((c) => [c.character_id, c.stand]));
+  assert.equal(cast.island.length, 3);
+  assert.equal(where.ERIC, "CREATOR_DISTRICT", "the fourth crew member works on the creator street");
+  assert.equal(where.GUO, "TRAVEL_DISTRICT");
+  assert.equal(where.HOTEL, "TRAVEL_DISTRICT");
+  assert.equal(where.SUPREME, "MAIN_CITY", "a closed district's resident waits on the main street");
+  assert.equal(where.XIAO_V, "MAIN_CITY");
+  const range = Object.fromEntries(plan.districts.map((d) => [d.id, [d.x, d.x + d.width]]));
+  for (const c of cast.city) assert.ok(c.spot >= range[c.stand][0] && c.spot < range[c.stand][1], `${c.character_id} stands inside ${c.stand}`);
+  // Every spot the street offers keeps residents apart and clear of every hotspot.
+  const full = state("starport", { characters: people, districts: districtRows("UNLOCKED") });
+  const fullPlan = Districts.layout(full);
+  const spots = fullPlan.districts.flatMap((d) => d.spots).sort((a, b) => a - b);
+  for (let i = 1; i < spots.length; i++) assert.ok(spots[i] - spots[i - 1] >= 180, `spots ${spots[i - 1]} and ${spots[i]} keep residents apart`);
+  const G = Art.GEOMETRY;
+  const head = G.city.feet - G.character;
+  const city = Art.scene(full).sections.find((s) => s.zone === "city");
+  for (const h of city.hotspots) {
+    const [x, y, w, hh] = h.box;
+    for (const s of spots) assert.ok(y + hh <= head || s + 105 < x || s - 105 > x + w, `${h.id} stays clickable over the resident at ${s}`);
+  }
+  assert.deepEqual([...new Set(city.hotspots.map((h) => h.district))].sort(), fullPlan.districts.map((d) => d.id).sort(), "every district can be opened from the street");
+});
+
+test("the crowd is anonymous and adds up to what the engine says is visible, spread by district crowd", () => {
+  const busy = state("riverside", { residents: { visible: 15, render_cap: { desktop: 28, mobile: 14 } }, activity: { lights_level: 88, event_flags: [], crowd_density: "BUSY" }, districts: districtRows({ CREATOR_DISTRICT: "UNLOCKED", TRAVEL_DISTRICT: "UNLOCKED" }) });
+  const plan = Districts.layout(busy);
+  const crowd = Districts.crowd(busy, plan, 28);
+  assert.equal(crowd.length, 15);
+  assert.equal(Districts.crowd(busy, plan, 6).length, 6, "the render cap (phone) wins");
+  assert.ok(crowd.every((p) => plan.districts.find((d) => d.id === p.district).status === "UNLOCKED"), "no pawn in a closed lot");
+  for (const p of crowd) {
+    const d = plan.districts.find((x) => x.id === p.district);
+    assert.ok(p.x >= d.x && p.x <= d.x + d.width, "pawns walk in their own district");
+  }
+  assert.ok(new Set(crowd.map((p) => Math.round(p.x / 100))).size >= 10, "pawns are spread out, not stacked");
+  assert.equal(Districts.crowd(state("camp", { residents: { visible: 0 }, districts: districtRows("LOCKED") }), plan, 28).length, 0);
+  const app = read("frontend/world/seamless-app.js");
+  const pawn = app.slice(app.indexOf("function pawn("), app.indexOf("const BALLOON"));
+  assert.ok(/NEUTRAL_PLACEHOLDER/.test(pawn) && !/img|character/.test(pawn), "a pawn is a faceless placeholder, never an image");
+});
+
+test("V1 parity lives in the drawer and the street, without timers and without widening what the page can see", () => {
+  const app = read("frontend/world/seamless-app.js");
+  for (const part of ["城市狀態", "文明時代", "居民八卦", "世界居民名冊", "世界模擬器（QA）", "資料來源", "重新整理", "暫停動態", "再放一次煙火", "再試一次", "街區", "精選影片", "最近的成長"]) assert.ok(app.includes(part), part);
+  assert.ok(/animationiteration/.test(app) && !/setInterval|setTimeout\(/.test(app), "gossip advances on CSS animation iterations, not timers");
+  assert.ok(!/audience=local/.test(app), "the page reads only the public view");
+  assert.ok(!/\.evidence|content_id|project_id|overrides_applied|\.skipped/.test(app), "no provenance or project ids reach the page");
+  assert.ok(/\/api\/world\/characters/.test(app) && /people\.open && !W\.roster/.test(app), "the roster loads only when its panel opens");
+  const roster = app.slice(app.indexOf("async function loadRoster("), app.indexOf("function replayCelebration("));
+  const figure = app.slice(app.indexOf("function rosterFigure("), app.indexOf("async function loadRoster("));
+  assert.ok(/public_visibility === true/.test(roster) && /"CANONICAL_CHARACTER", "PROFESSION_CHARACTER"/.test(roster) && /Art\.nameOf/.test(figure), "the roster shows only public, resolved characters, profession residents by profession");
+  assert.ok(/refresh=1/.test(app) && /const unmount = \(\) =>/.test(app) && /unmount\(\);\s*const world/.test(app), "a refresh rebuilds the world after releasing the old one");
+});

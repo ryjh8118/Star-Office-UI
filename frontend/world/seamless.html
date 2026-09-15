@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Renguin World · 無縫世界（預覽）</title>
-    <meta name="description" content="從 Star Office 空島往下，穿過雲海，抵達 Renguin City。" />
+    <meta name="description" content="從 Star Office 空島往下，穿過雲海，抵達 Renguin City，沿著街道走過每一個街區。" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6 58 20 58 44 32 58 6 44 6 20Z' fill='%239fd08a'/%3E%3Cpath d='M32 6 58 20 32 34 6 20Z' fill='%23c7ecb2'/%3E%3Cellipse cx='32' cy='30' rx='8' ry='11' fill='%23343a56'/%3E%3Cellipse cx='32' cy='32' rx='5' ry='7' fill='%23fff6e6'/%3E%3C/svg%3E"
@@ -41,6 +41,11 @@
         <div class="sw-loading"><p>正在載入世界…</p></div>
       </main>
 
+      <div class="sw-district-nav" id="sw-district-nav" hidden>
+        <button id="sw-district" class="sw-chip" type="button" aria-expanded="false" aria-controls="sw-district-list"><span class="sw-wide">街區：</span><span id="sw-district-name">主城區</span><i aria-hidden="true"></i></button>
+        <div id="sw-district-list" class="sw-district-list" role="group" aria-label="前往街區" hidden></div>
+      </div>
+
       <div class="sw-street-nav" id="sw-street-nav" hidden>
         <button id="sw-street-left" class="sw-chip" type="button" aria-label="街道往左">‹</button>
         <button id="sw-street-right" class="sw-chip" type="button" aria-label="街道往右">›</button>
@@ -53,6 +58,7 @@
           <h2 id="sw-card-name"></h2>
           <p id="sw-card-role" class="sw-card-role"></p>
           <dl id="sw-card-facts" class="sw-facts"></dl>
+          <div id="sw-card-actions" class="sw-card-actions"></div>
         </div>
       </section>
 
@@ -70,6 +76,7 @@
     <script src="/static/world/world-camera.js?v={{WORLD_VERSION}}" defer></script>
     <script src="/static/world/world-composition.js?v={{WORLD_VERSION}}" defer></script>
     <script src="/static/world/seamless-art.js?v={{WORLD_VERSION}}" defer></script>
+    <script src="/static/world/seamless-districts.js?v={{WORLD_VERSION}}" defer></script>
     <script src="/static/world/seamless-app.js?v={{WORLD_VERSION}}" defer></script>
   </body>
 </html>

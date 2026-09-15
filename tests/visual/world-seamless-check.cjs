@@ -110,7 +110,7 @@ async function main() {
     check("Opens at the Star Office sky island with the gondola docked there", start.dbg.zone === "island" && start.docked === "island", start);
     check("Desktop: no horizontal page overflow", start.overflow <= 0, start.overflow);
     const cast = await js("[...document.querySelectorAll('.sw-actor')].map(a=>({id:a.dataset.character, res:a.dataset.resolution, name:a.querySelector('.sw-nametag').textContent}))");
-    check("5-10 residents, all official characters (canonical or profession)", cast.length >= 5 && cast.length <= 10 && cast.every((c) => ["CANONICAL_CHARACTER", "PROFESSION_CHARACTER"].includes(c.res)), cast);
+    check("At least 5 residents, all official characters (canonical or profession)", cast.length >= 5 && cast.every((c) => ["CANONICAL_CHARACTER", "PROFESSION_CHARACTER"].includes(c.res)), cast);
     check("At least one profession resident is on the street", cast.some((c) => c.res === "PROFESSION_CHARACTER"));
     check("Culling: the city is not worked while the island is on screen", !start.dbg.near.includes("city"), start.dbg.near);
     baseline.desktop_idle_island = await cost(3);
@@ -150,8 +150,8 @@ async function main() {
     check("Mouse drag pans the street sideways without opening anything", dragged.left > before + 300 && !dragged.card, { before, after: dragged });
     await js("document.querySelector('.sw-street-scroll').scrollLeft = 99999");
     await sleep(300);
-    const edge = await js("(()=>{const s=document.querySelector('.sw-street-scroll'); return {left:s.scrollLeft, max:s.scrollWidth-s.clientWidth, width:s.scrollWidth, right: document.getElementById('sw-street-right').disabled}})()");
-    check("Street pan is bounded to the street (no runaway scroll width)", edge.left === edge.max && Math.abs(edge.width - 2800) <= 2 && edge.right, edge);
+    const edge = await js("(()=>{const s=document.querySelector('.sw-street-scroll'); const d=window.RenguinSeamlessWorld.districts(); const last=d[d.length-1]; return {left:s.scrollLeft, max:s.scrollWidth-s.clientWidth, width:s.scrollWidth, street:(last.x+last.width)*window.RenguinSeamlessWorld.debug().ws, right: document.getElementById('sw-street-right').disabled}})()");
+    check("Street pan is bounded to the street (no runaway scroll width)", edge.left === edge.max && Math.abs(edge.width - edge.street) <= 2 && edge.right, edge);
     await js("document.querySelector('.sw-street-scroll').scrollLeft = 0");
     await sleep(300);
 
@@ -193,7 +193,7 @@ async function main() {
     check("Zero console errors (desktop)", errors().length === 0, errors());
     await js("window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: false }))");
     const left = await js("window.RenguinSeamlessWorld.debug()");
-    check("Leaving releases listeners, observers, requests and the world", !left.running && left.listeners === 0 && left.disposers === 0 && !left.observing && left.pendingRequests === 0 && left.residents === 0, left);
+    check("Leaving releases listeners, observers, requests and the world", !left.running && left.listeners === 0 && left.disposers === 0 && left.mounted === 0 && !left.observing && left.pendingRequests === 0 && left.residents === 0, left);
 
     // ---------- reduced motion ----------
     await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
@@ -304,6 +304,111 @@ async function main() {
     check("C. the sky colour is identical on both sides of each seam", seamColours.islandEnd === seamColours.descentStart && seamColours.descentEnd === seamColours.cityStart, seamColours);
     const cable = await js("(()=>{const c=document.querySelector('.sw-cable'); const g=document.querySelector('.sw-gondola'); return {z: getComputedStyle(c).zIndex, parent: c.parentElement.id, docked: g.dataset.docked}})()");
     check("C. one cable belongs to the world itself and carries the gondola to the street", cable.parent === "sw-world" && cable.docked === "city", cable);
+
+    // ---------- districts: one street, every district reachable, far districts skipped ----------
+    await viewport(1440, 900);
+    await open(`${BASE}/world/seamless?sim=100&time=day`, 3500);
+    const allOpen = await js("window.RenguinSeamlessWorld.districts()");
+    check("Districts: all seven registry districts are stretches of one street, contiguous and in unlock order", allOpen.map((d) => d.id).join() === "MAIN_CITY,CREATOR_DISTRICT,TRAVEL_DISTRICT,VIDEO_HALL,MEMBER_DISTRICT,ENTERTAINMENT_DISTRICT,FUTURE_GATE" && allOpen.every((d, i) => !i || d.x === allOpen[i - 1].x + allOpen[i - 1].width) && allOpen.every((d) => d.status === "UNLOCKED"), allOpen.map((d) => `${d.id}@${d.x}+${d.width}`));
+    await js("window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'})");
+    await sleep(900);
+    const navStart = await js("({nav: !document.getElementById('sw-district-nav').hidden, name: document.getElementById('sw-district-name').textContent, items: document.querySelectorAll('#sw-district-list button').length, gate: [...document.querySelectorAll('.sw-chunk[data-district=FUTURE_GATE]')].map(c=>({near: c.hasAttribute('data-near'), painted: c.firstElementChild ? c.firstElementChild.checkVisibility() : null})), main: [...document.querySelectorAll('.sw-chunk[data-district=MAIN_CITY]')].every(c=>c.hasAttribute('data-near'))})");
+    check("Districts: the navigator appears in the city and lists every district", navStart.nav && navStart.name === "主城區" && navStart.items === allOpen.length, navStart);
+    check("Districts: far districts are culled (not near, contents skipped by the browser) while the main street is worked", navStart.main && navStart.gate.length >= 4 && navStart.gate.every((c) => !c.near && c.painted !== true), navStart.gate);
+    const journey = [];
+    const districtStart = await js("({href: location.href, history: history.length})");
+    for (const d of allOpen.slice(1)) {
+      await click("#sw-district");
+      await sleep(250);
+      await click(`#sw-district-list button[data-district="${d.id}"]`);
+      await sleep(1600);
+      const here = await js(`(()=>{const dbg=window.RenguinSeamlessWorld.debug(); const ws=dbg.ws; const actors=[...document.querySelectorAll('.sw-city .sw-actor[data-district=${d.id}]')].map(a=>{const r=a.querySelector('img').getBoundingClientRect(); return {h: Math.round(r.height), inside: a.closest('.sw-chunk').dataset.district}}); const talk=document.querySelector('.sw-talk[data-district=${d.id}] .sw-talk-text'); return {district: dbg.district, near: dbg.nearDistricts, actors, talk: talk ? talk.textContent : null, list: document.getElementById('sw-district-list').hidden, overflow: document.documentElement.scrollWidth - innerWidth}})()`);
+      journey.push({ id: d.id, ...here });
+      if (OUT) await shot(`district-${d.id}.png`);
+    }
+    const districtEnd = await js("({href: location.href, history: history.length, navs: performance.getEntriesByType('navigation').length})");
+    check("Districts: the navigator walks to every district on the same page (no route, no history entry)", journey.every((j) => j.district === j.id && j.near.includes(j.id) && j.list && j.overflow <= 0) && districtEnd.href === districtStart.href && districtEnd.history === districtStart.history && districtEnd.navs === 1, journey.map((j) => `${j.id}:${j.district}`));
+    check("Districts: residents stand in their own district at readable size, and each open district has its gossip", journey.every((j) => j.actors.every((a) => a.inside === j.id && a.h >= 120) && j.talk), journey.map((j) => ({ id: j.id, actors: j.actors.length, talk: Boolean(j.talk) })));
+    const talk = await js("(()=>{const t=document.querySelector('.sw-talk[data-district=FUTURE_GATE]'); const before=t.querySelector('.sw-talk-text').textContent; t.click(); return {before, after: t.querySelector('.sw-talk-text').textContent}})()");
+    check("Districts: tapping a gossip bubble moves to the next line", talk.before && talk.after && talk.before !== talk.after, talk);
+    const pawns = await js("[...document.querySelectorAll('.sw-pawn')].map(p=>({res: p.dataset.resolution, kids: p.children.length, district: p.closest('.sw-chunk').dataset.district}))");
+    check("Districts: the crowd is anonymous neutral pawns in open districts, never an image", pawns.length > 0 && pawns.every((p) => p.res === "NEUTRAL_PLACEHOLDER" && p.kids === 0), { count: pawns.length, districts: [...new Set(pawns.map((p) => p.district))] });
+    await js("window.RenguinSeamlessWorld.goToDistrict('TRAVEL_DISTRICT')");
+    await sleep(2000);
+    await click('.sw-place-link[data-hotspot="TRAVEL_DISTRICT.HARBOR"]');
+    await sleep(500);
+    const harbor = await js("({open: !document.getElementById('sw-card').hidden, kind: document.getElementById('sw-card').dataset.kind, name: document.getElementById('sw-card-name').textContent, facts: [...document.querySelectorAll('#sw-card-facts dt')].map(x=>x.textContent), img: !document.getElementById('sw-card-img').hidden, district: window.RenguinSeamlessWorld.debug().district})");
+    check("Districts: a district hotspot opens a place card with the district's own facts", harbor.open && harbor.kind === "place" && harbor.name.includes("旅行港區") && harbor.facts.includes("碼頭的船") && harbor.facts.includes("狀態") && !harbor.img, harbor);
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await sleep(200);
+    await js("document.querySelector('.sw-street-scroll').scrollLeft = 0");
+    await sleep(500);
+    baseline.desktop_pan_all_districts = await cost(0, async () => {
+      for (let k = 1; k <= 60; k++) {
+        await js(`document.querySelector('.sw-street-scroll').scrollLeft = ${k} * 230`);
+        await sleep(16);
+      }
+    });
+    baseline.desktop_idle_far_district = await cost(3);
+    check("Zero console errors (districts)", errors().length === 0, errors());
+
+    // ---------- the real era (sim=20): closed districts are lots that say what opens them ----------
+    await open(`${BASE}/world/seamless?sim=20&time=day`, 3500);
+    const young = await js("window.RenguinSeamlessWorld.districts()");
+    check("Districts at ERA_03: open districts get their street, closed ones a short lot", young.filter((d) => d.status === "UNLOCKED").map((d) => d.id).join() === "MAIN_CITY,CREATOR_DISTRICT,TRAVEL_DISTRICT" && young.filter((d) => d.status !== "UNLOCKED").every((d) => d.width === 1000), young.map((d) => `${d.id}:${d.status}`));
+    await js("window.RenguinSeamlessWorld.goToDistrict('MEMBER_DISTRICT')");
+    await sleep(2200);
+    await click('.sw-place-link[data-hotspot="MEMBER_DISTRICT.LOT"]');
+    await sleep(500);
+    const lot = await js("({open: !document.getElementById('sw-card').hidden, name: document.getElementById('sw-card-name').textContent, facts: [...document.querySelectorAll('#sw-card-facts dd')].map(x=>x.textContent), actors: document.querySelectorAll('.sw-actor[data-district=MEMBER_DISTRICT]').length})");
+    check("Districts at ERA_03: a closed lot's card tells what unlocks it, and nobody stands in it", lot.open && lot.name === "鵝寶會員區" && lot.facts.some((f) => f.includes("解鎖")) && lot.actors === 0, lot);
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 });
+    await sleep(200);
+
+    // ---------- V1 parity: the drawer carries everything V1 shows ----------
+    events = [];
+    await click("#sw-data");
+    await sleep(500);
+    const drawerAll = await js("({panels: [...document.querySelectorAll('#sw-drawer .sw-panel')].map(p=>(p.querySelector('h3,summary')||{}).textContent||'tools'), districts: document.querySelectorAll('#sw-drawer .sw-district-row').length, eras: document.querySelectorAll('#sw-drawer .sw-eras li').length, gossip: document.querySelectorAll('#sw-drawer .sw-gossip li').length, sources: document.querySelectorAll('#sw-drawer .sw-source-list li').length})");
+    const wantPanels = ["城市狀態", "內容", "街區", "精選影片", "最近的成長", "文明時代", "居民八卦", "世界居民名冊", "世界模擬器（QA）", "資料來源"];
+    check("V1 parity: the drawer has era, city status, content, districts, videos, growth, era road, gossip, roster, simulator and sources", wantPanels.every((t) => drawerAll.panels.includes(t)) && drawerAll.districts === 7 && drawerAll.eras === 8 && drawerAll.gossip > 0 && drawerAll.sources > 0, drawerAll);
+    check("V1 parity: the roster is not requested until its panel opens", !requests().some((u) => u.startsWith("/api/world/characters")));
+    await js("document.querySelector('#sw-drawer .sw-roster-panel').open = true");
+    await sleep(2500);
+    const roster = await js("({figures: document.querySelectorAll('#sw-drawer .sw-person').length, names: [...document.querySelectorAll('#sw-drawer .sw-person figcaption')].map(f=>f.textContent)})");
+    check("V1 parity: opening the roster loads it once and shows only named authority characters (profession residents by profession)", requests().filter((u) => u.startsWith("/api/world/characters")).length === 1 && roster.figures > 10 && !roster.names.some((n) => /MEMBER_AVATAR/.test(n)), { figures: roster.figures, professions: roster.names.filter((n) => n.endsWith("居民")) });
+    const beforeRefresh = await js("window.RenguinSeamlessWorld.debug()");
+    events = [];
+    await click("#sw-drawer .sw-tools-panel button");
+    await sleep(3000);
+    const afterRefresh = await js("window.RenguinSeamlessWorld.debug()");
+    check("V1 parity: 重新整理 reads the world again and rebuilds it without leaking listeners", requests().filter((u) => u.startsWith("/api/world/")).length === 1 && afterRefresh.listeners === beforeRefresh.listeners && afterRefresh.mounted === beforeRefresh.mounted && afterRefresh.residents === beforeRefresh.residents && afterRefresh.chunks === beforeRefresh.chunks, { before: beforeRefresh, after: afterRefresh });
+    await click("#sw-data");
+    await sleep(400);
+    await click("#sw-motion");
+    await sleep(300);
+    const motionOff = await js("({cls: document.getElementById('sw-app').classList.contains('sw-motion-static'), pressed: document.getElementById('sw-motion').getAttribute('aria-pressed'), anim: getComputedStyle(document.querySelector('.sw-pawn') || document.querySelector('.sw-actor-body')).animationPlayState})");
+    check("V1 parity: 暫停動態 stops every animation and says so", motionOff.cls && motionOff.pressed === "true" && motionOff.anim === "paused", motionOff);
+    await click("#sw-motion");
+    await click("#sw-drawer-close");
+    await sleep(200);
+    check("Zero console errors (parity)", errors().length === 0, errors());
+
+    // ---------- phone: the district chip sits under the HUD and never covers a resident ----------
+    await viewport(390, 844, true, 2);
+    await open(`${BASE}/world/seamless?sim=20&time=day`, 3500);
+    await js("window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'})");
+    await sleep(1000);
+    const phoneNav = [];
+    for (const id of ["MAIN_CITY", "CREATOR_DISTRICT", "TRAVEL_DISTRICT"]) {
+      await js(`window.RenguinSeamlessWorld.goToDistrict('${id}')`);
+      await sleep(1800);
+      phoneNav.push(await js("(()=>{const n=document.getElementById('sw-district').getBoundingClientRect(); const hits=[...document.querySelectorAll('.sw-city .sw-actor')].map(a=>a.getBoundingClientRect()).filter(r=>r.right>0&&r.left<innerWidth&&r.top<n.bottom&&r.bottom>n.top&&r.left<n.right&&r.right>n.left).length; return {district: window.RenguinSeamlessWorld.debug().district, top: Math.round(n.top), bottom: Math.round(n.bottom), hits, overflow: document.documentElement.scrollWidth-innerWidth}})()"));
+    }
+    if (OUT) await shot("phone-district.png");
+    check("Phone: the district chip sits under the HUD, reaches every open district and covers no resident", phoneNav.every((p, i) => p.district === ["MAIN_CITY", "CREATOR_DISTRICT", "TRAVEL_DISTRICT"][i] && p.top >= 60 && p.hits === 0 && p.overflow <= 0), phoneNav);
 
     // ---------- V1 still there ----------
     await viewport(1440, 900);

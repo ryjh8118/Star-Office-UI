@@ -309,7 +309,24 @@ a:focus-visible,
 }
 .sw-span {
   left: 0;
-  width: calc(2800 * var(--u));
+  width: calc(var(--w, 2800) * var(--u));
+}
+/* A district's part of a street layer: positioned in street units, culled and anchored on its own. */
+.sw-chunk {
+  position: absolute;
+  top: 0;
+  left: calc(var(--cx) * var(--u));
+  width: calc(var(--cw) * var(--u));
+  height: 100%;
+}
+/* Far districts are skipped by the browser (no layout or paint) but keep their size. */
+.sw-chunk:not([data-near]) {
+  content-visibility: hidden;
+}
+/* Animations under content-visibility keep ticking (style is skipped, so a pause rule never lands):
+   far residents, crowd and effects are removed from rendering instead, which ends their animations. */
+:is([data-layer="residents"], [data-layer="effects"]) > .sw-chunk:not([data-near]) {
+  display: none;
 }
 .sw-layer:not([data-depth="1"]) {
   will-change: transform;
@@ -335,7 +352,13 @@ a:focus-visible,
 .sw-section:not([data-near]) .sw-cull {
   visibility: hidden;
 }
-.sw-section:not([data-near]) *,
+.sw-section:not([data-onscreen]) *,
+.sw-section:not([data-onscreen]) *::before,
+.sw-section:not([data-onscreen]) *::after,
+.sw-chunk:not([data-near]) *,
+.sw-motion-static *,
+.sw-motion-static *::before,
+.sw-motion-static *::after,
 .sw-paused *,
 .sw-paused *::before,
 .sw-paused *::after {
@@ -418,6 +441,24 @@ a:focus-visible,
   fill: #fff;
   text-anchor: middle;
 }
+.sw-sign-small {
+  font: 600 14px/1 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  fill: #5a4535;
+  text-anchor: middle;
+}
+.sw-sign-big {
+  font-size: 34px;
+  letter-spacing: 4px;
+}
+/* District lights: marquee bulbs and lanterns glow from dusk. */
+.sw-bulb,
+.sw-lantern {
+  opacity: 0.75;
+}
+.sw-app[data-daypart="dusk"] .is-lit:is(.sw-bulb, .sw-lantern),
+.sw-app[data-daypart="night"] .is-lit:is(.sw-bulb, .sw-lantern) {
+  opacity: 1;
+}
 
 /* Island extras. */
 .sw-descend {
@@ -493,8 +534,8 @@ a:focus-visible,
 .sw-fx-bird {
   width: calc(34 * var(--u));
   height: calc(12 * var(--u));
-  animation: sw-flap 0.5s ease-in-out var(--delay) infinite alternate;
 }
+/* The wings flap, not the empty box around them: an animated element with nothing painted cannot run on the compositor. */
 .sw-fx-bird::before,
 .sw-fx-bird::after {
   content: "";
@@ -504,6 +545,7 @@ a:focus-visible,
   height: 100%;
   border-top: 3px solid #5b5470;
   border-radius: 60% 60% 0 0;
+  animation: sw-flap 0.5s ease-in-out var(--delay) infinite alternate;
 }
 .sw-fx-bird::before {
   left: 0;
@@ -646,6 +688,10 @@ a:focus-visible,
   animation: none;
   opacity: 0.9;
 }
+/* Until its image has loaded, a resident stands still (see actor() in seamless-app.js). */
+.sw-actor:not(.is-ready) .sw-actor-body {
+  animation: none;
+}
 .sw-actor:hover img,
 .sw-actor:focus-visible img,
 .sw-actor.is-selected img {
@@ -755,6 +801,116 @@ a:focus-visible,
   animation: sw-burst 1.8s ease-out var(--delay, 0s) 5 both;
 }
 
+.sw-fx-glow {
+  width: calc(120 * var(--u));
+  height: calc(120 * var(--u));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe7a8aa, #ffe7a800 68%);
+  animation: sw-glow 2.4s ease-in-out infinite alternate;
+}
+.sw-fx-spotlight {
+  width: calc(90 * var(--u));
+  height: calc(420 * var(--u));
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  rotate: var(--r, 0deg);
+  background: linear-gradient(#fff6c8aa, #fff6c800);
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  animation: sw-glow 1.6s ease-in-out infinite alternate;
+}
+.sw-fx-gate {
+  width: calc(400 * var(--u));
+  height: calc(400 * var(--u));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #9db8f200 48%, #9db8f288 60%, #9db8f200 72%);
+  animation: sw-glow 2.8s ease-in-out infinite alternate;
+}
+.sw-fx-confetti {
+  width: calc(10 * var(--u));
+  height: calc(16 * var(--u));
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  animation: sw-fall 3.4s linear var(--delay, 0s) 6 both;
+}
+
+/* The anonymous crowd: faceless paper pawns, smaller than any character, strolling along the street. */
+/* The pawn's own box is its body, so the walking element paints something and can run on the compositor. */
+.sw-pawn {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(30 * var(--u));
+  height: calc(44 * var(--u));
+  translate: -50% -100%;
+  border: max(1px, calc(2 * var(--u))) solid #8d8373;
+  border-radius: 45% 45% 18% 18%;
+  background: #e9e0cf;
+  pointer-events: none;
+  animation: sw-walk var(--dur, 9s) ease-in-out calc(var(--delay, 0) * -1s) infinite alternate;
+}
+.sw-pawn::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 2 * var(--u));
+  width: calc(24 * var(--u));
+  height: calc(24 * var(--u));
+  translate: -50% 0;
+  border: inherit;
+  border-radius: 50%;
+  background: inherit;
+}
+.sw-app[data-daypart="night"] .sw-pawn {
+  opacity: 0.8;
+}
+
+/* Residents' gossip: a paper speech bubble above each open district's signpost, opening towards the district. */
+.sw-talk {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  translate: calc(-40 * var(--u)) -100%;
+  display: grid;
+  gap: 2px;
+  max-width: max(180px, calc(240 * var(--u)));
+  width: max-content;
+  padding: 6px 12px 7px;
+  border: 1px solid #cdbda3;
+  border-radius: 14px;
+  background: #fffaf0f2;
+  color: var(--ink);
+  font-size: max(12px, calc(14 * var(--u)));
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px #2f2a4418;
+  opacity: 0;
+  animation: sw-talk 6.5s ease-in-out var(--delay, 0s) infinite;
+}
+.sw-talk::after {
+  content: "";
+  position: absolute;
+  left: calc(40 * var(--u) - 6px);
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  rotate: 45deg;
+  background: #fffaf0;
+  border-right: 1px solid #cdbda3;
+  border-bottom: 1px solid #cdbda3;
+}
+.sw-talk-who {
+  color: var(--soft);
+  font-size: 11px;
+}
+.sw-talk:focus-visible {
+  opacity: 1;
+}
+
 /* Secondary UI: resident card and the data drawer. */
 .sw-card {
   position: fixed;
@@ -812,6 +968,92 @@ a:focus-visible,
 .sw-facts dd {
   margin: 0;
 }
+.sw-card[data-kind="place"] {
+  grid-template-columns: 1fr;
+}
+.sw-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sw-card-actions:empty {
+  display: none;
+}
+
+/* District navigator: where on the street you are, and a jump to any district. */
+.sw-district-nav {
+  position: fixed;
+  z-index: 47;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  translate: -50% 0;
+  display: grid;
+  justify-items: center;
+}
+.sw-district-nav > .sw-chip {
+  min-height: 48px;
+  gap: 6px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px #2f2a4422;
+}
+.sw-district-nav > .sw-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8cc47a;
+}
+.sw-district-nav > .sw-chip[data-status="PREVIEW"] i {
+  background: #f2b33d;
+}
+.sw-district-nav > .sw-chip[data-status="LOCKED"] i {
+  background: #b3aba0;
+}
+.sw-district-list {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  display: grid;
+  gap: 4px;
+  width: min(320px, calc(100vw - 24px));
+  max-height: 60vh;
+  overflow: auto;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 12px 30px #2f2a4430;
+}
+.sw-district-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.sw-district-item:hover,
+.sw-district-item[aria-current="true"] {
+  background: #eaf4e2;
+}
+.sw-district-item small {
+  grid-column: 1 / -1;
+  color: var(--soft);
+  font-size: 12px;
+}
+.sw-district-status {
+  color: #35603a;
+  font-size: 12px;
+}
+[data-status="LOCKED"] .sw-district-status {
+  color: var(--soft);
+}
+[data-status="PREVIEW"] .sw-district-status {
+  color: #a8701d;
+}
 .sw-drawer {
   position: fixed;
   z-index: 70;
@@ -868,6 +1110,142 @@ a:focus-visible,
   font-size: 13px;
   color: #b03a3a;
 }
+.sw-tools-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.sw-source {
+  margin-right: auto;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: #eaf4e2;
+  color: #35603a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sw-source[data-source="MOCK"] {
+  background: #fde8c8;
+  color: #8a5a1d;
+}
+.sw-tagline {
+  margin: 4px 0;
+  font-size: 13px;
+}
+.sw-activity-chip {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 99px;
+  background: #eaf4e2;
+  color: #35603a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sw-activity-chip:is([data-state="QUIET"], [data-state="DORMANT"], [data-state="DEEP_DORMANT"], [data-state="EMPTY_WORLD"]) {
+  background: #ece8f2;
+  color: #5b5470;
+}
+.sw-activity-chip:is([data-state="REVIVAL"], [data-state="FESTIVAL"]) {
+  background: #fde8c8;
+  color: #8a5a1d;
+}
+.sw-new {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #e05a4f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.sw-eras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.sw-eras li {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #f1ece2;
+  color: var(--soft);
+}
+.sw-eras li.is-reached {
+  background: #eaf4e2;
+  color: #35603a;
+}
+.sw-eras li.is-current {
+  background: var(--accent);
+  color: #fff8e6;
+  font-weight: 700;
+}
+.sw-district-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px dashed var(--line);
+}
+.sw-district-row .sw-note {
+  margin: 0;
+}
+.sw-go {
+  min-height: 32px;
+}
+.sw-panel summary {
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sw-panel h4 {
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+.sw-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+.sw-person {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+}
+.sw-person img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+.sw-sim-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.sw-chip.is-on {
+  background: #eaf4e2;
+  border-color: var(--accent);
+}
+.sw-source-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.sw-source-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.sw-source-list li:is([data-status="SYNC_ERROR"], [data-status="ERROR"], [data-status="UNAVAILABLE"]) b {
+  color: #b03a3a;
+}
 
 @keyframes sw-idle {
   to {
@@ -915,6 +1293,34 @@ a:focus-visible,
     transform: scaleY(0.82);
   }
 }
+@keyframes sw-walk {
+  to {
+    transform: translateX(calc(var(--run, 120) * var(--u)));
+  }
+}
+@keyframes sw-talk {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  8%,
+  88% {
+    opacity: 1;
+  }
+}
+@keyframes sw-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(420 * var(--u))) rotate(540deg);
+  }
+}
 @keyframes sw-hint {
   0%,
   100% {
@@ -948,6 +1354,10 @@ a:focus-visible,
   .sw-app *::after {
     animation: none !important;
     transition: none !important;
+  }
+  /* Without motion the gossip stays readable and advances when tapped. */
+  .sw-talk {
+    opacity: 1;
   }
 }
 
@@ -1028,6 +1438,21 @@ a:focus-visible,
 }
 .is-compact .sw-street-nav {
   display: none;
+}
+/* On a portrait phone the bottom belongs to the altimeter and the residents' name tags: the district chip sits under the HUD. */
+.is-compact .sw-district-nav {
+  top: calc(64px + env(safe-area-inset-top));
+  bottom: auto;
+}
+.is-compact .sw-district-nav > .sw-chip {
+  min-height: 40px;
+}
+.is-compact .sw-district-list {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+.sw-app[data-source="MOCK"].is-compact .sw-district-nav {
+  top: calc(96px + env(safe-area-inset-top));
 }
 
 /* Short screens (a landscape phone): the side altimeter already leads down; keep the island clear. */
