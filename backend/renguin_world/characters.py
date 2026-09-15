@@ -29,6 +29,9 @@ SCHEMA = 'RENGUIN_WORLD_CHARACTER_REGISTRY_V1'
 TIER_WORDS = ('Platinum', 'Gold', 'Silver', 'Bronze')
 MAPPING = {'已綁定': 'BOUND', '高信心候選': 'CANDIDATE', '待綁定': 'UNBOUND'}
 RESOLUTIONS = ('CANONICAL_CHARACTER', 'PROFESSION_CHARACTER', 'NEUTRAL_PLACEHOLDER', 'UNRESOLVED', 'EVENT_SKIN')
+# Name-free reference mapping written by scripts/build_world_thumbnails.py from the member icon folder.
+MEMBER_ICON_MAP = 'member-icons.json'
+PRIVATE_ART = Path(__file__).resolve().parent / 'art' / 'portraits-private'
 
 
 def default_paths(frontend_dir):
@@ -39,6 +42,9 @@ def default_paths(frontend_dir):
         'general_index': Path(os.environ.get('RENGUIN_GENERAL_CANON_INDEX', producer / '10_AI_Editorial_Engine/06_Local_Runner/image_generation/config/GENERAL_CHARACTER_CANON_INDEX.json')),
         'member_library': bible / 'Member_Character_Library',
         'member_registry': world / 'member_registry.json',
+        # READ-ONLY official 鵝寶會員 cut-outs; only the offline builder opens it.
+        'member_icons': Path(os.environ.get('RENGUIN_MEMBER_ICON_ROOT', r'E:\素材\icon\鵝寶會員')),
+        'member_icon_map': PRIVATE_ART / MEMBER_ICON_MAP,
         'frontend': Path(frontend_dir),
     }
 
@@ -225,6 +231,50 @@ def _members(paths, config, reports):
     return characters, geese
 
 
+def member_profile_text(paths, character_id, registry):
+    """Profile name and role of an ASSET-08 character, for in-memory evidence only; never stored."""
+    entry = next((c for c in registry['characters'] if c['character_id'] == character_id), None)
+    if not entry or entry.get('source_authority') != 'ASSET-08':
+        return ''
+    root = paths['member_library']
+    try:
+        if (entry.get('source_ref') or {}).get('member_class') == 'REAL_MEMBER_AVATAR':
+            _, library, _ = _library(root)
+            row = next(r for r in library['characters'] if r.get('member_class') == 'REAL_MEMBER_AVATAR' and opaque_member_id(r) == character_id)
+            profile_path = root / row['profile_path']
+        else:
+            profile_path = root / 'avatars' / character_id / 'profile.json'
+        profile = _json(profile_path)
+    except (OSError, ValueError, KeyError, StopIteration):
+        return ''
+    return ' '.join(str(profile.get(k) or '') for k in ('chinese', 'display_name', 'role'))
+
+
+def _member_icons(paths, entries, reports):
+    """Attach the offline icon mapping: which characters render from the official cut-outs, which files stay unresolved."""
+    if 'member_icon_map' not in paths:
+        return []
+    path = paths['member_icon_map']
+    if not path or not Path(path).is_file():
+        reports.append(_report('MEMBER_ICON_FOLDER', paths.get('member_icons') or '', status='NONE', count=0))
+        return []
+    try:
+        mapping = _json(path)
+        files = mapping['files']
+    except (OSError, ValueError, KeyError, TypeError):
+        reports.append(_report('MEMBER_ICON_FOLDER', paths.get('member_icons') or '', status='ERROR', count=0))
+        return []
+    known = {e['character_id']: e for e in entries}
+    matched = [f for f in files if f.get('status') == 'MATCHED' and f.get('character_id') in known]
+    for f in matched:
+        known[f['character_id']]['render_source'] = 'MEMBER_ICON_FOLDER'
+    unresolved = [{'asset_id': 'MEMBER_ICON_' + str(f.get('icon_sha256', ''))[:12].upper(), 'resolution': 'UNRESOLVED',
+                   'reason': f.get('reason') or 'UNRESOLVED'} for f in files if f not in matched]
+    reports.append(_report('MEMBER_ICON_FOLDER', paths.get('member_icons') or '', status=mapping.get('status', 'OK'),
+                           count=len(files), matched=len(matched), unresolved=len(unresolved)))
+    return unresolved
+
+
 def _population(paths, config, geese, reports):
     path = paths['member_registry']
     try:
@@ -296,6 +346,8 @@ def resolution_report(registry):
     for c in registry.get('civilians') or []:
         wrong = c['resolution'] == 'NEUTRAL_PLACEHOLDER' and c['profession'] in imaged
         rows.append({'id': c['civilian_id'], 'resolution': c['resolution'], 'label': c.get('label'), 'wrong': wrong})
+    for a in registry.get('unresolved_assets') or []:
+        rows.append({'id': a['asset_id'], 'resolution': 'UNRESOLVED', 'label': a['reason'], 'wrong': False})
     for row in rows:
         counts['TOTAL_RESIDENTS'] += 1
         counts[row['resolution']] += 1
@@ -307,12 +359,14 @@ def build_registry(paths, config):
     reports = []
     general, _ = _general(paths, config, reports)
     members, geese = _members(paths, config, reports)
+    unresolved_assets = _member_icons(paths, members, reports)
     population = _population(paths, config, geese, reports)
     return {
         'schema': SCHEMA,
         'authority_role': 'DERIVED_VIEW_NOT_AN_AUTHORITY',
         'sources': reports,
         'characters': general + members,
+        'unresolved_assets': unresolved_assets,
         'goosebaby': {'schema': 'RENGUIN_WORLD_GOOSEBABY_REGISTRY_V1', 'entries': geese, 'population': population},
         'civilians': civilians(config, geese),
     }

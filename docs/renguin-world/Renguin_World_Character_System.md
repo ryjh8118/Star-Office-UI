@@ -26,8 +26,26 @@ profession character and the anonymous walkers stay placeholders. The generic
 badge-coloured penguin sprite is gone.
 
 `python -m renguin_world residents` prints the report. Real authorities on
-2026-09-15: TOTAL 57 · CANONICAL 37 · PROFESSION 14 (7 characters + 7 role refs) ·
-PLACEHOLDER 4 · UNRESOLVED 2 · GENERIC_WRONG 0.
+2026-09-15: TOTAL 60 · CANONICAL 37 · PROFESSION 14 (7 characters + 7 role refs) ·
+PLACEHOLDER 4 · UNRESOLVED 5 · GENERIC_WRONG 0.
+
+### Member icon folder (read-only source, `RENGUIN_MEMBER_ICON_ROOT`)
+
+`E:\素材\icon\鵝寶會員` holds the official 鵝寶會員 cut-outs. Only the offline
+builder opens it, never a web request, and nothing in it is modified. A file is
+mapped onto an existing ASSET-08 character only when two independent kinds of
+evidence agree: its artwork is the nearest reference by structure and colour
+(structure distance < 0.18), and its file name agrees with that character's
+authority profile on profession or name. A name alone maps nothing, two files
+may not claim one character, and everything else is `UNRESOLVED` and not shown.
+
+The mapping (`portraits-private/member-icons.json`, git-ignored) records file
+hashes, opaque character ids and the evidence scores only — no file names, no
+member names. A matched character keeps its ASSET-08 address and permission
+check; only its display derivative is rendered from the official cut-out, so
+no keying is needed. 2026-09-15: 10 files → 7 matched (all seven profession
+residents), 3 unresolved (a second design of the construction assistant, a
+magician and a social-worker character with no authority record).
 
 Six profession sources are painted on an opaque white page and the hotel source
 is a chroma-green JPEG with a white sticker frame. The offline builder keys only

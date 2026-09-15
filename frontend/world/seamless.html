@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Renguin World · 無縫世界（預覽）</title>
+    <meta name="description" content="從 Star Office 空島往下，穿過雲海，抵達 Renguin City。" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6 58 20 58 44 32 58 6 44 6 20Z' fill='%239fd08a'/%3E%3Cpath d='M32 6 58 20 32 34 6 20Z' fill='%23c7ecb2'/%3E%3Cellipse cx='32' cy='30' rx='8' ry='11' fill='%23343a56'/%3E%3Cellipse cx='32' cy='32' rx='5' ry='7' fill='%23fff6e6'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/static/world/seamless.css?v={{WORLD_VERSION}}" />
+  </head>
+  <body>
+    <div id="sw-app" class="sw-app" data-status="loading" data-daypart="day">
+      <header class="sw-hud">
+        <a class="sw-chip sw-back" href="/" aria-label="回到 Star Office">←<span class="sw-wide"> Star Office</span></a>
+        <div class="sw-brand"><span aria-hidden="true">◆</span><span class="sw-wide"> RENGUIN WORLD</span></div>
+        <div id="sw-level" class="sw-level" hidden>
+          <strong id="sw-level-text"></strong>
+          <span class="sw-meter" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="sw-level-fill"></i></span>
+        </div>
+        <div class="sw-tools">
+          <button id="sw-zoom-out" class="sw-chip" type="button" aria-label="縮小世界">A−</button>
+          <button id="sw-zoom-in" class="sw-chip" type="button" aria-label="放大世界">A+</button>
+          <button id="sw-time" class="sw-chip" type="button" aria-label="切換時段">時段</button>
+          <button id="sw-data" class="sw-chip is-primary" type="button" aria-expanded="false" aria-controls="sw-drawer">世界資料</button>
+          <a class="sw-chip" href="/world" title="原本的等角世界 V1">V1</a>
+        </div>
+      </header>
+      <div id="sw-banner" class="sw-banner" role="status" hidden></div>
+
+      <nav id="sw-altimeter" class="sw-altimeter" aria-label="高度">
+        <button type="button" data-zone="island"><i></i><span>空島</span></button>
+        <button type="button" data-zone="descent"><i></i><span>雲海</span></button>
+        <button type="button" data-zone="city"><i></i><span>城市</span></button>
+      </nav>
+
+      <div id="sw-defs" class="sw-defs-host"></div>
+      <main id="sw-world" class="sw-world" aria-label="Renguin World">
+        <div class="sw-loading"><p>正在載入世界…</p></div>
+      </main>
+
+      <div class="sw-street-nav" id="sw-street-nav" hidden>
+        <button id="sw-street-left" class="sw-chip" type="button" aria-label="街道往左">‹</button>
+        <button id="sw-street-right" class="sw-chip" type="button" aria-label="街道往右">›</button>
+      </div>
+
+      <section id="sw-card" class="sw-card" role="dialog" aria-modal="false" aria-labelledby="sw-card-name" hidden>
+        <button id="sw-card-close" class="sw-card-close" type="button" aria-label="關閉">×</button>
+        <img id="sw-card-img" alt="" width="96" height="96" />
+        <div>
+          <h2 id="sw-card-name"></h2>
+          <p id="sw-card-role" class="sw-card-role"></p>
+          <dl id="sw-card-facts" class="sw-facts"></dl>
+        </div>
+      </section>
+
+      <aside id="sw-drawer" class="sw-drawer" aria-label="世界資料" hidden>
+        <div class="sw-drawer-head">
+          <h2>世界資料</h2>
+          <button id="sw-drawer-close" class="sw-chip" type="button">關閉</button>
+        </div>
+        <div id="sw-drawer-body"></div>
+      </aside>
+      <div class="sw-night" aria-hidden="true"></div>
+    </div>
+    <noscript><p>Renguin World 需要啟用 JavaScript。</p></noscript>
+    <script src="/static/world/world-scene.js?v={{WORLD_VERSION}}" defer></script>
+    <script src="/static/world/world-camera.js?v={{WORLD_VERSION}}" defer></script>
+    <script src="/static/world/seamless-art.js?v={{WORLD_VERSION}}" defer></script>
+    <script src="/static/world/seamless-app.js?v={{WORLD_VERSION}}" defer></script>
+  </body>
+</html>

@@ -340,6 +340,56 @@ class OfflineDerivatives(unittest.TestCase):
             self.assertEqual(keyed.getpixel((30, 11)), image.getpixel((30, 11)), 'outline pixels keep their colour')
         self.assertIsNone(build.canvas(Image.new('RGBA', (20, 20), (0, 0, 0, 0))), 'transparent art is never keyed')
 
+    def test_member_icon_files_map_only_with_artwork_and_profile_evidence(self):
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        import build_world_thumbnails as build
+        from PIL import Image, ImageDraw
+
+        def art(shape, colour):
+            image = Image.new('RGBA', (80, 100), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(image)
+            if shape == 'round':
+                draw.ellipse((10, 10, 70, 95), fill=colour, outline=(20, 20, 30, 255), width=3)
+            else:
+                draw.rectangle((5, 40, 75, 95), fill=colour, outline=(20, 20, 30, 255), width=3)
+                draw.polygon([(5, 40), (40, 2), (75, 40)], fill=(30, 30, 40, 255))
+            return build.signature(build.prepared(image))
+
+        nurse = {'character_id': 'MEMBER_AVATAR_NURSE', 'signature': art('round', (140, 220, 190, 255)), 'evidence': '甲甲（護理師） 會員化身／護理師公企鵝'}
+        baker = {'character_id': 'MEMBER_AVATAR_BAKER', 'signature': art('house', (120, 80, 50, 255)), 'evidence': '乙乙（烘焙門市） 會員化身／烘焙門市公企鵝'}
+        icons = [
+            {'stem': '甲甲(護理師)', 'sha256': 'a' * 64, 'signature': art('round', (140, 220, 190, 255))},
+            {'stem': '丙丙(護理師)', 'sha256': 'b' * 64, 'signature': art('house', (240, 60, 60, 255))},
+            {'stem': '無關檔名', 'sha256': 'c' * 64, 'signature': art('house', (120, 80, 50, 255))},
+            {'stem': '甲甲(護理師)', 'sha256': 'd' * 64, 'signature': art('square', (10, 10, 200, 255))},
+        ]
+        rows = {r['icon_sha256'][0]: r for r in build.match_member_icons(icons, [nurse, baker], CONFIG)}
+        self.assertEqual((rows['a']['status'], rows['a']['character_id']), ('MATCHED', 'MEMBER_AVATAR_NURSE'))
+        self.assertEqual(rows['b']['status'], 'UNRESOLVED', 'same profession, different artwork: never guessed')
+        self.assertEqual((rows['c']['status'], rows['c']['reason']), ('UNRESOLVED', 'ARTWORK_MATCH_WITHOUT_PROFILE_EVIDENCE'),
+                         'matching artwork with no profile evidence in the name stays unresolved')
+        self.assertEqual(rows['d']['status'], 'UNRESOLVED', 'a file name alone maps nothing')
+        text = json.dumps(list(rows.values()), ensure_ascii=False)
+        self.assertNotIn('甲甲', text)
+        twice = build.match_member_icons([icons[0], {**icons[0], 'sha256': 'e' * 64}], [nurse, baker], CONFIG)
+        self.assertTrue(all(r['status'] == 'UNRESOLVED' and r['reason'] == 'SEVERAL_FILES_CLAIM_ONE_CHARACTER' for r in twice))
+
+    def test_registry_reports_icon_mapping_without_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = authorities(tmp)
+            registry = characters.build_registry(paths, CONFIG)
+            opaque = next(g for g in registry['goosebaby']['entries'] if g['member_class'] == 'REAL_MEMBER_AVATAR')['goosebaby_id']
+            mapping = Path(tmp) / 'member-icons.json'
+            mapping.write_text(json.dumps({'status': 'OK', 'files': [
+                {'icon_sha256': '1' * 64, 'status': 'MATCHED', 'character_id': opaque},
+                {'icon_sha256': '2' * 64, 'status': 'UNRESOLVED', 'character_id': None, 'reason': 'ARTWORK_MATCHES_NO_AUTHORITY_CHARACTER'}]}), encoding='utf-8')
+            registry = characters.build_registry({**paths, 'member_icon_map': mapping, 'member_icons': Path(tmp)}, CONFIG)
+        source = next(s for s in registry['sources'] if s['id'] == 'MEMBER_ICON_FOLDER')
+        self.assertEqual((source['count'], source['matched'], source['unresolved']), (2, 1, 1))
+        self.assertEqual(next(c for c in registry['characters'] if c['character_id'] == opaque)['render_source'], 'MEMBER_ICON_FOLDER')
+        report = characters.resolution_report(registry)
+        self.assertIn('MEMBER_ICON_222222222222', [r['id'] for r in report['rows'] if r['resolution'] == 'UNRESOLVED'])
+
 
 class YouTubePopularity(unittest.TestCase):
     def test_without_a_key_the_layer_is_gated_and_the_world_still_builds(self):
