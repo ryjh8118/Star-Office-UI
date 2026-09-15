@@ -4,6 +4,7 @@
   roadmap      milestone table from the 100-content mock simulation
   simulate N   world_state for the first N mock contents
   characters   the derived character / goosebaby / civilian registry
+  residents    character resolution report (canonical / profession / placeholder / unresolved)
   youtube-sync fetch view counts (GATED without YOUTUBE_API_KEY)
 """
 import argparse
@@ -19,7 +20,7 @@ FRONTEND = ROOT / 'frontend'
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='python -m renguin_world')
-    parser.add_argument('command', choices=['build', 'roadmap', 'simulate', 'characters', 'youtube-sync'])
+    parser.add_argument('command', choices=['build', 'roadmap', 'simulate', 'characters', 'residents', 'youtube-sync'])
     parser.add_argument('count', nargs='?', type=int, default=100)
     parser.add_argument('--presentation-root', default=content_adapter.presentation_root_from_env(str(ROOT / '.user-presentation')))
     parser.add_argument('--audience', choices=['public', 'local'], default='public')
@@ -45,6 +46,9 @@ def main(argv=None):
     elif args.command == 'characters':
         registry = service.registry(FRONTEND)
         output = {**registry, 'sources': [{k: v for k, v in s.items() if k != 'path'} for s in registry['sources']]}
+    elif args.command == 'residents':
+        from . import characters
+        output = characters.resolution_report(service.registry(FRONTEND))
     else:
         output = service.sync_youtube(args.presentation_root)
     json.dump(output, sys.stdout, ensure_ascii=False, indent=1)

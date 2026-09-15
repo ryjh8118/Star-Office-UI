@@ -365,6 +365,8 @@ def characters(registry, config, era_info, unlocked, activity_state, seed):
         return {'character_id': entry['character_id'], 'display_name': entry['display_name'],
                 'character_type': entry['character_type'], 'district': district,
                 'has_image': bool(entry.get('asset_ref')), 'render_mode': 'IMAGE' if entry.get('asset_ref') else 'TOKEN',
+                'resolution': entry.get('resolution') or ('CANONICAL_CHARACTER' if entry.get('asset_ref') else 'NEUTRAL_PLACEHOLDER'),
+                'profession': entry.get('profession'), 'world_role': entry.get('world_role'),
                 'state': pose(entry), 'source_authority': entry.get('source_authority')}
 
     def available(entry):
@@ -406,6 +408,7 @@ def residents(config, era_info, crowd, civilians, unlocked, population=None):
     return {'crowd_density': crowd, 'capacity': capacity, 'visible': round(capacity * factor),
             'render_cap': config['rules']['crowd']['render_cap'], 'member_district_bonus': member_bonus,
             'archetypes': [{'civilian_id': c['civilian_id'], 'label': c['label'], 'profession': c['profession'],
+                            'resolution': c.get('resolution', 'NEUTRAL_PLACEHOLDER'), 'character_ref': c.get('character_ref'),
                             'district': c['district'] if c['district'] in unlocked else 'MAIN_CITY',
                             'density_group': c['density_group'], 'day': c['day'], 'night': c['night']}
                            for c in archetypes]}

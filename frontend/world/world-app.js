@@ -51,6 +51,7 @@
     "ASSET-01_GENERAL_CANON_INDEX": "角色聖經 · 一般角色",
     "ASSET-08_MEMBER_CHARACTER_LIBRARY": "會員角色庫",
     RENGUIN_WORLD_MEMBER_REGISTRY: "鵝寶人口底冊（只取統計）",
+    MEMBER_ICON_FOLDER: "鵝寶會員正式素材（只讀對照）",
     MOCK_CONTENTS: "模擬內容",
   };
   const STATUS = {
@@ -456,7 +457,7 @@
       img.height = 64;
       img.src = `/api/world/character-thumb/${encodeURIComponent(c.character_id)}?s=160`;
       box.append(img);
-    } else box.append(node("span", "🐧", "rw-token"));
+    } else box.append(node("span", "居民", "rw-token"));
     box.append(node("figcaption", c.display_name));
     return box;
   }

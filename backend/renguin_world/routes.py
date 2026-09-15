@@ -15,6 +15,8 @@ FRONTEND = ROOT / 'frontend'
 WORLD_DIR = FRONTEND / 'world'
 THUMB_SIZES = {96, 160, 256}
 PORTRAITS = ROOT / 'backend/renguin_world/art/portraits'
+# Derivatives of private-identity member avatars are built locally and never committed.
+PRIVATE_PORTRAITS = ROOT / 'backend/renguin_world/art/portraits-private'
 
 
 @lru_cache(maxsize=128)
@@ -51,6 +53,15 @@ def world_page():
     # The shell is always fresh; its scripts load from /static/world/ with this
     # content hash, so they cache immutably and still change the moment they do.
     html = (WORLD_DIR / 'index.html').read_text(encoding='utf-8').replace('{{WORLD_VERSION}}', world_version())
+    response = make_response(html)
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return response
+
+
+@bp.get('/world/seamless')
+def world_seamless_page():
+    """Seamless side-view vertical slice. V1 at /world stays the default and the fallback."""
+    html = (WORLD_DIR / 'seamless.html').read_text(encoding='utf-8').replace('{{WORLD_VERSION}}', world_version())
     response = make_response(html)
     response.headers['Content-Type'] = 'text/html; charset=utf-8'
     return response
@@ -95,7 +106,8 @@ def world_character_asset(character_id):
     path = _character_file(character_id)
     if not path:
         abort(404)
-    return send_file(path, mimetype='image/png', max_age=0, conditional=True)
+    mimetype = 'image/jpeg' if path.suffix.lower() in ('.jpg', '.jpeg') else 'image/png'
+    return send_file(path, mimetype=mimetype, max_age=0, conditional=True)
 
 
 @bp.get('/api/world/character-thumb/<character_id>')
@@ -113,11 +125,12 @@ def world_character_thumb(character_id):
         abort(404)
     stat = path.stat()
     digest = _source_digest(str(path), stat.st_mtime_ns, stat.st_size)
-    derivative = PORTRAITS / f'{digest}-{size}.webp'
-    if derivative.is_file():
+    derivative = next((d for d in (PORTRAITS / f'{digest}-{size}.webp', PRIVATE_PORTRAITS / f'{digest}-{size}.webp') if d.is_file()), None)
+    if derivative:
         response = send_file(derivative, mimetype='image/webp', conditional=True, max_age=0)
         response.headers['X-World-Art'] = 'offline-derivative'
     else:
-        response = send_file(path, mimetype='image/png', conditional=True, max_age=0)
+        mimetype = 'image/jpeg' if path.suffix.lower() in ('.jpg', '.jpeg') else 'image/png'
+        response = send_file(path, mimetype=mimetype, conditional=True, max_age=0)
         response.headers['X-World-Art'] = 'original-needs-offline-build'
     return response

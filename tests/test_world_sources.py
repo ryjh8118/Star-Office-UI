@@ -184,8 +184,12 @@ class CharacterRegistry(unittest.TestCase):
         avatar = geese['REAL_MEMBER_AVATAR']
         self.assertTrue(avatar['goosebaby_id'].startswith('MEMBER_AVATAR_'))
         self.assertIsNone(avatar['avatar_name'])
-        self.assertIsNone(avatar['asset_ref'], 'a private avatar is never served as an image')
+        self.assertEqual(avatar['asset_ref'], '/api/world/character-asset/' + avatar['goosebaby_id'],
+                         'the official profession art is addressed by the opaque id, never by the member folder')
         self.assertEqual((avatar['display_name'], avatar['profession'], avatar['status']), ('護理師鵝寶', 'NURSE', 'BOUND'))
+        entry = next(c for c in registry['characters'] if c['character_id'] == avatar['goosebaby_id'])
+        self.assertEqual((entry['resolution'], entry['world_role']), ('PROFESSION_CHARACTER', '護理師居民'))
+        self.assertIn('IDENTITY_PRIVATE', entry['special_flags'])
         self.assertEqual(geese['MEMBER_WORLD_NPC']['asset_ref'], '/api/world/character-asset/GOOSE_EGG')
         self.assertEqual(registry['goosebaby']['population'], {'total': 2, 'by_tier': {'BRONZE': 1, 'GOLD': 1},
                                                                'snapshot_at': '2026-08-20T16:16:00+08:00',
@@ -199,11 +203,38 @@ class CharacterRegistry(unittest.TestCase):
             row = rows['CIVILIAN_' + key]
             self.assertTrue({'profession', 'district', 'density_group', 'day', 'night', 'asset_ref', 'activity_states'} <= set(row))
         self.assertEqual(rows['CIVILIAN_NURSE']['source'], 'ASSET-08_PROFESSION')
+        nurse = next(g for g in registry['goosebaby']['entries'] if g['profession'] == 'NURSE')
+        self.assertEqual((rows['CIVILIAN_NURSE']['resolution'], rows['CIVILIAN_NURSE']['character_ref']),
+                         ('PROFESSION_CHARACTER', nurse['goosebaby_id']), 'a profession points at its existing character')
+        self.assertEqual((rows['CIVILIAN_FACTORY_WORKER']['resolution'], rows['CIVILIAN_FACTORY_WORKER']['character_ref']),
+                         ('NEUTRAL_PLACEHOLDER', None), 'no character exists for this profession in the fixture')
+        self.assertEqual(rows['CIVILIAN_VILLAGER']['resolution'], 'NEUTRAL_PLACEHOLDER')
+        report = characters.resolution_report(registry)
+        self.assertEqual(report['counts']['GENERIC_WRONG_CHARACTER'], 0)
+        self.assertEqual(report['counts']['TOTAL_RESIDENTS'], sum(report['counts'][k] for k in
+                         ('CANONICAL_CHARACTER', 'PROFESSION_CHARACTER', 'NEUTRAL_PLACEHOLDER', 'UNRESOLVED')))
+        self.assertFalse(any(r['id'] == 'VAMPIRE_RENGUIN' for r in report['rows']), 'event skins are not residents')
+        broken = json.loads(json.dumps(registry))
+        next(c for c in broken['civilians'] if c['civilian_id'] == 'CIVILIAN_NURSE')['resolution'] = 'NEUTRAL_PLACEHOLDER'
+        self.assertEqual(characters.resolution_report(broken)['counts']['GENERIC_WRONG_CHARACTER'], 1,
+                         'a placeholder where the profession character exists is counted as wrong')
         items = [{'project_id': f'c{i}', 'title': f'c{i}', 'content_type': 'long', 'status': 'PUBLISHED',
                   'published_at': f'2026-09-{10 + i:02d}T00:00:00Z'} for i in range(4)]
         state = engine.build_state(items, now='2026-09-15T00:00:00Z', registry=registry)
         self.assertTrue(state['residents']['archetypes'])
         self.assertEqual(state['residents']['crowd_density'], state['activity']['crowd_density'])
+
+    def test_private_avatar_image_resolves_only_through_its_opaque_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = authorities(tmp)
+            registry = characters.build_registry(paths, CONFIG)
+            opaque = next(g for g in registry['goosebaby']['entries'] if g['member_class'] == 'REAL_MEMBER_AVATAR')['goosebaby_id']
+            file = characters.asset_path(registry, opaque, paths)
+            self.assertEqual(file.name, 'reference_01.png')
+            self.assertIsNone(characters.asset_path(registry, 'TESTMEMBERNAME_NURSE', paths), 'the member folder id is not an address')
+            hidden = json.loads(json.dumps(registry))
+            next(c for c in hidden['characters'] if c['character_id'] == opaque)['public_visibility'] = False
+            self.assertIsNone(characters.asset_path(hidden, opaque, paths))
 
     def test_tampered_authorities_are_refused_not_repaired(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -265,6 +296,11 @@ class Routes(unittest.TestCase):
             self.assertEqual(page.status_code, 200)
             self.assertNotIn('{{WORLD_VERSION}}', page.get_data(as_text=True))
             self.assertIn('no-cache', client.get('/world').headers.get('Cache-Control', 'no-cache'))
+            slice_page = client.get('/world/seamless')
+            self.assertEqual(slice_page.status_code, 200)
+            body = slice_page.get_data(as_text=True)
+            self.assertNotIn('{{WORLD_VERSION}}', body)
+            self.assertIn('/static/world/seamless-app.js?v=', body)
             with patch('renguin_world.characters.default_paths', return_value=paths):
                 service._registry.update(value=None)
                 sim = client.get('/api/world/simulate?contents=50&idle=20').get_json()
@@ -276,7 +312,11 @@ class Routes(unittest.TestCase):
                 self.assertFalse(any('path' in s for s in roster['sources']))
                 self.assertEqual(client.get('/api/world/character-thumb/NOPE').status_code, 404)
                 private = roster['goosebaby']['entries'][1]['goosebaby_id']
-                self.assertEqual(client.get(f'/api/world/character-asset/{private}').status_code, 404)
+                self.assertNotIn('TESTMEMBERNAME', json.dumps(roster, ensure_ascii=False))
+                response = client.get(f'/api/world/character-asset/{private}')
+                self.assertEqual((response.status_code, response.mimetype), (200, 'image/png'))
+                response.close()
+                self.assertEqual(client.get('/api/world/character-asset/TESTMEMBERNAME_NURSE').status_code, 404)
                 with patch('creator_history.snapshot', side_effect=RuntimeError('PRODUCER_UNAVAILABLE')):
                     live = client.get('/api/world/state').get_json()
                     cached = client.get('/api/world/state').get_json()
@@ -287,6 +327,73 @@ class Routes(unittest.TestCase):
         self.assertEqual({s['id']: s['status'] for s in live['sources']}['CONTENT_OS_LEDGER'], 'SYNC_ERROR')
         self.assertFalse(live['cache']['hit'])
         self.assertTrue(cached['cache']['hit'], 'the precomputed state is reused inside its TTL')
+
+
+class OfflineDerivatives(unittest.TestCase):
+    def test_only_the_border_connected_canvas_is_keyed(self):
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        import build_world_thumbnails as build
+        from PIL import Image, ImageDraw
+        for kind, canvas_colour in (('white', (254, 254, 254, 255)), ('green', (10, 245, 20, 255))):
+            image = Image.new('RGBA', (60, 60), canvas_colour)
+            draw = ImageDraw.Draw(image)
+            draw.ellipse((10, 10, 50, 50), fill=(255, 255, 255, 255), outline=(20, 20, 30, 255), width=3)
+            self.assertEqual(build.canvas(image), kind)
+            keyed = build.key_canvas(image, kind)
+            self.assertEqual(keyed.getpixel((1, 1))[3], 0, 'canvas at the border becomes transparent')
+            self.assertEqual(keyed.getpixel((30, 30)), (255, 255, 255, 255), 'white inside the outline is the character: untouched')
+            self.assertEqual(keyed.getpixel((30, 11)), image.getpixel((30, 11)), 'outline pixels keep their colour')
+        self.assertIsNone(build.canvas(Image.new('RGBA', (20, 20), (0, 0, 0, 0))), 'transparent art is never keyed')
+
+    def test_member_icon_files_map_only_with_artwork_and_profile_evidence(self):
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        import build_world_thumbnails as build
+        from PIL import Image, ImageDraw
+
+        def art(shape, colour):
+            image = Image.new('RGBA', (80, 100), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(image)
+            if shape == 'round':
+                draw.ellipse((10, 10, 70, 95), fill=colour, outline=(20, 20, 30, 255), width=3)
+            else:
+                draw.rectangle((5, 40, 75, 95), fill=colour, outline=(20, 20, 30, 255), width=3)
+                draw.polygon([(5, 40), (40, 2), (75, 40)], fill=(30, 30, 40, 255))
+            return build.signature(build.prepared(image))
+
+        nurse = {'character_id': 'MEMBER_AVATAR_NURSE', 'signature': art('round', (140, 220, 190, 255)), 'evidence': '甲甲（護理師） 會員化身／護理師公企鵝'}
+        baker = {'character_id': 'MEMBER_AVATAR_BAKER', 'signature': art('house', (120, 80, 50, 255)), 'evidence': '乙乙（烘焙門市） 會員化身／烘焙門市公企鵝'}
+        icons = [
+            {'stem': '甲甲(護理師)', 'sha256': 'a' * 64, 'signature': art('round', (140, 220, 190, 255))},
+            {'stem': '丙丙(護理師)', 'sha256': 'b' * 64, 'signature': art('house', (240, 60, 60, 255))},
+            {'stem': '無關檔名', 'sha256': 'c' * 64, 'signature': art('house', (120, 80, 50, 255))},
+            {'stem': '甲甲(護理師)', 'sha256': 'd' * 64, 'signature': art('square', (10, 10, 200, 255))},
+        ]
+        rows = {r['icon_sha256'][0]: r for r in build.match_member_icons(icons, [nurse, baker], CONFIG)}
+        self.assertEqual((rows['a']['status'], rows['a']['character_id']), ('MATCHED', 'MEMBER_AVATAR_NURSE'))
+        self.assertEqual(rows['b']['status'], 'UNRESOLVED', 'same profession, different artwork: never guessed')
+        self.assertEqual((rows['c']['status'], rows['c']['reason']), ('UNRESOLVED', 'ARTWORK_MATCH_WITHOUT_PROFILE_EVIDENCE'),
+                         'matching artwork with no profile evidence in the name stays unresolved')
+        self.assertEqual(rows['d']['status'], 'UNRESOLVED', 'a file name alone maps nothing')
+        text = json.dumps(list(rows.values()), ensure_ascii=False)
+        self.assertNotIn('甲甲', text)
+        twice = build.match_member_icons([icons[0], {**icons[0], 'sha256': 'e' * 64}], [nurse, baker], CONFIG)
+        self.assertTrue(all(r['status'] == 'UNRESOLVED' and r['reason'] == 'SEVERAL_FILES_CLAIM_ONE_CHARACTER' for r in twice))
+
+    def test_registry_reports_icon_mapping_without_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = authorities(tmp)
+            registry = characters.build_registry(paths, CONFIG)
+            opaque = next(g for g in registry['goosebaby']['entries'] if g['member_class'] == 'REAL_MEMBER_AVATAR')['goosebaby_id']
+            mapping = Path(tmp) / 'member-icons.json'
+            mapping.write_text(json.dumps({'status': 'OK', 'files': [
+                {'icon_sha256': '1' * 64, 'status': 'MATCHED', 'character_id': opaque},
+                {'icon_sha256': '2' * 64, 'status': 'UNRESOLVED', 'character_id': None, 'reason': 'ARTWORK_MATCHES_NO_AUTHORITY_CHARACTER'}]}), encoding='utf-8')
+            registry = characters.build_registry({**paths, 'member_icon_map': mapping, 'member_icons': Path(tmp)}, CONFIG)
+        source = next(s for s in registry['sources'] if s['id'] == 'MEMBER_ICON_FOLDER')
+        self.assertEqual((source['count'], source['matched'], source['unresolved']), (2, 1, 1))
+        self.assertEqual(next(c for c in registry['characters'] if c['character_id'] == opaque)['render_source'], 'MEMBER_ICON_FOLDER')
+        report = characters.resolution_report(registry)
+        self.assertIn('MEMBER_ICON_222222222222', [r['id'] for r in report['rows'] if r['resolution'] == 'UNRESOLVED'])
 
 
 class YouTubePopularity(unittest.TestCase):

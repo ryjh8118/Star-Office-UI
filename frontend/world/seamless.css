@@ -1,0 +1,1463 @@
+/* Renguin World · seamless side-view slice.
+ * Sizes are world units times --ws (one world scale); motion is transform and
+ * opacity only, runs only in sections near the viewport, and .sw-paused or
+ * reduced motion stops all of it. */
+:root {
+  --ws: 1;
+  --u: calc(var(--ws) * 1px);
+  --ink: #2f2a44;
+  --soft: #6b6583;
+  --paper: #fffaf0;
+  --line: #e6dcc8;
+  --accent: #567258;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  scroll-behavior: auto;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+  background: #86664b;
+}
+button {
+  font: inherit;
+}
+
+/* Sky palettes: every section's gradient starts where the previous one ends, so the sky is one piece. */
+.sw-app {
+  --sky-0: #95c6e8;
+  --sky-1: #cae4f2;
+  --sky-2: #f6f2e8;
+  --sky-3: #deecd8;
+  --sky-4: #f0e7cf;
+  --cloud: #fffdf8;
+  --cloud-sh: #c8d7e6;
+  --cloud-hi: #ffffff;
+  --mtn: #cdd5e6;
+  --hill-far: #c2d5b1;
+  --hill-near: #a8c793;
+  --far-house: #aebf9e;
+  --skyline: #bec7d9;
+  --sun: #fff1c2;
+  --sea: #fbf8f1;
+  --night: 0;
+  --night-tint: #141a44;
+}
+.sw-app[data-daypart="dusk"] {
+  --sky-0: #eea487;
+  --sky-1: #f8cdb0;
+  --sky-2: #fbe6d2;
+  --sky-3: #efd9c3;
+  --sky-4: #ead3b6;
+  --cloud: #fff1e4;
+  --cloud-sh: #e3b7a7;
+  --cloud-hi: #fff8f0;
+  --mtn: #d8b9c0;
+  --hill-far: #c9c09a;
+  --hill-near: #b3b384;
+  --far-house: #b9ab8e;
+  --skyline: #cdb2b8;
+  --sun: #ffd6a0;
+  --sea: #fcefe2;
+  --night: 0.12;
+  --night-tint: #7a3f52;
+}
+.sw-app[data-daypart="night"] {
+  --sky-0: #161b46;
+  --sky-1: #2a3468;
+  --sky-2: #46507e;
+  --sky-3: #37466c;
+  --sky-4: #2d3a57;
+  --cloud: #c9cde6;
+  --cloud-sh: #6f78a6;
+  --cloud-hi: #e1e4f5;
+  --mtn: #4a5480;
+  --hill-far: #3f5a5c;
+  --hill-near: #3b5a4c;
+  --far-house: #56705f;
+  --skyline: #56608c;
+  --sun: #f4f1dc;
+  --sea: #bfc4e0;
+  --night: 0.3;
+  --night-tint: #141a44;
+}
+.sw-night {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  background: var(--night-tint);
+  opacity: var(--night);
+  transition: opacity 0.6s;
+}
+
+/* HUD: small, paper, out of the world's way. */
+.sw-hud {
+  position: fixed;
+  z-index: 50;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fffaf0f0;
+  box-shadow: 0 6px 20px #2f2a441a;
+}
+.sw-back .sw-wide {
+  margin-left: 4px;
+}
+.sw-brand {
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #425b4a;
+  white-space: nowrap;
+}
+.sw-brand span:first-child {
+  color: #6aa85a;
+}
+.sw-level {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px 10px;
+  border-left: 1px solid var(--line);
+}
+.sw-level strong {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sw-meter {
+  display: block;
+  height: 6px;
+  width: 120px;
+  border-radius: 99px;
+  background: #e9e1cf;
+  overflow: hidden;
+}
+.sw-meter.is-wide {
+  width: 100%;
+  height: 10px;
+  margin: 6px 0;
+}
+.sw-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8cc47a, #f2b33d);
+}
+.sw-tools {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  align-items: center;
+}
+.sw-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #cdbda3;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sw-chip:hover {
+  background: #fff3dc;
+}
+.sw-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sw-chip.is-primary {
+  background: var(--accent);
+  border-color: #405942;
+  color: #fff8e6;
+}
+button:focus-visible,
+a:focus-visible,
+.sw-street-scroll:focus-visible {
+  outline: 3px solid #688a89;
+  outline-offset: 3px;
+}
+.sw-banner {
+  position: fixed;
+  z-index: 49;
+  top: calc(70px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100% - 32px));
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: #fde8c8;
+  border: 1px solid #f0c98c;
+  font-size: 12px;
+}
+
+/* Altimeter: where you are on the way down. */
+.sw-altimeter {
+  position: fixed;
+  z-index: 48;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 99px;
+  background: #fffaf0d9;
+  border: 1px solid var(--line);
+}
+.sw-altimeter button {
+  display: grid;
+  grid-template-columns: 14px auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-radius: 99px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+.sw-altimeter i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #9d8f78;
+}
+.sw-altimeter [aria-current="true"] {
+  color: var(--ink);
+  font-weight: 700;
+  background: #eaf4e2;
+}
+.sw-altimeter [aria-current="true"] i {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The world: sections stacked on one sky; layers move, sections never do. */
+.sw-world {
+  position: relative;
+  z-index: 0;
+  /* The world ends where its sections end: art that a composed section crops never lengthens the page. */
+  overflow: clip;
+}
+.sw-loading {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  color: var(--soft);
+  background: linear-gradient(var(--sky-0), var(--sky-1));
+}
+.sw-section {
+  position: relative;
+  height: calc(var(--h) * var(--u));
+}
+/* Seams: each gradient starts on the colour the previous section ends with. */
+.sw-island {
+  /* Composition lead: extra (or trimmed) sky above the island so its focus band sits centred. */
+  height: calc(var(--h) * var(--u) + var(--island-lead, 0px));
+  background: linear-gradient(var(--sky-0), var(--sky-1));
+}
+.sw-descent {
+  background: linear-gradient(var(--sky-1), var(--sky-2) 52%, var(--sky-3));
+}
+.sw-city {
+  /* Composed height: soil the art does not reach continues in the same colour. */
+  background: linear-gradient(var(--sky-3), var(--sky-4) calc(640 * var(--u)), var(--sky-4) calc(900 * var(--u)), #86664b calc(900 * var(--u)));
+}
+.sw-layer {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+}
+/* Layers keep their art's own height whatever height the composition gives the section. */
+.sw-island > .sw-layer {
+  top: var(--island-lead, 0px);
+  height: calc(1000 * var(--u));
+}
+.sw-descent > .sw-layer {
+  height: calc(1500 * var(--u));
+}
+.sw-city .sw-layer {
+  height: calc(1080 * var(--u));
+}
+.sw-span {
+  left: 0;
+  width: calc(var(--w, 2800) * var(--u));
+}
+/* A district's part of a street layer: positioned in street units, culled and anchored on its own. */
+.sw-chunk {
+  position: absolute;
+  top: 0;
+  left: calc(var(--cx) * var(--u));
+  width: calc(var(--cw) * var(--u));
+  height: 100%;
+}
+/* Far districts are skipped by the browser (no layout or paint) but keep their size. */
+.sw-chunk:not([data-near]) {
+  content-visibility: hidden;
+}
+/* Animations under content-visibility keep ticking (style is skipped, so a pause rule never lands):
+   far residents, crowd and effects are removed from rendering instead, which ends their animations. */
+:is([data-layer="residents"], [data-layer="effects"]) > .sw-chunk:not([data-near]) {
+  display: none;
+}
+.sw-layer:not([data-depth="1"]) {
+  will-change: transform;
+}
+.sw-center {
+  left: 50%;
+  width: calc(2200 * var(--u));
+  margin-left: calc(-1100 * var(--u));
+}
+.sw-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sw-defs-host,
+.sw-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.sw-section:not([data-near]) .sw-cull {
+  visibility: hidden;
+}
+.sw-section:not([data-onscreen]) *,
+.sw-section:not([data-onscreen]) *::before,
+.sw-section:not([data-onscreen]) *::after,
+.sw-chunk:not([data-near]) *,
+.sw-motion-static *,
+.sw-motion-static *::before,
+.sw-motion-static *::after,
+.sw-paused *,
+.sw-paused *::before,
+.sw-paused *::after {
+  animation-play-state: paused !important;
+}
+
+/* Paper materials that follow the time of day. */
+.sw-c-body,
+.sw-sea {
+  fill: var(--cloud);
+}
+.sw-sea {
+  fill: var(--sea);
+}
+.sw-c-sh {
+  fill: var(--cloud-sh);
+}
+.sw-c-hi {
+  fill: var(--cloud-hi);
+  opacity: 0.85;
+}
+.sw-far {
+  opacity: 0.85;
+}
+.sw-sun {
+  fill: var(--sun);
+  opacity: 0.9;
+}
+.sw-mountain {
+  fill: var(--mtn);
+}
+.sw-snow {
+  fill: #f8f6f0;
+  opacity: 0.9;
+}
+.sw-distant path {
+  fill: var(--mtn);
+}
+.sw-distant .sw-distant-top {
+  fill: var(--hill-far);
+}
+.sw-hill-far {
+  fill: var(--hill-far);
+}
+.sw-hill-near {
+  fill: var(--hill-near);
+}
+.sw-far-house {
+  fill: var(--far-house);
+}
+.sw-skyline,
+.sw-skyline rect,
+.sw-skyline path,
+.sw-skyline circle {
+  fill: var(--skyline);
+}
+.sw-lamp-glass {
+  fill: #fff2c4;
+}
+.sw-lamp-glow {
+  opacity: 0;
+}
+.sw-app[data-daypart="dusk"] .sw-lamp-glow,
+.sw-app[data-daypart="night"] .sw-lamp-glow {
+  opacity: 0.95;
+}
+.sw-sign {
+  font: 700 13px/1 system-ui, sans-serif;
+  letter-spacing: 1.5px;
+  fill: #ffe39a;
+  text-anchor: middle;
+}
+.sw-sign-dark {
+  font: 700 17px/1 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  fill: #5a4535;
+  text-anchor: middle;
+}
+.sw-tag {
+  font: 800 12px/1 system-ui, sans-serif;
+  fill: #fff;
+  text-anchor: middle;
+}
+.sw-sign-small {
+  font: 600 14px/1 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  fill: #5a4535;
+  text-anchor: middle;
+}
+.sw-sign-big {
+  font-size: 34px;
+  letter-spacing: 4px;
+}
+/* District lights: marquee bulbs and lanterns glow from dusk. */
+.sw-bulb,
+.sw-lantern {
+  opacity: 0.75;
+}
+.sw-app[data-daypart="dusk"] .is-lit:is(.sw-bulb, .sw-lantern),
+.sw-app[data-daypart="night"] .is-lit:is(.sw-bulb, .sw-lantern) {
+  opacity: 1;
+}
+
+/* Island extras. */
+.sw-descend {
+  position: fixed;
+  z-index: 46;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  translate: -50% 0;
+  min-height: 44px;
+  padding: 8px 18px 8px 16px;
+  border: 1px solid #cdbda3;
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px #2f2a4422;
+  animation: sw-nudge 1.4s ease-in-out infinite alternate;
+}
+.sw-descend::after {
+  content: " ↓";
+}
+.sw-app:not([data-zone="island"]) .sw-descend {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The cable car: one line from the island station to the street station. */
+.sw-cable {
+  position: absolute;
+  z-index: 5;
+  height: 3px;
+  margin-top: -1.5px;
+  transform-origin: 0 50%;
+  background: #4e4763;
+  box-shadow: 0 3px 0 #2c234018;
+  pointer-events: none;
+}
+.sw-gondola {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: 0;
+  width: 80px;
+  height: 96px;
+  margin: -2px 0 0 -40px;
+  transform-origin: 40px 2px;
+  pointer-events: none;
+  will-change: transform;
+}
+.sw-gondola svg {
+  width: 100%;
+  height: 100%;
+  animation: sw-sway 3.4s ease-in-out infinite alternate;
+  transform-origin: 50% 2%;
+}
+.sw-wheel {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: 0;
+  height: 0;
+}
+.sw-fx-balloon {
+  width: calc(120 * var(--u));
+  translate: -50% -100%;
+  animation: sw-bob 5s ease-in-out infinite alternate;
+}
+.sw-fx-balloon svg {
+  width: 100%;
+  display: block;
+}
+.sw-fx-bird {
+  width: calc(34 * var(--u));
+  height: calc(12 * var(--u));
+}
+/* The wings flap, not the empty box around them: an animated element with nothing painted cannot run on the compositor. */
+.sw-fx-bird::before,
+.sw-fx-bird::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  border-top: 3px solid #5b5470;
+  border-radius: 60% 60% 0 0;
+  animation: sw-flap 0.5s ease-in-out var(--delay) infinite alternate;
+}
+.sw-fx-bird::before {
+  left: 0;
+}
+.sw-fx-bird::after {
+  right: 0;
+}
+
+/* City street: a native horizontal scroller, so touch keeps its momentum. */
+.sw-street-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  cursor: grab;
+}
+.sw-street-scroll::-webkit-scrollbar {
+  display: none;
+}
+.sw-street-scroll.is-dragging {
+  cursor: grabbing;
+}
+.sw-street {
+  position: relative;
+  width: calc(var(--w, 2800) * var(--u));
+  height: 100%;
+  /* Parallax layers slide inside the street; they must never widen what the street can scroll. */
+  overflow: clip;
+}
+.sw-swipe-hint {
+  display: none;
+}
+@media (hover: none) {
+  .sw-swipe-hint {
+    display: block;
+    position: absolute;
+    z-index: 8;
+    left: 50%;
+    top: calc(380 * var(--u));
+    translate: -50% 0;
+    margin: 0;
+    padding: 4px 12px;
+    border-radius: 99px;
+    background: #2f2a44cc;
+    color: #fff8e6;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .sw-app[data-zone="city"] .sw-swipe-hint {
+    animation: sw-hint 4.5s ease-in-out forwards;
+  }
+}
+.sw-street-nav {
+  position: fixed;
+  z-index: 47;
+  left: 12px;
+  right: 12px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.sw-street-nav .sw-chip {
+  pointer-events: auto;
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 22px;
+  box-shadow: 0 6px 16px #2f2a4422;
+}
+.sw-end {
+  position: absolute;
+  z-index: 7;
+  left: 0;
+  right: 0;
+  bottom: calc(40 * var(--u));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  color: #fff4e0;
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+}
+.sw-end .sw-chip {
+  pointer-events: auto;
+}
+
+/* Residents: the authority's own images at a readable size, with name tags. */
+.sw-actor {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  translate: -50% -100%;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.sw-actor::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(-6 * var(--u));
+  width: calc(96 * var(--u));
+  height: calc(16 * var(--u));
+  translate: -50% 0;
+  border-radius: 50%;
+  background: #2c234026;
+}
+.sw-actor-body {
+  display: block;
+  height: calc(150 * var(--u));
+  transform-origin: 50% 100%;
+  animation: sw-idle 3.2s ease-in-out var(--delay, 0s) infinite alternate;
+}
+.sw-actor img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: calc(210 * var(--u));
+  object-fit: contain;
+  object-position: 50% 100%;
+  transition: scale 0.18s;
+}
+.sw-actor.is-celebrating .sw-actor-body {
+  animation-name: sw-hop;
+  animation-duration: 0.8s;
+}
+.sw-actor.is-napping .sw-actor-body {
+  animation: none;
+  opacity: 0.9;
+}
+/* Until its image has loaded, a resident stands still (see actor() in seamless-app.js). */
+.sw-actor:not(.is-ready) .sw-actor-body {
+  animation: none;
+}
+.sw-actor:hover img,
+.sw-actor:focus-visible img,
+.sw-actor.is-selected img {
+  scale: 1.06;
+}
+.sw-actor.is-selected::before {
+  background: #f2b33d66;
+}
+.sw-actor:focus-visible {
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+.sw-nametag {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  translate: -50% 0;
+  margin-top: calc(10 * var(--u));
+  padding: 1px 9px;
+  border-radius: 7px;
+  background: #2f2a44d9;
+  color: #fff8e6;
+  font-size: max(11px, calc(13 * var(--u)));
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.sw-actor.is-selected .sw-nametag {
+  background: #567258;
+}
+.sw-hotspot {
+  position: absolute;
+  z-index: 4;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.sw-hotspot:hover,
+.sw-hotspot:focus-visible {
+  outline: 3px dashed #fff8e6;
+  outline-offset: 4px;
+}
+.sw-hotspot-tip {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  translate: -50% -100%;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: #2f2a44e6;
+  color: #fff8e6;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.sw-hotspot:hover .sw-hotspot-tip,
+.sw-hotspot:focus-visible .sw-hotspot-tip {
+  opacity: 1;
+}
+
+/* Small effects, compositor-only. */
+.sw-fx {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  pointer-events: none;
+}
+.sw-fx-beacon {
+  width: calc(70 * var(--u));
+  height: calc(70 * var(--u));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe7a8cc, #ffe7a800 70%);
+  animation: sw-glow 1.8s ease-in-out infinite alternate;
+}
+.sw-fx-flame {
+  width: calc(34 * var(--u));
+  height: calc(52 * var(--u));
+  translate: -50% -100%;
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 50% 72%, #fff3b0, #ffb347 58%, #ffb34700 72%);
+  transform-origin: 50% 100%;
+  animation: sw-flicker 0.45s ease-in-out infinite alternate;
+}
+.sw-fx-firework {
+  width: calc(110 * var(--u));
+  height: calc(110 * var(--u));
+  translate: -50% -50%;
+}
+.sw-fx-firework::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--c) 0 6deg, transparent 6deg 36deg);
+  -webkit-mask: radial-gradient(circle, transparent 30%, #000 32%, #000 60%, transparent 62%);
+  mask: radial-gradient(circle, transparent 30%, #000 32%, #000 60%, transparent 62%);
+  opacity: 0;
+  animation: sw-burst 1.8s ease-out var(--delay, 0s) 5 both;
+}
+
+.sw-fx-glow {
+  width: calc(120 * var(--u));
+  height: calc(120 * var(--u));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe7a8aa, #ffe7a800 68%);
+  animation: sw-glow 2.4s ease-in-out infinite alternate;
+}
+.sw-fx-spotlight {
+  width: calc(90 * var(--u));
+  height: calc(420 * var(--u));
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  rotate: var(--r, 0deg);
+  background: linear-gradient(#fff6c8aa, #fff6c800);
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  animation: sw-glow 1.6s ease-in-out infinite alternate;
+}
+.sw-fx-gate {
+  width: calc(400 * var(--u));
+  height: calc(400 * var(--u));
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #9db8f200 48%, #9db8f288 60%, #9db8f200 72%);
+  animation: sw-glow 2.8s ease-in-out infinite alternate;
+}
+.sw-fx-confetti {
+  width: calc(10 * var(--u));
+  height: calc(16 * var(--u));
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  animation: sw-fall 3.4s linear var(--delay, 0s) 6 both;
+}
+
+/* The anonymous crowd: faceless paper pawns, smaller than any character, strolling along the street. */
+/* The pawn's own box is its body, so the walking element paints something and can run on the compositor. */
+.sw-pawn {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(30 * var(--u));
+  height: calc(44 * var(--u));
+  translate: -50% -100%;
+  border: max(1px, calc(2 * var(--u))) solid #8d8373;
+  border-radius: 45% 45% 18% 18%;
+  background: #e9e0cf;
+  pointer-events: none;
+  animation: sw-walk var(--dur, 9s) ease-in-out calc(var(--delay, 0) * -1s) infinite alternate;
+}
+.sw-pawn::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 2 * var(--u));
+  width: calc(24 * var(--u));
+  height: calc(24 * var(--u));
+  translate: -50% 0;
+  border: inherit;
+  border-radius: 50%;
+  background: inherit;
+}
+.sw-app[data-daypart="night"] .sw-pawn {
+  opacity: 0.8;
+}
+
+/* Residents' gossip: a paper speech bubble above each open district's signpost, opening towards the district. */
+.sw-talk {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  translate: calc(-40 * var(--u)) -100%;
+  display: grid;
+  gap: 2px;
+  max-width: max(180px, calc(240 * var(--u)));
+  width: max-content;
+  padding: 6px 12px 7px;
+  border: 1px solid #cdbda3;
+  border-radius: 14px;
+  background: #fffaf0f2;
+  color: var(--ink);
+  font-size: max(12px, calc(14 * var(--u)));
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px #2f2a4418;
+  opacity: 0;
+  animation: sw-talk 6.5s ease-in-out var(--delay, 0s) infinite;
+}
+.sw-talk::after {
+  content: "";
+  position: absolute;
+  left: calc(40 * var(--u) - 6px);
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  rotate: 45deg;
+  background: #fffaf0;
+  border-right: 1px solid #cdbda3;
+  border-bottom: 1px solid #cdbda3;
+}
+.sw-talk-who {
+  color: var(--soft);
+  font-size: 11px;
+}
+.sw-talk:focus-visible {
+  opacity: 1;
+}
+
+/* Secondary UI: resident card and the data drawer. */
+.sw-card {
+  position: fixed;
+  z-index: 60;
+  left: 16px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  width: min(380px, calc(100% - 32px));
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 12px 30px #2f2a4430;
+}
+.sw-card img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+.sw-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.sw-card-role {
+  margin: 0 0 6px;
+  color: #35603a;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sw-card-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+.sw-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  margin: 0;
+  font-size: 13px;
+}
+.sw-facts dt {
+  color: var(--soft);
+}
+.sw-facts dd {
+  margin: 0;
+}
+.sw-card[data-kind="place"] {
+  grid-template-columns: 1fr;
+}
+.sw-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sw-card-actions:empty {
+  display: none;
+}
+
+/* District navigator: where on the street you are, and a jump to any district. */
+.sw-district-nav {
+  position: fixed;
+  z-index: 47;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  translate: -50% 0;
+  display: grid;
+  justify-items: center;
+}
+.sw-district-nav > .sw-chip {
+  min-height: 48px;
+  gap: 6px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px #2f2a4422;
+}
+.sw-district-nav > .sw-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8cc47a;
+}
+.sw-district-nav > .sw-chip[data-status="PREVIEW"] i {
+  background: #f2b33d;
+}
+.sw-district-nav > .sw-chip[data-status="LOCKED"] i {
+  background: #b3aba0;
+}
+.sw-district-list {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  display: grid;
+  gap: 4px;
+  width: min(320px, calc(100vw - 24px));
+  max-height: 60vh;
+  overflow: auto;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 12px 30px #2f2a4430;
+}
+.sw-district-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.sw-district-item:hover,
+.sw-district-item[aria-current="true"] {
+  background: #eaf4e2;
+}
+.sw-district-item small {
+  grid-column: 1 / -1;
+  color: var(--soft);
+  font-size: 12px;
+}
+.sw-district-status {
+  color: #35603a;
+  font-size: 12px;
+}
+[data-status="LOCKED"] .sw-district-status {
+  color: var(--soft);
+}
+[data-status="PREVIEW"] .sw-district-status {
+  color: #a8701d;
+}
+.sw-drawer {
+  position: fixed;
+  z-index: 70;
+  top: calc(66px + env(safe-area-inset-top));
+  right: 12px;
+  bottom: 12px;
+  width: min(400px, calc(100% - 24px));
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 12px 30px #2f2a4430;
+}
+.sw-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sw-drawer-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.sw-panel {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.sw-panel h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.sw-note {
+  margin: 2px 0;
+  font-size: 12px;
+  color: var(--soft);
+  overflow-wrap: anywhere;
+}
+.sw-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.sw-video {
+  padding: 6px 0;
+  border-top: 1px dashed var(--line);
+}
+.sw-video strong {
+  overflow-wrap: anywhere;
+}
+.sw-link {
+  font-size: 13px;
+  color: #b03a3a;
+}
+.sw-tools-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.sw-source {
+  margin-right: auto;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: #eaf4e2;
+  color: #35603a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sw-source[data-source="MOCK"] {
+  background: #fde8c8;
+  color: #8a5a1d;
+}
+.sw-tagline {
+  margin: 4px 0;
+  font-size: 13px;
+}
+.sw-activity-chip {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 99px;
+  background: #eaf4e2;
+  color: #35603a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sw-activity-chip:is([data-state="QUIET"], [data-state="DORMANT"], [data-state="DEEP_DORMANT"], [data-state="EMPTY_WORLD"]) {
+  background: #ece8f2;
+  color: #5b5470;
+}
+.sw-activity-chip:is([data-state="REVIVAL"], [data-state="FESTIVAL"]) {
+  background: #fde8c8;
+  color: #8a5a1d;
+}
+.sw-new {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #e05a4f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.sw-eras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.sw-eras li {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #f1ece2;
+  color: var(--soft);
+}
+.sw-eras li.is-reached {
+  background: #eaf4e2;
+  color: #35603a;
+}
+.sw-eras li.is-current {
+  background: var(--accent);
+  color: #fff8e6;
+  font-weight: 700;
+}
+.sw-district-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px dashed var(--line);
+}
+.sw-district-row .sw-note {
+  margin: 0;
+}
+.sw-go {
+  min-height: 32px;
+}
+.sw-panel summary {
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sw-panel h4 {
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+.sw-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+.sw-person {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+}
+.sw-person img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+.sw-sim-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.sw-chip.is-on {
+  background: #eaf4e2;
+  border-color: var(--accent);
+}
+.sw-source-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.sw-source-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.sw-source-list li:is([data-status="SYNC_ERROR"], [data-status="ERROR"], [data-status="UNAVAILABLE"]) b {
+  color: #b03a3a;
+}
+
+@keyframes sw-idle {
+  to {
+    transform: translateY(calc(-4 * var(--u))) scaleY(1.01);
+  }
+}
+@keyframes sw-hop {
+  to {
+    transform: translateY(calc(-14 * var(--u)));
+  }
+}
+@keyframes sw-nudge {
+  to {
+    transform: translateY(6px);
+  }
+}
+@keyframes sw-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+@keyframes sw-bob {
+  to {
+    transform: translateY(calc(-26 * var(--u)));
+  }
+}
+@keyframes sw-flap {
+  to {
+    transform: scaleY(0.4);
+  }
+}
+@keyframes sw-glow {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sw-flicker {
+  to {
+    transform: scaleY(0.82);
+  }
+}
+@keyframes sw-walk {
+  to {
+    transform: translateX(calc(var(--run, 120) * var(--u)));
+  }
+}
+@keyframes sw-talk {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  8%,
+  88% {
+    opacity: 1;
+  }
+}
+@keyframes sw-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(420 * var(--u))) rotate(540deg);
+  }
+}
+@keyframes sw-hint {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  80% {
+    opacity: 1;
+  }
+}
+@keyframes sw-burst {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sw-app *,
+  .sw-app *::before,
+  .sw-app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Without motion the gossip stays readable and advances when tapped. */
+  .sw-talk {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .sw-hud {
+    left: 8px;
+    right: 8px;
+    gap: 4px;
+    padding: 4px 6px;
+  }
+  .sw-wide,
+  #sw-zoom-in,
+  #sw-zoom-out {
+    display: none;
+  }
+  .sw-chip {
+    min-height: 40px;
+    padding: 4px 9px;
+  }
+  .sw-meter {
+    width: 84px;
+  }
+  .sw-level {
+    padding: 0 6px;
+  }
+  .sw-level strong {
+    font-size: 12px;
+  }
+  .sw-banner {
+    top: calc(64px + env(safe-area-inset-top));
+    padding: 3px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .sw-card {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    bottom: calc(62px + env(safe-area-inset-bottom));
+  }
+  .sw-drawer {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    top: auto;
+    max-height: 78vh;
+  }
+}
+
+/* Compact is decided by world-composition.js (a portrait phone), so framing and controls agree. */
+.sw-app.is-compact {
+  --compact: 1;
+}
+/* Compact (composition rule): the altimeter becomes a small bar at the bottom; the street is explored by swiping. */
+.is-compact .sw-altimeter {
+  top: auto;
+  right: auto;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  grid-auto-flow: column;
+  padding: 3px;
+}
+.is-compact .sw-altimeter button {
+  grid-template-columns: 12px max-content;
+  min-height: 40px;
+  padding: 0 12px 0 10px;
+  white-space: nowrap;
+}
+.is-compact .sw-end {
+  bottom: 72px;
+}
+.is-compact .sw-descend {
+  bottom: calc(70px + env(safe-area-inset-bottom));
+}
+.is-compact .sw-end span {
+  display: none;
+}
+.is-compact .sw-street-nav {
+  display: none;
+}
+/* On a portrait phone the bottom belongs to the altimeter and the residents' name tags: the district chip sits under the HUD. */
+.is-compact .sw-district-nav {
+  top: calc(64px + env(safe-area-inset-top));
+  bottom: auto;
+}
+.is-compact .sw-district-nav > .sw-chip {
+  min-height: 40px;
+}
+.is-compact .sw-district-list {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+.sw-app[data-source="MOCK"].is-compact .sw-district-nav {
+  top: calc(96px + env(safe-area-inset-top));
+}
+
+/* Short screens (a landscape phone): the side altimeter already leads down; keep the island clear. */
+@media (max-height: 480px) {
+  .sw-descend {
+    display: none;
+  }
+}

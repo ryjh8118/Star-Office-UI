@@ -1,5 +1,61 @@
 # Renguin World — Character System
 
+## 2026-09-15 resolution policy (V2 checkpoint)
+
+The World is a character consumer. Each resident resolves in this order and the
+result is recorded as `resolution` on the registry entry and on the street cast:
+
+1. `CANONICAL_CHARACTER` — the resident has its own authority image (ASSET-01 via
+   the Office image, or an ASSET-08 `MEMBER_WORLD_NPC` reference).
+2. `PROFESSION_CHARACTER` — an existing 鵝寶居民 profession character. The seven
+   ASSET-08 `REAL_MEMBER_AVATAR` entries (護理師, 工廠作業員, 外送員, 建築工程助理,
+   烘焙門市, 電話客服, 飯店客服) now wear their official art. ASSET-08's cameo rule
+   asks for them to be clearly recognisable, so the earlier "token only" choice is
+   retired. Identity stays private: the image is addressed by the opaque
+   `MEMBER_AVATAR_<12 hex>` id, re-resolved through the sha-checked registry on
+   every request, and the label is the profession (護理師居民 · 鵝寶居民), never the
+   member name.
+3. `NEUTRAL_PLACEHOLDER` — no authority character exists for the role (村民, 旅人,
+   攤販, 慶典遊客 crowd roles). One faceless paper pawn; no face, costume or badge.
+4. `UNRESOLVED` — an image exists but no authority confirms who it is (Office-only
+   residents such as JOSH). Hidden, never guessed.
+
+Crowd roles never copy a character: ASSET-08 forbids duplicating one, so a
+profession role (`CIVILIAN_NURSE`) carries `character_ref` to its single
+profession character and the anonymous walkers stay placeholders. The generic
+badge-coloured penguin sprite is gone.
+
+`python -m renguin_world residents` prints the report. Real authorities on
+2026-09-15: TOTAL 60 · CANONICAL 37 · PROFESSION 14 (7 characters + 7 role refs) ·
+PLACEHOLDER 4 · UNRESOLVED 5 · GENERIC_WRONG 0.
+
+### Member icon folder (read-only source, `RENGUIN_MEMBER_ICON_ROOT`)
+
+`E:\素材\icon\鵝寶會員` holds the official 鵝寶會員 cut-outs. Only the offline
+builder opens it, never a web request, and nothing in it is modified. A file is
+mapped onto an existing ASSET-08 character only when two independent kinds of
+evidence agree: its artwork is the nearest reference by structure and colour
+(structure distance < 0.18), and its file name agrees with that character's
+authority profile on profession or name. A name alone maps nothing, two files
+may not claim one character, and everything else is `UNRESOLVED` and not shown.
+
+The mapping (`portraits-private/member-icons.json`, git-ignored) records file
+hashes, opaque character ids and the evidence scores only — no file names, no
+member names. A matched character keeps its ASSET-08 address and permission
+check; only its display derivative is rendered from the official cut-out, so
+no keying is needed. 2026-09-15: 10 files → 7 matched (all seven profession
+residents), 3 unresolved (a second design of the construction assistant, a
+magician and a social-worker character with no authority record).
+
+Six profession sources are painted on an opaque white page and the hotel source
+is a chroma-green JPEG with a white sticker frame. The offline builder keys only
+the canvas connected to the image border, so the character, its outline and the
+frame keep their pixels. Private-identity derivatives are written to the
+git-ignored `backend/renguin_world/art/portraits-private/`; run
+`scripts/build_world_thumbnails.py` on each machine (Production included) or
+the thumb route serves the permitted original. Sources smaller than 256 px are
+flagged `ASSET_RESOLUTION_LIMIT` in the manifest (GOOSE_EGG, RENGUIN, ULY).
+
 ## 2026-09-15 display derivative update
 
 `scripts/build_world_thumbnails.py` creates proportional, alpha-trimmed lossless
