@@ -296,6 +296,11 @@ class Routes(unittest.TestCase):
             self.assertEqual(page.status_code, 200)
             self.assertNotIn('{{WORLD_VERSION}}', page.get_data(as_text=True))
             self.assertIn('no-cache', client.get('/world').headers.get('Cache-Control', 'no-cache'))
+            slice_page = client.get('/world/seamless')
+            self.assertEqual(slice_page.status_code, 200)
+            body = slice_page.get_data(as_text=True)
+            self.assertNotIn('{{WORLD_VERSION}}', body)
+            self.assertIn('/static/world/seamless-app.js?v=', body)
             with patch('renguin_world.characters.default_paths', return_value=paths):
                 service._registry.update(value=None)
                 sim = client.get('/api/world/simulate?contents=50&idle=20').get_json()

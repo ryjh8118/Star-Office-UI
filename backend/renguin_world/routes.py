@@ -58,6 +58,15 @@ def world_page():
     return response
 
 
+@bp.get('/world/seamless')
+def world_seamless_page():
+    """Seamless side-view vertical slice. V1 at /world stays the default and the fallback."""
+    html = (WORLD_DIR / 'seamless.html').read_text(encoding='utf-8').replace('{{WORLD_VERSION}}', world_version())
+    response = make_response(html)
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return response
+
+
 @bp.get('/api/world/state')
 def world_state():
     from . import engine, service

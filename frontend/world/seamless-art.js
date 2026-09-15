@@ -28,9 +28,9 @@
   // World units: one unit is one CSS pixel at world scale 1 (a 1440 px desktop).
   const GEOMETRY = {
     character: 150,
-    island: { width: 2200, height: 1000, ground: 552, wheel: [550, 470], spots: [-250, -178, 190], office: [-130, 238, 260, 314] },
+    island: { width: 2200, height: 1000, ground: 552, wheel: [550, 470], spots: [-232, 286, -372], office: [-130, 238, 260, 314] },
     descent: { width: 2200, height: 1500 },
-    city: { width: 2800, height: 1080, ground: 740, feet: 782, wheel: [300, 486], spots: [360, 640, 930, 1190, 1410, 1690, 1960, 2250, 2520], poster: [1082, 598, 64, 78] },
+    city: { width: 2800, height: 1080, ground: 740, feet: 782, wheel: [300, 486], spots: [360, 640, 900, 1250, 1450, 1720, 2010, 2250, 2520], poster: [1130, 598, 64, 78] },
   };
   const TYPE_LABEL = { MAIN_CHARACTER: "主角", SUPPORTING_CHARACTER: "主要配角", SPECIAL_GUEST: "特別來賓", GOOSEBABY: "鵝寶" };
   const SOURCE_LABEL = { "ASSET-01": "角色聖經", "ASSET-08": "會員角色庫" };
@@ -227,9 +227,9 @@
     for (let x = 474; x > -472; x -= 38) scallop += `Q${r1(x - 19)} ${612 + (hash("sc" + x) - 0.5) * 8} ${r1(x - 38)} 588`;
     s += `<path d="${scallop}Z" fill="#8fbd78" stroke="${OUT}" stroke-opacity=".3" stroke-width="1.5"/><path d="M-440 552Q0 538 440 552" stroke="#c6e2a8" stroke-width="6" fill="none" stroke-linecap="round"/>`;
     // Porch, trees, telescope, mailbox.
-    s += use("sw-tree", -380, 552, 1.15) + use("sw-pine", -300, 552, 0.8) + use("sw-tree", 300, 552, 0.95) + use("sw-bush", -200, 554, 0.9) + use("sw-flowers", 214, 552, 1.1) + use("sw-flowers", -96, 552, 1);
-    s += `<g class="sw-telescope"><path d="M-250 552L-236 470M-222 552L-236 470M-236 552V470" stroke="#6f5646" stroke-width="5" stroke-linecap="round"/><g transform="translate(-236 466) rotate(-32)"><rect x="-10" y="-11" width="86" height="22" rx="6" fill="#5b6f8f" stroke="${OUT}" stroke-opacity=".5" stroke-width="1.5"/><rect x="70" y="-15" width="16" height="30" rx="4" fill="#f2c46b" stroke="${OUT}" stroke-opacity=".5"/></g></g>`;
-    s += `<path d="M-150 552V500" stroke="#8a6848" stroke-width="6"/>` + rect(-172, 470, 44, 32, "#e07d4f", ` rx="10"`) + `<path d="M-128 480h12v-18h-6" fill="none" stroke="#ffd35e" stroke-width="3"/>`;
+    s += use("sw-pine", -300, 548, 0.85) + use("sw-tree", -420, 552, 1.15) + use("sw-tree", 210, 552, 0.9) + use("sw-bush", -168, 556, 0.8) + use("sw-flowers", 360, 552, 1.1) + use("sw-flowers", -120, 552, 1);
+    s += `<g class="sw-telescope" transform="translate(620 0)"><path d="M-250 552L-236 470M-222 552L-236 470M-236 552V470" stroke="#6f5646" stroke-width="5" stroke-linecap="round"/><g transform="translate(-236 466) rotate(-32)"><rect x="-10" y="-11" width="86" height="22" rx="6" fill="#5b6f8f" stroke="${OUT}" stroke-opacity=".5" stroke-width="1.5"/><rect x="70" y="-15" width="16" height="30" rx="4" fill="#f2c46b" stroke="${OUT}" stroke-opacity=".5"/></g></g>`;
+    s += `<path d="M-192 552V500" stroke="#8a6848" stroke-width="6"/>` + rect(-214, 470, 44, 32, "#e07d4f", ` rx="10"`) + `<path d="M-170 480h12v-18h-6" fill="none" stroke="#ffd35e" stroke-width="3"/>`;
     // The Star Office itself: cream walls, slate roof, a star in the gable window.
     const wall = "#f3e3c3",
       roof = "#5b6f8f";
@@ -275,17 +275,26 @@
       }
       return s + `</svg>`;
     };
-    // The cloud sea: a solid bank the view passes through, drawn once as the densest layer.
+    // The cloud sea: overlapping banks with gaps, so the sky shows through as the view passes.
     let sea = `<svg class="sw-art" viewBox="-1100 0 2200 1500" width="2200" height="1500" aria-hidden="true" focusable="false">`;
-    sea += `<path class="sw-sea" d="M-1100 760Q-900 700-700 740T-300 730T100 745T500 725T900 742T1100 735V1010Q900 1060 700 1030T300 1045T-100 1030T-500 1050T-900 1030T-1100 1045Z"/>`;
-    for (let k = 0; k < 11; k++) sea += use(k % 2 ? "sw-cloud-b" : "sw-cloud-a", -1180 + k * 215, 780 + (k % 3) * 18, 1.3 + (k % 2) * 0.2);
-    for (let k = 0; k < 10; k++) sea += use("sw-cloud-a", -1120 + k * 240, 1080 + (k % 2) * 26, 1.25);
+    for (let k = 0; k < 9; k++) {
+      if (k === 3 || k === 7) continue;
+      sea += use(k % 2 ? "sw-cloud-b" : "sw-cloud-a", -1180 + k * 250 + hash("sea" + k) * 60, 820 + hash("seay" + k) * 90, 1.15 + hash("seas" + k) * 0.35);
+    }
+    for (let k = 0; k < 6; k++) sea += use(k % 3 ? "sw-cloud-c" : "sw-cloud-a", -1100 + k * 380 + hash("wisp" + k) * 160, 1080 + hash("wispy" + k) * 360, 0.55 + hash("wisps" + k) * 0.6);
     sea += `</svg>`;
+    // Distant paper islands: the sky world is bigger than this one street.
+    let far = `<svg class="sw-art" viewBox="-1100 0 2200 1500" width="2200" height="1500" aria-hidden="true" focusable="false">`;
+    for (const [x, y, sc] of [[-760, 520, 0.9], [640, 330, 0.7], [820, 1180, 0.55], [-420, 1320, 0.45]]) {
+      far += `<g class="sw-distant" transform="translate(${x} ${y}) scale(${sc})"><path d="M-150 0C-140-18-110-24-60-24H70C120-24 146-16 152 0L120 30 90 36 70 80 20 96 0 130-30 92-80 70-100 34Z"/><path class="sw-distant-top" d="M-150 0C-140-18-110-24-60-24H70C120-24 146-16 152 0Q0 14-150 0Z"/><path d="M-40-24V-70L-10-96 20-70V-24Z"/><path d="M60-24V-54L80-70 100-54V-24Z"/></g>`;
+    }
+    far += `</svg>`;
     return [
-      { depth: 0.45, z: 1, svg: layer("far", 9, [120, 1400], [0.6, 0.9]), cls: "sw-far" },
-      { depth: 0.75, z: 2, svg: layer("mid", 8, [200, 1450], [0.9, 1.3]), cls: "" },
+      { depth: 0.3, z: 1, svg: far, cls: "sw-far" },
+      { depth: 0.5, z: 1, svg: layer("far", 8, [80, 1450], [0.5, 0.8]), cls: "sw-far" },
+      { depth: 0.78, z: 2, svg: layer("mid", 6, [160, 1400], [0.8, 1.1]), cls: "" },
       { depth: 1, z: 4, svg: sea, cls: "" },
-      { depth: 1.22, z: 6, svg: layer("near", 5, [300, 1480], [1.5, 2.1]), cls: "sw-near" },
+      { depth: 1.2, z: 6, svg: layer("near", 4, [260, 1350], [1.1, 1.5]), cls: "sw-near" },
     ];
   }
 
@@ -313,17 +322,21 @@
     // Far background: mountains, hills, the era's skyline.
     let bg = "";
     for (const [x, y, id, sc] of [[80, 230, "sw-cloud-b", 0.9], [760, 140, "sw-cloud-c", 1], [1300, 260, "sw-cloud-a", 0.8], [1960, 170, "sw-cloud-b", 0.8], [2500, 250, "sw-cloud-c", 1.1]]) bg += use(id, x, y, sc, ` class="sw-far"`);
-    bg += `<path class="sw-mountain" d="M0 560L220 390L360 470L560 330L760 480L980 360L1220 500L1420 380L1640 470L1880 340L2100 480L2340 370L2560 460L2800 360V760H0Z"/>`;
-    bg += `<path class="sw-hill-far" d="M0 600Q180 520 400 560T820 540T1240 570T1680 530T2100 565T2520 535T2800 555V780H0Z"/>`;
+    for (const [x, y, c, r] of [[520, 250, "#f28c6d", -12], [1720, 150, "#7fc6c2", 10], [2380, 300, "#ffd35e", -6]])
+      bg += `<g class="sw-kite" transform="translate(${x} ${y}) rotate(${r})"><path d="M0-34L22 0L0 40L-22 0Z" fill="${c}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/><path d="M0-34V40M-22 0H22" stroke="#fff8ea" stroke-width="2"/><path d="M0 40C10 70-14 96 4 130S-6 180 10 214" fill="none" stroke="${OUT}" stroke-opacity=".35" stroke-width="1.5"/><path d="M-4 84l8 6-8 6ZM6 150l8 6-8 6Z" fill="${c}"/></g>`;
+    bg += `<path class="sw-mountain" d="M0 560L220 390L360 470L560 330L760 480L980 360L1220 500L1420 380L1640 470L1880 340L2100 480L2340 370L2560 460L2800 360V1080H0Z"/><path class="sw-snow" d="M200 405L220 390L244 404L232 412ZM540 346L560 330L586 348L570 356ZM960 376L980 360L1002 374L988 382ZM1860 356L1880 340L1904 356L1890 364ZM2322 384L2340 370L2362 382L2348 390Z"/>`;
+    bg += `<path class="sw-hill-far" d="M0 600Q180 520 400 560T820 540T1240 570T1680 530T2100 565T2520 535T2800 555V1080H0Z"/>`;
     if (idx >= 3) bg += `<g class="sw-skyline"><rect x="1210" y="330" width="96" height="260"/><circle cx="1258" cy="376" r="26" fill="#fff8e8" opacity=".75"/><path d="M1198 330L1258 258L1318 330Z"/></g>`;
     if (idx >= 4) bg += `<g class="sw-skyline"><rect x="1900" y="400" width="210" height="170"/><rect x="1880" y="330" width="46" height="240"/><rect x="2084" y="330" width="46" height="240"/><path d="M1872 330L1903 280L1934 330ZM2076 330L2107 280L2138 330Z"/></g>`;
     if (idx >= 5) bg += `<g class="sw-skyline"><rect x="600" y="220" width="22" height="360"/><circle cx="611" cy="240" r="26"/><rect x="2380" y="300" width="90" height="280"/><rect x="2490" y="360" width="70" height="220"/></g>`;
-    for (let k = 0; k < 16; k++) {
-      const x = 40 + k * 176 + hash("farhouse" + k) * 60,
-        y = 560 + hash("farhy" + k) * 30;
-      bg += `<path class="sw-far-house" d="M${r1(x)} ${r1(y + 34)}V${r1(y + 12)}L${r1(x + 18)} ${r1(y - 4)}L${r1(x + 36)} ${r1(y + 12)}V${r1(y + 34)}Z"/>`;
+    for (let k = 0, x = 30; k < 22 && x < W; k++) {
+      x += 70 + hash("farhouse" + k) * 190;
+      const y = 548 + hash("farhy" + k) * 44,
+        w = 26 + hash("farhw" + k) * 22,
+        h = 18 + hash("farhh" + k) * 16;
+      bg += `<path class="sw-far-house" d="M${r1(x)} ${r1(y + h)}V${r1(y)}L${r1(x + w / 2)} ${r1(y - w * 0.45)}L${r1(x + w)} ${r1(y)}V${r1(y + h)}Z"/>`;
     }
-    bg += `<path class="sw-hill-near" d="M0 650Q240 590 520 630T1080 610T1620 640T2180 612T2800 630V780H0Z"/>`;
+    bg += `<path class="sw-hill-near" d="M0 650Q240 590 520 630T1080 610T1620 640T2180 612T2800 630V1080H0Z"/>`;
 
     // Back row: older, smaller houses and trees behind the street.
     let backRow = "";
@@ -334,7 +347,7 @@
     }
     for (const [x, sc, id] of [[330, 0.8, "sw-tree"], [1480, 0.7, "sw-pine"], [1830, 0.75, "sw-tree"], [2700, 0.9, "sw-pine"], [980, 0.6, "sw-pine"]]) backRow += use(id, x, base - 30, sc);
     if (idx >= 3 && landmarks.has("CLOCK_TOWER")) {
-      backRow += `<g class="sw-clock">` + rect(1220, 300, 100, 410, "#e6dac4") + poly([[1208, 300], [1270, 218], [1332, 300]], STYLES.town.roof) + `<circle cx="1270" cy="360" r="30" fill="#fff8e8" stroke="${OUT}" stroke-opacity=".5" stroke-width="2"/><path d="M1270 360V338M1270 360H1288" stroke="${OUT}" stroke-width="3" stroke-linecap="round"/></g>`;
+      backRow += `<g class="sw-clock">` + rect(1250, 300, 100, 410, "#e6dac4") + poly([[1238, 300], [1300, 218], [1362, 300]], STYLES.town.roof) + `<circle cx="1300" cy="360" r="30" fill="#fff8e8" stroke="${OUT}" stroke-opacity=".5" stroke-width="2"/><path d="M1300 360V338M1300 360H1318" stroke="${OUT}" stroke-width="3" stroke-linecap="round"/></g>`;
     }
 
     // Main street: station, homes, plaza, market, stream and bridge, construction.
@@ -367,14 +380,14 @@
       mid += `</g>`;
     }
     // Plaza: campfire before the town era, fountain after.
-    mid += `<ellipse cx="1270" cy="${base + 18}" rx="250" ry="26" fill="#f1e4c6" opacity=".7"/>`;
+    mid += `<ellipse cx="1300" cy="${base + 18}" rx="250" ry="26" fill="#f1e4c6" opacity=".7"/>`;
     if (idx < 3) {
-      mid += `<g class="sw-campfire"><ellipse cx="1270" cy="${base - 4}" rx="56" ry="14" fill="#9a8a7a"/><ellipse cx="1270" cy="${base - 8}" rx="42" ry="10" fill="#6f5646"/><path d="M1234 ${base - 6}L1306 ${base - 22}M1236 ${base - 22}L1304 ${base - 6}" stroke="#8a5a36" stroke-width="10" stroke-linecap="round"/></g>`;
-      mid += `<path d="M1150 ${base - 2}h70v-16h-70Z" fill="#9b7652" stroke="${OUT}" stroke-opacity=".3"/><path d="M1320 ${base - 2}h70v-16h-70Z" fill="#9b7652" stroke="${OUT}" stroke-opacity=".3"/>`;
+      mid += `<g class="sw-campfire"><ellipse cx="1300" cy="${base - 4}" rx="56" ry="14" fill="#9a8a7a"/><ellipse cx="1300" cy="${base - 8}" rx="42" ry="10" fill="#6f5646"/><path d="M1264 ${base - 6}L1336 ${base - 22}M1266 ${base - 22}L1334 ${base - 6}" stroke="#8a5a36" stroke-width="10" stroke-linecap="round"/></g>`;
+      mid += `<path d="M1370 ${base - 2}h70v-16h-70Z" fill="#9b7652" stroke="${OUT}" stroke-opacity=".3"/>`;
     } else {
-      mid += `<g class="sw-fountain">` + `<path d="M1170 ${base}Q1170 ${base - 54} 1270 ${base - 54}Q1370 ${base - 54} 1370 ${base}Z" fill="${shade(st.wall, -0.1)}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/>`;
-      mid += `<ellipse cx="1270" cy="${base - 52}" rx="96" ry="12" fill="#8fd3ef"/>` + rect(1256, base - 140, 28, 90, shade(st.wall, -0.05)) + `<ellipse cx="1270" cy="${base - 140}" rx="46" ry="10" fill="${shade(st.wall, -0.1)}" stroke="${OUT}" stroke-opacity=".4"/>`;
-      mid += `<path d="M1270 ${base - 146}Q1230 ${base - 200} 1200 ${base - 60}M1270 ${base - 146}Q1310 ${base - 200} 1340 ${base - 60}" fill="none" stroke="#bfe9f7" stroke-width="5" stroke-linecap="round"/></g>`;
+      mid += `<g class="sw-fountain">` + `<path d="M1200 ${base}Q1200 ${base - 54} 1300 ${base - 54}Q1400 ${base - 54} 1400 ${base}Z" fill="${shade(st.wall, -0.1)}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/>`;
+      mid += `<ellipse cx="1300" cy="${base - 52}" rx="96" ry="12" fill="#8fd3ef"/>` + rect(1286, base - 140, 28, 90, shade(st.wall, -0.05)) + `<ellipse cx="1300" cy="${base - 140}" rx="46" ry="10" fill="${shade(st.wall, -0.1)}" stroke="${OUT}" stroke-opacity=".4"/>`;
+      mid += `<path d="M1300 ${base - 146}Q1260 ${base - 200} 1230 ${base - 60}M1300 ${base - 146}Q1340 ${base - 200} 1370 ${base - 60}" fill="none" stroke="#bfe9f7" stroke-width="5" stroke-linecap="round"/></g>`;
     }
     const poster = (state?.featured_contents || [])[0];
     const [px, py, pw, ph] = G.poster;
@@ -385,9 +398,9 @@
       mid += rect(px + pw + 8, py + 10, 20, 26, "#fffdf6", ` rx="2" transform="rotate(8 ${px + pw + 18} ${py + 22})"`);
     } else mid += rect(px, py, pw, ph, "#f1e8d6", ` rx="3" stroke-dasharray="6 5"`);
     mid += `</g>`;
-    mid += use("sw-bench", 1170, base, 1) + use("sw-bench", 1400, base, 1);
+    mid += use("sw-bench", 1480, base, 1);
     // Signpost: the only words on the street.
-    mid += `<g class="sw-signpost"><path d="M1000 ${base}V${base - 170}" stroke="#8a6848" stroke-width="9"/>` + `<path d="M952 ${base - 162}h106l18 16-18 16h-106Z" fill="#e8d3a8" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><text x="1008" y="${base - 140}" class="sw-sign-dark">主城區</text>` + `<path d="M1048 ${base - 116}h-106l-18 14 18 14h106Z" fill="#d9c49a" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><text x="992" y="${base - 97}" class="sw-sign-dark">↑ 空島</text></g>`;
+    mid += `<g class="sw-signpost"><path d="M1025 ${base}V${base - 170}" stroke="#8a6848" stroke-width="9"/>` + `<path d="M972 ${base - 162}h96l16 16-16 16h-96Z" fill="#e8d3a8" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><text x="1022" y="${base - 140}" class="sw-sign-dark">主城區</text>` + `<path d="M1078 ${base - 116}h-96l-16 14 16 14h96Z" fill="#d9c49a" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><text x="1032" y="${base - 97}" class="sw-sign-dark">↑ 空島</text></g>`;
     // Market: stalls from the town era, a single cart before it.
     if (landmarks.has("MARKET") || idx >= 3) {
       for (const [x, color, k] of [[1540, "#e07d4f", 0], [1680, "#6fae9a", 1]]) {
@@ -401,7 +414,7 @@
       mid += `<g class="sw-cart"><circle cx="1600" cy="${base - 16}" r="16" fill="#8a6848"/><circle cx="1700" cy="${base - 16}" r="16" fill="#8a6848"/>` + rect(1570, base - 80, 160, 56, "#c79a68", ` rx="6"`) + `<path d="M1650 ${base - 80}V${base - 160}" stroke="#8a6848" stroke-width="5"/><path d="M1580 ${base - 150}Q1650 ${base - 210} 1720 ${base - 150}Z" fill="#e07d4f" stroke="${OUT}" stroke-opacity=".35"/></g>`;
     }
     // Lamps and trees along the street.
-    for (const x of [130, 690, 1060, 1480, 2060, 2600]) mid += use("sw-lamp", x, base, 1);
+    for (const x of [130, 700, 1100, 1560, 2060, 2600]) mid += use("sw-lamp", x, base, 1);
     for (const [x, sc, id] of [[60, 1.2, "sw-tree"], [1850, 0.9, "sw-pine"], [2720, 1.25, "sw-tree"], [2780, 0.8, "sw-pine"]]) mid += use(id, x, base, sc);
 
     // Ground: the street surface, the stream cut and the soil cross-section.
@@ -426,18 +439,20 @@
     }
     if (river) {
       // The street crosses the stream on a wooden bridge; the water runs in a cut below.
-      ground += `<path d="M1900 ${base + 2}Q1920 ${base + 140} 1980 ${base + 150}H2060Q2120 ${base + 140} 2140 ${base + 2}Z" fill="#78aebb"/><path d="M1930 ${base + 70}Q2020 ${base + 90} 2110 ${base + 70}" stroke="#a5d3d6" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M1960 ${base + 112}h40M2040 ${base + 124}h30" stroke="#e0f0e4" stroke-width="4" stroke-linecap="round"/>`;
-      ground += rect(1880, base - 4, 280, 20, "#b98a5a");
-      for (let k = 0; k < 14; k++) ground += `<path d="M${1886 + k * 20} ${base - 2}v16" stroke="#8a6848" stroke-width="2" opacity=".6"/>`;
-      ground += `<path d="M1880 ${base - 40}H2160M1880 ${base - 20}H2160" stroke="#8a6848" stroke-width="5"/><path d="M1890 ${base}V${base - 48}M1960 ${base}V${base - 44}M2030 ${base}V${base - 44}M2100 ${base}V${base - 44}M2150 ${base}V${base - 48}" stroke="#8a6848" stroke-width="7" stroke-linecap="round"/>`;
-      ground += `<path d="M1904 ${base + 16}q-10-30 0-44M1916 ${base + 20}q6-26 16-34M2126 ${base + 16}q10-30 0-40" stroke="#6ea35a" stroke-width="3.5" fill="none"/>`;
+      ground += `<path d="M1890 ${base + 30}Q1916 ${base + 176} 1990 ${base + 186}H2050Q2124 ${base + 176} 2150 ${base + 30}Z" fill="#6f9fae"/><path d="M1900 ${base + 44}Q2020 ${base + 64} 2140 ${base + 44}V${base + 30}H1900Z" fill="#8cc0cb"/>`;
+      ground += `<path d="M1930 ${base + 96}q30 8 60 0t60 0M1972 ${base + 136}q24 6 48 0" stroke="#d8eef0" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      ground += `<path d="M1924 ${base + 30}V${base + 120}M2116 ${base + 30}V${base + 120}" stroke="#7b5a40" stroke-width="12"/>`;
+      ground += rect(1870, base - 6, 300, 36, "#b98a5a", ` rx="3"`);
+      for (let k = 0; k < 15; k++) ground += `<path d="M${1880 + k * 20} ${base - 4}v32" stroke="#8a6848" stroke-width="2" opacity=".55"/>`;
+      ground += `<path d="M1870 ${base - 44}H2170M1870 ${base - 24}H2170" stroke="#8a6848" stroke-width="5"/><path d="M1878 ${base - 4}V${base - 52}M1950 ${base - 4}V${base - 48}M2020 ${base - 4}V${base - 48}M2090 ${base - 4}V${base - 48}M2162 ${base - 4}V${base - 52}" stroke="#8a6848" stroke-width="7" stroke-linecap="round"/>`;
+      ground += `<path d="M1892 ${base + 44}q-10-26 0-40M2150 ${base + 44}q10-26 0-36" stroke="#6ea35a" stroke-width="3.5" fill="none"/>`;
     }
     void cut;
 
     // Foreground: low, placed between residents so nobody is ever hidden.
     let fg = "";
-    for (const x of [30, 500, 800, 1110, 1330, 1560, 1830, 2190, 2420, 2760]) fg += use("sw-tuft", x, base + 70, 1.2) + use("sw-tuft", x + 26, base + 72, 0.9);
-    for (const x of [250, 1050, 1740, 2330]) fg += use("sw-flowers", x, base + 72, 1.1);
+    for (const x of [30, 500, 790, 1100, 1350, 1600, 1860, 2140, 2400, 2760]) fg += use("sw-tuft", x, base + 70, 1.2) + use("sw-tuft", x + 26, base + 72, 0.9);
+    for (const x of [250, 1060, 1590, 2380]) fg += use("sw-flowers", x, base + 72, 1.1);
     fg += use("sw-bush", 20, base + 96, 1.5) + use("sw-bush", W - 30, base + 96, 1.6) + use("sw-fence", 2560, base + 70, 1);
 
     return {
@@ -445,7 +460,7 @@
         { name: "bg", depth: 0.35, z: 1, svg: svg("sw-city-bg", bg) },
         { name: "back", depth: 0.7, z: 2, svg: svg("sw-city-back", backRow) },
         { name: "main", depth: 1, z: 3, svg: svg("sw-city-main", mid + ground) },
-        { name: "front", depth: 1.18, z: 6, svg: svg("sw-city-front", fg) },
+        { name: "front", depth: 1.18, z: 5, svg: svg("sw-city-front", fg) },
       ],
       stats: { variant, front_houses: frontCount, back_houses: backCount, river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
     };

@@ -20,7 +20,7 @@
   }
 
   // A layer at depth d moves d times as fast as the content it sits in.
-  const parallax = (offset, depth) => -offset * (1 - depth);
+  const parallax = (offset, depth) => -offset * (1 - depth) + 0;
 
   // Keep a 1-D camera inside [0, content - viewport]; centre it when the content is smaller.
   function bound(position, content, viewport) {
