@@ -134,7 +134,7 @@ async function main() {
     check("Altimeter 城市 arrives at Renguin City; gondola docked at the street station", city.dbg.zone === "city" && city.docked === "city" && city.bottom < 4 && city.nav, city);
     check("Culling: the island is not worked while the city is on screen", !city.dbg.near.includes("island"), city.dbg.near);
     await shot("desktop-city.png");
-    const sizes = await js("[...document.querySelectorAll('.sw-street-actors .sw-actor')].filter(a=>{const r=a.getBoundingClientRect(); return r.right>0&&r.left<innerWidth}).map(a=>Math.round(a.querySelector('img').getBoundingClientRect().height))");
+    const sizes = await js("[...document.querySelectorAll('.sw-city [data-layer=residents] .sw-actor')].filter(a=>{const r=a.getBoundingClientRect(); return r.right>0&&r.left<innerWidth}).map(a=>Math.round(a.querySelector('img').getBoundingClientRect().height))");
     check("Street residents are readable size on desktop (>= 120 px)", sizes.length && sizes.every((h) => h >= 120), sizes);
     baseline.desktop_idle_city = await cost(3);
 
@@ -155,8 +155,8 @@ async function main() {
     await js("document.querySelector('.sw-street-scroll').scrollLeft = 0");
     await sleep(300);
 
-    const residentId = await js("document.querySelector('.sw-street-actors .sw-actor').dataset.character");
-    await click(`.sw-street-actors .sw-actor[data-character="${residentId}"]`);
+    const residentId = await js("document.querySelector('.sw-city [data-layer=residents] .sw-actor').dataset.character");
+    await click(`.sw-city [data-layer=residents] .sw-actor[data-character="${residentId}"]`);
     await sleep(400);
     const card = await js("({open: !document.getElementById('sw-card').hidden, name: document.getElementById('sw-card-name').textContent, role: document.getElementById('sw-card-role').textContent, selected: document.querySelectorAll('.sw-actor.is-selected').length})");
     check("Clicking a resident opens its card with authority-only facts", card.open && card.name && card.role && card.selected === 1, card);
@@ -207,7 +207,7 @@ async function main() {
     // ---------- phone ----------
     await viewport(390, 844, true, 2);
     await open(`${BASE}/world/seamless?sim=20&time=day`, 3500);
-    const phone = await js("({w: innerWidth, overflow: document.documentElement.scrollWidth - innerWidth, ws: window.RenguinSeamlessWorld.debug().ws, island: [...document.querySelectorAll('.sw-island-actors .sw-actor')].map(a=>{const r=a.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]})})");
+    const phone = await js("({w: innerWidth, overflow: document.documentElement.scrollWidth - innerWidth, ws: window.RenguinSeamlessWorld.debug().ws, island: [...document.querySelectorAll('.sw-island [data-layer=residents] .sw-actor')].map(a=>{const r=a.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]})})");
     check("Phone: no horizontal overflow and island residents stay on screen", phone.w === 390 && phone.overflow <= 0 && phone.island.every(([l, r]) => l >= 0 && r <= 390), phone);
     baseline.phone_idle_island = await cost(3);
     await shot("phone-island.png");
@@ -226,7 +226,7 @@ async function main() {
     check("Phone: a vertical swipe scrolls the world down", touched.y > 400, touched);
     await js("window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'})");
     await sleep(1500);
-    const phoneCity = await js("({zone: window.RenguinSeamlessWorld.debug().zone, sizes: [...document.querySelectorAll('.sw-street-actors .sw-actor')].filter(a=>{const r=a.getBoundingClientRect(); return r.right>0&&r.left<innerWidth}).map(a=>Math.round(a.querySelector('img').getBoundingClientRect().height)), left: document.querySelector('.sw-street-scroll').scrollLeft})");
+    const phoneCity = await js("({zone: window.RenguinSeamlessWorld.debug().zone, sizes: [...document.querySelectorAll('.sw-city [data-layer=residents] .sw-actor')].filter(a=>{const r=a.getBoundingClientRect(); return r.right>0&&r.left<innerWidth}).map(a=>Math.round(a.querySelector('img').getBoundingClientRect().height)), left: document.querySelector('.sw-street-scroll').scrollLeft})");
     check("Phone: arrives in the city with readable residents (>= 95 px)", phoneCity.zone === "city" && phoneCity.sizes.length && phoneCity.sizes.every((h) => h >= 95), phoneCity);
     await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 330, y: 560 }] });
     for (let j = 1; j <= 12; j++) {
@@ -242,6 +242,68 @@ async function main() {
     const imageBytes = events.filter((e) => e.method === "Network.loadingFinished").reduce((sum, e) => sum + e.params.encodedDataLength, 0);
     baseline.phone_transfer_kb_after_city = Math.round(imageBytes / 1024);
     check("Zero console errors (phone)", errors().length === 0, errors());
+
+    // ---------- A. composition rule, measured in the real page ----------
+    const frame = `(()=>{const c=window.RenguinSeamlessWorld.composition(); const band=(sel)=>[...document.querySelectorAll(sel)].map(a=>{const img=a.querySelector('img').getBoundingClientRect(); const tag=a.querySelector('.sw-nametag').getBoundingClientRect(); return {l:img.left, r:img.right, t:img.top, b:tag.bottom, h:img.height};}).filter(x=>x.r>0&&x.l<innerWidth); return {c, w: innerWidth, h: innerHeight, overflow: document.documentElement.scrollWidth-innerWidth, star: document.querySelector('.sw-fx-beacon').getBoundingClientRect().top + document.querySelector('.sw-fx-beacon').getBoundingClientRect().height/2, island: band('.sw-island [data-layer=residents] .sw-actor'), city: band('.sw-city [data-layer=residents] .sw-actor')};})()`;
+    const matrix = [["desktop wide", 1920, 1080, false], ["laptop", 1440, 900, false], ["laptop 720p", 1280, 720, false], ["tablet landscape", 1024, 768, true], ["tablet portrait", 768, 1024, true], ["phone portrait", 390, 844, true], ["small phone", 360, 640, true], ["phone landscape", 844, 390, true], ["small phone landscape", 667, 375, true]];
+    const composition = {};
+    for (const [label, w, h, touch] of matrix) {
+      await viewport(w, h, touch, touch ? 2 : 1);
+      await open(`${BASE}/world/seamless?sim=20&time=day`, 2600);
+      const top = await js(frame);
+      await js("window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'})");
+      await sleep(700);
+      const bottom = await js(frame);
+      const safeTop = top.c.safe.top - 2,
+        safeBottom = h - top.c.safe.bottom + 2;
+      const islandOk = top.star >= safeTop && top.island.length > 0 && top.island.every((a) => a.t >= safeTop && a.b <= safeBottom && a.l >= 0 && a.r <= w);
+      const cityOk = bottom.city.length > 0 && bottom.city.every((a) => a.t >= safeTop && a.b <= safeBottom);
+      const sizes = [...top.island, ...bottom.city].map((a) => Math.round(a.h));
+      composition[label] = { ws: top.c.ws, compact: top.c.compact, resident_px: sizes, island_top: Math.round(top.star), island_bottom: Math.round(Math.max(...top.island.map((a) => a.b))), city_top: Math.round(Math.min(...bottom.city.map((a) => a.t))), city_bottom: Math.round(Math.max(...bottom.city.map((a) => a.b))), safe: [top.c.safe.top, h - top.c.safe.bottom] };
+      check(`A. ${label} ${w}x${h}: island and street residents framed inside the safe area, no overflow`, islandOk && cityOk && top.overflow <= 0 && sizes.every((px) => px >= 80), composition[label]);
+    }
+    baseline.composition = composition;
+
+    // ---------- B. every city layer can be controlled on its own ----------
+    await viewport(1440, 900);
+    await open(`${BASE}/world/seamless?sim=20&time=day`, 3000);
+    await js("window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'})");
+    await sleep(800);
+    const stack = await js("window.RenguinSeamlessWorld.layers().filter(l=>l.zone==='city')");
+    const required = ["sky", "distant", "backdrop", "buildings", "street", "foreground", "residents", "effects"];
+    check("B. Renguin City mounts eight independent layers in z order", required.every((n) => stack.some((l) => l.name === n)) && stack.map((l) => l.z).every((z, i, a) => !i || z > a[i - 1]), stack.map((l) => `${l.name}@${l.z}/${l.host}/${l.depth}`));
+    const isolated = [];
+    for (const name of required) {
+      if (OUT) {
+        // Evidence image: this layer alone.
+        await js(`(()=>{for (const n of ${JSON.stringify(required)}) window.RenguinSeamlessWorld.setLayer('city.'+n, n===${JSON.stringify(name)}); return true})()`);
+        await sleep(150);
+        await shot(`layer-${name}.png`);
+      }
+      const seen = await js(`(()=>{for (const n of ${JSON.stringify(required)}) window.RenguinSeamlessWorld.setLayer('city.'+n, true); window.RenguinSeamlessWorld.setLayer('city.${name}', false); const hidden = window.RenguinSeamlessWorld.layers().filter(l=>l.zone==='city'&&l.hidden).map(l=>l.name); const residents = [...document.querySelectorAll('.sw-city [data-layer=residents] .sw-actor')].filter(a=>a.getClientRects().length).length; for (const n of ${JSON.stringify(required)}) window.RenguinSeamlessWorld.setLayer('city.'+n, true); return {hidden, residents};})()`);
+      isolated.push({ name, ...seen });
+    }
+    check("B. hiding one layer hides only that layer (residents stay unless the residents layer is hidden)", isolated.every((x) => x.hidden.length === 1 && x.hidden[0] === x.name && (x.name === "residents" ? x.residents === 0 : x.residents > 0)), isolated);
+    await open(`${BASE}/world/seamless?sim=20&time=day&hide=city.foreground,city.effects`, 2800);
+    const hiddenByQuery = await js("window.RenguinSeamlessWorld.layers().filter(l=>l.hidden).map(l=>l.zone+'.'+l.name)");
+    check("B. ?hide= loads the world with chosen layers switched off (QA and future art passes)", hiddenByQuery.length === 2 && hiddenByQuery.includes("city.foreground") && hiddenByQuery.includes("city.effects"), hiddenByQuery);
+
+    // ---------- C. seamless navigation ----------
+    await open(`${BASE}/world/seamless?sim=20&time=day`, 3000);
+    const journeyStart = await js("(()=>{window.__left=0; addEventListener('pagehide',()=>window.__left++); addEventListener('beforeunload',()=>window.__left++); return {href: location.href, history: history.length, navs: performance.getEntriesByType('navigation').length}})()");
+    await wheel(720, 500, 120, 50);
+    await sleep(600);
+    await click('#sw-altimeter [data-zone="island"]');
+    await sleep(2200);
+    await click('#sw-altimeter [data-zone="city"]');
+    await sleep(2200);
+    const journeyEnd = await js("(()=>{const s=[...document.querySelectorAll('.sw-section')]; const seams=s.slice(1).map((x,i)=>Math.abs(x.offsetTop-(s[i].offsetTop+s[i].offsetHeight))); return {href: location.href, history: history.length, navs: performance.getEntriesByType('navigation').length, left: window.__left, zone: window.RenguinSeamlessWorld.debug().zone, seams, order: s.map(x=>x.dataset.zone), sameDocument: !!window.__left===false}})()");
+    check("C. the whole island → clouds → city journey (wheel and altimeter) stays in one document on one route", journeyEnd.href === journeyStart.href && journeyEnd.history === journeyStart.history && journeyEnd.navs === 1 && journeyEnd.left === 0 && journeyEnd.zone === "city", { journeyStart, journeyEnd });
+    check("C. the three sections touch with no gap: one continuous world", journeyEnd.seams.every((g) => g <= 1) && journeyEnd.order.join() === "island,descent,city", journeyEnd.seams);
+    const seamColours = await js("(()=>{const s=[...document.querySelectorAll('.sw-section')].map(x=>getComputedStyle(x).backgroundImage.match(/rgba?\\([^)]*\\)/g)); return {islandEnd: s[0].at(-1), descentStart: s[1][0], descentEnd: s[1].at(-1), cityStart: s[2][0]}})()");
+    check("C. the sky colour is identical on both sides of each seam", seamColours.islandEnd === seamColours.descentStart && seamColours.descentEnd === seamColours.cityStart, seamColours);
+    const cable = await js("(()=>{const c=document.querySelector('.sw-cable'); const g=document.querySelector('.sw-gondola'); return {z: getComputedStyle(c).zIndex, parent: c.parentElement.id, docked: g.dataset.docked}})()");
+    check("C. one cable belongs to the world itself and carries the gondola to the street", cable.parent === "sw-world" && cable.docked === "city", cable);
 
     // ---------- V1 still there ----------
     await viewport(1440, 900);

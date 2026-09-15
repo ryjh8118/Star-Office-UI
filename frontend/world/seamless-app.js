@@ -11,6 +11,7 @@
   "use strict";
   const Art = window.RenguinSeamlessArt;
   const Cam = window.RenguinWorldCamera;
+  const Compose = window.RenguinWorldComposition;
   const $ = (id) => document.getElementById(id);
   const G = Art.GEOMETRY;
   const TIMES = ["auto", "day", "dusk", "night"];
@@ -32,12 +33,12 @@
     zoom: 0,
     time: "auto",
     ws: 1,
+    comp: null,
+    hidden: new Set(),
     sections: [],
     layers: [],
     street: null,
-    streetLayers: [],
     cable: null,
-    cityFar: null,
     gondola: null,
     wheels: null,
     scroll: null,
@@ -75,6 +76,8 @@
   function params() {
     const q = new URLSearchParams(location.search);
     if (TIMES.includes(q.get("time"))) W.time = q.get("time");
+    // QA: ?hide=foreground,city.effects hides layers by name to prove each one stands alone.
+    W.hidden = new Set((q.get("hide") || "").split(",").map((x) => x.trim()).filter(Boolean));
     if (!q.has("sim")) return { url: "/api/world/state", mock: false };
     const n = (key, hi) => Math.max(0, Math.min(hi, parseInt(q.get(key), 10) || 0));
     return { url: `/api/world/simulate?contents=${n("sim", 150)}&idle=${n("idle", 365)}&gap=${n("gap", 120)}`, mock: true, contents: n("sim", 150) };
@@ -86,21 +89,7 @@
     return h >= 6 && h < 17 ? "day" : h >= 17 && h < 19 ? "dusk" : "night";
   }
 
-  // One world scale for every section: characters stay readable on a phone, full size on a desktop.
-  function worldScale() {
-    const base = Cam.clamp(0.45 + window.innerWidth / 2600, 0.7, 1);
-    return +(base * ZOOMS[W.zoom]).toFixed(3);
-  }
-
-  // ---------- mount ----------
-  function layer(svg, depth, z, cls = "") {
-    const el = node("div", undefined, "sw-layer " + cls);
-    el.style.zIndex = z;
-    el.dataset.depth = depth;
-    el.innerHTML = svg;
-    return el;
-  }
-
+  // ---------- mount: a generic walk over the scene's declared layer stacks ----------
   function thumb(c) {
     const need = G.character * W.ws * (window.devicePixelRatio || 1);
     return `/api/world/character-thumb/${encodeURIComponent(c.character_id)}?s=${need > 170 ? 256 : 160}`;
@@ -111,7 +100,7 @@
     b.type = "button";
     b.style.setProperty("--x", x);
     b.style.setProperty("--y", y);
-    b.style.setProperty("--delay", `-${(Scene().hash(c.character_id) * 3).toFixed(2)}s`);
+    b.style.setProperty("--delay", `-${(window.RenguinWorldScene.hash(c.character_id) * 3).toFixed(2)}s`);
     b.dataset.character = c.character_id;
     b.dataset.resolution = c.resolution || "CANONICAL_CHARACTER";
     b.setAttribute("aria-label", `${Art.nameOf(c)} · ${Art.roleOf(c)}`);
@@ -128,15 +117,25 @@
     return b;
   }
 
-  const Scene = () => window.RenguinWorldScene;
+  const BALLOON = `<svg viewBox="-60 -150 120 210" aria-hidden="true"><path d="M0-146C-54-146-58-84-40-50-28-28-10-12-8 0H8C10-12 28-28 40-50 58-84 54-146 0-146Z" fill="#f28c6d" stroke="#3a3150" stroke-opacity=".4" stroke-width="2"/><path d="M0-146C-22-146-26-80-16-48-10-26-4-10-4 0H4C4-10 10-26 16-48 26-80 22-146 0-146Z" fill="#fff4e0"/><path d="M-8 0L-14 26M8 0L14 26" stroke="#8a6848" stroke-width="2"/><rect x="-16" y="26" width="32" height="24" rx="4" fill="#b98a5a" stroke="#3a3150" stroke-opacity=".4"/></svg>`;
 
-  function section(id, zone, height, anchor) {
-    const s = node("section", undefined, `sw-section sw-${zone}`);
-    s.id = id;
-    s.dataset.zone = zone;
-    s.dataset.anchor = anchor;
-    s.style.setProperty("--h", height);
-    return s;
+  // Effects are descriptors from the art; each kind is one small compositor-only element.
+  function effect(fx) {
+    const el = node("i", undefined, `sw-fx sw-fx-${fx.kind}`);
+    el.style.setProperty("--x", fx.x);
+    el.style.setProperty("--y", fx.y);
+    if (fx.color) el.style.setProperty("--c", fx.color);
+    if (fx.delay !== undefined) el.style.setProperty("--delay", (fx.kind === "bird" ? -fx.delay : fx.delay) + "s");
+    if (fx.kind === "balloon") el.innerHTML = BALLOON;
+    return el;
+  }
+
+  function hotspot(tag, cls, label, tip, [x, y, w, h]) {
+    const el = node(tag, undefined, "sw-hotspot " + cls);
+    el.setAttribute("aria-label", label);
+    el.style.cssText = `--x:${x};--y:${y};--w:${w};--h:${h}`;
+    el.append(node("span", tip, "sw-hotspot-tip"));
+    return el;
   }
 
   function mount(state) {
@@ -145,125 +144,100 @@
     world.replaceChildren();
     W.sections = [];
     W.layers = [];
-    W.streetLayers = [];
-    const cast = Art.cast(state);
-
-    // A. Star Office sky island.
-    const island = section("sw-island", "island", G.island.height, "top");
-    island.append(layer(Art.islandSky(), 0.4, 1, "sw-center sw-cull"));
-    const ground = layer(Art.island(state), 1, 3, "sw-center");
-    const actors = node("div", undefined, "sw-actors");
-    actors.classList.add("sw-island-actors");
-    for (const c of cast.island) {
-      const el = actor(c, c.spot + G.island.width / 2, G.island.ground);
-      el.dataset.spot = c.spot;
-      actors.append(el);
-    }
-    const office = node("a", undefined, "sw-hotspot sw-office-link");
-    office.href = "/";
-    office.setAttribute("aria-label", "進入 Star Office");
-    const [ox, oy, ow, oh] = G.island.office;
-    office.style.cssText = `--x:${ox + G.island.width / 2};--y:${oy};--w:${ow};--h:${oh}`;
-    office.append(node("span", "進入 Star Office", "sw-hotspot-tip"));
-    const beacon = node("i", undefined, "sw-fx sw-fx-beacon");
-    beacon.style.cssText = `--x:${G.island.width / 2};--y:170`;
-    ground.append(office, beacon, actors);
-    const wheelIsland = node("i", undefined, "sw-wheel");
-    wheelIsland.style.cssText = `--x:${G.island.wheel[0] + G.island.width / 2};--y:${G.island.wheel[1]}`;
-    ground.append(wheelIsland);
-    island.append(ground);
-    const hint = node("button", "往下探索", "sw-descend");
-    hint.type = "button";
-    hint.addEventListener("click", () => goTo("descent"));
-    island.append(hint);
-
-    // B. Cloud descent.
-    const descent = section("sw-descent", "descent", G.descent.height, "center");
-    for (const l of Art.descent(state)) descent.append(layer(l.svg, l.depth, l.z, "sw-center " + (l.cls === "sw-near" || l.cls === "sw-far" ? "sw-cull" : "")));
-    const balloon = node("div", undefined, "sw-balloon");
-    balloon.innerHTML = `<svg viewBox="-60 -150 120 210" aria-hidden="true"><path d="M0-146C-54-146-58-84-40-50-28-28-10-12-8 0H8C10-12 28-28 40-50 58-84 54-146 0-146Z" fill="#f28c6d" stroke="#3a3150" stroke-opacity=".4" stroke-width="2"/><path d="M0-146C-22-146-26-80-16-48-10-26-4-10-4 0H4C4-10 10-26 16-48 26-80 22-146 0-146Z" fill="#fff4e0"/><path d="M-8 0L-14 26M8 0L14 26" stroke="#8a6848" stroke-width="2"/><rect x="-16" y="26" width="32" height="24" rx="4" fill="#b98a5a" stroke="#3a3150" stroke-opacity=".4"/></svg>`;
-    descent.append(balloon);
-    for (let k = 0; k < 3; k++) {
-      const bird = node("i", undefined, "sw-bird");
-      bird.style.cssText = `--bx:${[-420, 380, 120][k]};--by:${[260, 520, 1040][k]};--delay:-${k * 0.4}s`;
-      descent.append(bird);
-    }
-
-    // C. Renguin City, one street.
-    const city = section("sw-city", "city", G.city.height, "bottom");
-    const scroller = node("div", undefined, "sw-street-scroll");
-    scroller.tabIndex = 0;
-    scroller.setAttribute("aria-label", "Renguin City 主城區街道，可左右移動");
-    const street = node("div", undefined, "sw-street");
-    const cityArt = Art.city(state);
-    for (const l of cityArt.layers) {
-      // The far background sits outside the scroller: it may rise into the clouds without being clipped.
-      const el = layer(l.svg, l.depth, l.z, "sw-street-layer" + (l.name === "bg" || l.name === "front" ? " sw-cull" : ""));
-      if (l.name === "bg") {
-        el.classList.add("sw-city-far");
-        city.append(el);
-        W.cityFar = el;
-      } else {
-        street.append(el);
-        if (l.depth !== 1) W.streetLayers.push(el);
+    const scene = Art.scene(state);
+    const half = G.island.width / 2;
+    let residents = 0;
+    for (const spec of scene.sections) {
+      const s = node("section", undefined, `sw-section sw-${spec.zone}`);
+      s.id = "sw-" + spec.zone;
+      s.dataset.zone = spec.zone;
+      s.dataset.anchor = spec.anchor;
+      s.style.setProperty("--h", spec.height);
+      let street = null;
+      if (spec.street) {
+        const scroller = node("div", undefined, "sw-street-scroll");
+        scroller.tabIndex = 0;
+        scroller.setAttribute("aria-label", "Renguin City 主城區街道，可左右移動");
+        street = node("div", undefined, "sw-street");
+        street.style.setProperty("--w", spec.street.width);
+        scroller.append(street);
+        s.append(scroller);
+        W.street = scroller;
       }
-    }
-    const residents = node("div", undefined, "sw-actors sw-street-actors");
-    for (const c of cast.city) residents.append(actor(c, c.spot, G.city.feet));
-    street.append(residents);
-    const [px, py, pw, ph] = G.city.poster;
-    const posterLink = node("button", undefined, "sw-hotspot sw-poster-link");
-    posterLink.type = "button";
-    posterLink.setAttribute("aria-label", "看精選影片");
-    posterLink.style.cssText = `--x:${px - 34};--y:${py - 22};--w:${pw + 68};--h:${ph + 44}`;
-    posterLink.append(node("span", "精選影片", "sw-hotspot-tip"));
-    posterLink.addEventListener("click", () => openDrawer("videos"));
-    street.append(posterLink);
-    const wheelCity = node("i", undefined, "sw-wheel");
-    wheelCity.style.cssText = `--x:${G.city.wheel[0]};--y:${G.city.wheel[1]}`;
-    street.append(wheelCity);
-    if ((state.activity?.event_flags || []).some((f) => f === "FIREWORKS" || f === "SMALL_FIREWORKS")) {
-      for (let k = 0; k < 4; k++) {
-        const fw = node("i", undefined, "sw-firework");
-        fw.style.cssText = `--x:${900 + k * 260};--y:${180 + (k % 2) * 90};--c:${["#ffd35e", "#ff7fa8", "#7fd6c2", "#9db8f2"][k]};--delay:${k * 0.6}s`;
-        street.append(fw);
+      const byName = {};
+      for (const l of spec.layers) {
+        const el = node("div", undefined, "sw-layer");
+        el.dataset.layer = l.name;
+        el.dataset.depth = l.depth;
+        el.dataset.host = l.host;
+        el.style.zIndex = l.z;
+        el.classList.toggle("sw-cull", Boolean(l.cull));
+        // Section layers of a street section span the street; the others are centred on the world axis.
+        el.classList.add(spec.street ? "sw-span" : "sw-center");
+        if (l.kind === "svg") el.innerHTML = l.svg || "";
+        (l.host === "street" ? street : s).append(el);
+        byName[l.name] = el;
+        W.layers.push({ el, name: l.name, zone: spec.zone, host: l.host, depth: l.depth, section: s });
+        if (W.hidden.has(`${spec.zone}.${l.name}`) || W.hidden.has(l.name)) el.hidden = true;
       }
+      for (const r of spec.residents) {
+        const el = actor(r.character, r.x, r.y);
+        el.dataset.spot = r.spot;
+        byName.residents.append(el);
+        residents += 1;
+      }
+      for (const fx of spec.effects) byName.effects.append(effect(fx));
+      if (spec.zone === "island") {
+        const office = hotspot("a", "sw-office-link", "進入 Star Office", "進入 Star Office", [G.island.office[0] + half, ...G.island.office.slice(1)]);
+        office.href = "/";
+        byName.buildings.append(office);
+        const wheel = node("i", undefined, "sw-wheel");
+        wheel.style.cssText = `--x:${G.island.wheel[0] + half};--y:${G.island.wheel[1]}`;
+        byName.terrain.append(wheel);
+        const hint = node("button", "往下探索", "sw-descend");
+        hint.type = "button";
+        hint.addEventListener("click", () => goTo("descent"));
+        s.append(hint);
+        W.wheels = [wheel];
+      }
+      if (spec.zone === "city") {
+        const [px, py, pw, ph] = G.city.poster;
+        const poster = hotspot("button", "sw-poster-link", "看精選影片", "精選影片", [px - 34, py - 22, pw + 68, ph + 44]);
+        poster.type = "button";
+        poster.addEventListener("click", () => openDrawer("videos"));
+        byName.buildings.append(poster);
+        const wheel = node("i", undefined, "sw-wheel");
+        wheel.style.cssText = `--x:${G.city.wheel[0]};--y:${G.city.wheel[1]}`;
+        byName.buildings.append(wheel);
+        W.wheels.push(wheel);
+        s.append(node("p", "← 左右滑動，逛逛這條街 →", "sw-swipe-hint"));
+        const end = node("footer", undefined, "sw-end");
+        end.append(node("span", "這是 Renguin City 的第一條街。其他街區還在施工中。"));
+        const top = node("button", "回到空島 ↑", "sw-chip");
+        top.type = "button";
+        top.addEventListener("click", () => goTo("island"));
+        end.append(top);
+        s.append(end);
+      }
+      world.append(s);
+      W.sections.push(s);
     }
-    const fire = Art.eraIndex(state) < 3 ? node("i", undefined, "sw-fx sw-fx-flame") : null;
-    if (fire) {
-      fire.style.cssText = `--x:1270;--y:${G.city.ground - 24}`;
-      street.append(fire);
-    }
-    scroller.append(street);
-    city.append(scroller);
-    city.append(node("p", "← 左右滑動，逛逛這條街 →", "sw-swipe-hint"));
-    const end = node("footer", undefined, "sw-end");
-    end.append(node("span", "這是 Renguin City 的第一條街。其他街區還在施工中。"));
-    const top = node("button", "回到空島 ↑", "sw-chip");
-    top.type = "button";
-    top.addEventListener("click", () => goTo("island"));
-    end.append(top);
-    city.append(end);
 
-    // The sky cable and its gondola live on the world itself, above both ends.
+    // The sky cable and its gondola belong to the world, not to a section: one line from island to street.
     W.cable = node("div", undefined, "sw-cable");
     W.gondola = node("div", undefined, "sw-gondola");
+    W.cable.style.zIndex = W.gondola.style.zIndex = scene.cable_z;
     W.gondola.innerHTML = `<svg viewBox="-40 -14 80 96" aria-hidden="true"><path d="M0-12V16" stroke="#4e4763" stroke-width="4"/><circle cx="0" cy="-10" r="6" fill="#4e4763"/><path d="M-34 16H34L30 76H-30Z" fill="#e07d4f" stroke="#3a3150" stroke-opacity=".45" stroke-width="2"/><rect x="-26" y="26" width="22" height="22" rx="3" fill="#ffe39a"/><rect x="4" y="26" width="22" height="22" rx="3" fill="#ffe39a"/><path d="M-32 58H32" stroke="#fff4e0" stroke-width="5"/></svg>`;
-
-    world.append(island, descent, city, W.cable, W.gondola);
-    W.sections = [island, descent, city];
-    W.layers = [...world.querySelectorAll(".sw-section:not(.sw-city) .sw-layer")];
-    W.street = scroller;
-    W.wheels = [wheelIsland, wheelCity];
+    world.append(W.cable, W.gondola);
 
     W.zone = "island";
     $("sw-app").dataset.zone = "island";
     for (const b of $("sw-altimeter").querySelectorAll("button")) b.setAttribute("aria-current", String(b.dataset.zone === "island"));
-    W.disposers.push(Cam.dragPan(scroller));
-    listen(scroller, "scroll", W.streetScroll, { passive: true });
+    W.disposers.push(Cam.dragPan(W.street));
+    listen(W.street, "scroll", W.streetScroll, { passive: true });
     observe();
     applyScale(true);
-    return cast;
+    return residents;
   }
 
   // ---------- motion: parallax, cable, gondola ----------
@@ -294,32 +268,33 @@
 
   const pageRect = (el) => {
     const r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2 + window.scrollX, y: r.top + r.height / 2 + window.scrollY, top: r.top + window.scrollY, height: r.height };
+    return { x: r.left + r.width / 2 + window.scrollX, y: r.top + r.height / 2 + window.scrollY };
   };
 
+  // One rule for every layer, decided by its host and depth:
+  //   section layer          lags vertically by depth; in a street section it also lags sideways
+  //   street layer           slides sideways by depth inside the street, never vertically
   function onScroll() {
     if (!W.running) return;
     const y = window.scrollY,
       vh = window.innerHeight,
-      still = Cam.reducedMotion();
-    for (const el of W.layers) {
-      const s = el.parentElement;
-      if (!W.near.has(s)) continue;
-      const depth = +el.dataset.depth;
-      if (depth === 1) continue;
-      const offset = Cam.anchorOffset(s.dataset.anchor, s.offsetTop, s.offsetHeight, y, vh);
-      move(el, still ? "" : `translate3d(0, ${Cam.parallax(offset, depth).toFixed(0)}px, 0)`);
-    }
-    const city = W.sections[2];
-    if (city && W.near.has(city)) {
-      const offset = Cam.anchorOffset("bottom", city.offsetTop, city.offsetHeight, y, vh);
-      const left = W.street.scrollLeft;
-      // Inside the scroller layers only slide sideways; the far layer also lags vertically.
-      for (const el of W.streetLayers) move(el, still ? "" : `translate3d(${(left * (1 - +el.dataset.depth)).toFixed(0)}px, 0, 0)`);
-      if (W.cityFar) {
-        const depth = +W.cityFar.dataset.depth;
-        move(W.cityFar, `translate3d(${(-left * (still ? 1 : depth)).toFixed(0)}px, ${still ? 0 : Cam.parallax(offset, depth).toFixed(0)}px, 0)`);
+      still = Cam.reducedMotion(),
+      left = W.street ? W.street.scrollLeft : 0;
+    for (const l of W.layers) {
+      if (!W.near.has(l.section)) continue;
+      const streetSection = l.section.dataset.zone === "city";
+      if (l.depth === 1 && !(streetSection && l.host === "section")) continue;
+      if (still) {
+        move(l.el, streetSection && l.host === "section" ? `translate3d(${-left}px, 0, 0)` : "");
+        continue;
       }
+      if (l.host === "street") {
+        move(l.el, `translate3d(${(left * (1 - l.depth)).toFixed(0)}px, 0, 0)`);
+        continue;
+      }
+      const offset = Cam.anchorOffset(l.section.dataset.anchor, l.section.offsetTop, l.section.offsetHeight, y, vh);
+      const x = streetSection ? (-left * l.depth).toFixed(0) : 0;
+      move(l.el, `translate3d(${x}px, ${Cam.parallax(offset, l.depth).toFixed(0)}px, 0)`);
     }
     placeGondola();
     // Which altitude are we at: the section holding the viewport's middle.
@@ -334,13 +309,16 @@
   }
 
   function placeCable() {
-    if (!W.cable || !W.wheels) return;
+    if (!W.cable || !W.wheels || W.wheels.length < 2) return;
     const a = pageRect(W.wheels[0]),
       b = pageRect(W.wheels[1]);
     W.cableEnds = { a, b };
     const dx = b.x - a.x,
       dy = b.y - a.y;
-    W.cable.style.cssText = `left:${a.x.toFixed(1)}px;top:${a.y.toFixed(1)}px;width:${Math.hypot(dx, dy).toFixed(1)}px;transform:rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
+    W.cable.style.left = a.x.toFixed(1) + "px";
+    W.cable.style.top = a.y.toFixed(1) + "px";
+    W.cable.style.width = Math.hypot(dx, dy).toFixed(1) + "px";
+    W.cable.style.transform = `rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
     placeGondola();
   }
 
@@ -364,35 +342,49 @@
     W.scroll();
   }
 
+  // Composition rule A: one world scale and two composed views for every viewport ratio.
   function applyScale(initial) {
-    const zone = W.zone;
-    const ratio = document.documentElement.scrollHeight > window.innerHeight ? window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) : 0;
-    W.ws = worldScale();
-    document.documentElement.style.setProperty("--ws", W.ws);
-    // On a narrow screen the island crew gathers toward the office so nobody stands off the edge.
-    const reach = Math.max(...G.island.spots.map(Math.abs));
-    const half = window.innerWidth / (2 * W.ws) - 76;
-    const squeeze = Math.min(1, half / reach);
-    for (const el of document.querySelectorAll(".sw-island-actors .sw-actor")) el.style.setProperty("--x", (+el.dataset.spot * squeeze + G.island.width / 2).toFixed(1));
+    const doc = document.documentElement;
+    const ratio = doc.scrollHeight > window.innerHeight ? window.scrollY / (doc.scrollHeight - window.innerHeight) : 0;
+    const comp = Compose.compose({ width: window.innerWidth, height: window.innerHeight, zoom: ZOOMS[W.zoom] });
+    W.comp = comp;
+    W.ws = comp.ws;
+    doc.style.setProperty("--ws", W.ws);
+    doc.style.setProperty("--island-lead", comp.island.lead + "px");
+    $("sw-app").classList.toggle("is-compact", comp.compact);
+    const city = W.sections.find((s) => s.dataset.zone === "city");
+    if (city) city.style.setProperty("--h", comp.city.height);
+    const squeeze = comp.island.squeeze(G.island.spots);
+    for (const el of document.querySelectorAll('.sw-island [data-layer="residents"] .sw-actor')) el.style.setProperty("--x", (+el.dataset.spot * squeeze + G.island.width / 2).toFixed(1));
     $("sw-zoom-out").disabled = W.zoom === 0;
     $("sw-zoom-in").disabled = W.zoom === ZOOMS.length - 1;
     for (const img of document.querySelectorAll(".sw-actor img")) {
-      const c = img.closest(".sw-actor").dataset.character;
-      const next = thumb({ character_id: c });
+      const next = thumb({ character_id: img.closest(".sw-actor").dataset.character });
       if (next.endsWith("256") && !img.src.endsWith("256")) img.src = next;
     }
-    if (!initial) window.scrollTo({ top: ratio * (document.documentElement.scrollHeight - window.innerHeight), behavior: "instant" });
-    else if (zone === "island") window.scrollTo({ top: 0, behavior: "instant" });
+    if (initial) window.scrollTo({ top: 0, behavior: "instant" });
+    else window.scrollTo({ top: ratio * (doc.scrollHeight - window.innerHeight), behavior: "instant" });
     placeCable();
     W.scroll();
     W.streetScroll();
   }
 
+  // Seamless navigation C: every jump is a scroll of the same page, never a page or a route.
   function goTo(zone) {
     const s = W.sections.find((x) => x.dataset.zone === zone);
     if (!s) return;
     const top = zone === "city" ? s.offsetTop + s.offsetHeight - window.innerHeight : zone === "descent" ? s.offsetTop - window.innerHeight * 0.1 : 0;
     Cam.scrollTo(window, { top });
+  }
+
+  function setLayer(name, visible) {
+    let count = 0;
+    for (const l of W.layers)
+      if (l.name === name || `${l.zone}.${l.name}` === name) {
+        l.el.hidden = !visible;
+        count += 1;
+      }
+    return count;
   }
 
   // ---------- card and drawer (secondary) ----------
@@ -500,8 +492,7 @@
     for (const s of state.sources || []) if (["SYNC_ERROR", "ERROR", "UNAVAILABLE"].includes(s.status)) warnings.push(`${s.id} 無法確認，世界只使用可確認的資料。`);
     banner.hidden = !warnings.length;
     banner.textContent = warnings.join(" ");
-    const cast = mount(state);
-    app.dataset.residents = String(cast.island.length + cast.city.length);
+    app.dataset.residents = String(mount(state));
     delete $("sw-drawer").dataset.built;
   }
 
@@ -600,8 +591,7 @@
     $("sw-world")?.replaceChildren();
     W.sections = [];
     W.layers = [];
-    W.streetLayers = [];
-    W.street = W.cable = W.gondola = W.wheels = W.cableEnds = W.cityFar = null;
+    W.street = W.cable = W.gondola = W.wheels = W.cableEnds = W.comp = null;
     W.state = null;
   }
 
@@ -611,6 +601,9 @@
     pause,
     resume,
     goTo,
+    setLayer,
+    layers: () => W.layers.map((l) => ({ zone: l.zone, name: l.name, host: l.host, depth: l.depth, z: +l.el.style.zIndex, hidden: l.el.hidden })),
+    composition: () => W.comp && { ws: W.comp.ws, compact: W.comp.compact, safe: W.comp.safe, island_lead: W.comp.island.lead, city_height: W.comp.city.height, resident_px: W.comp.resident_px },
     debug: () => ({
       running: W.running,
       paused: W.paused,

@@ -1,8 +1,10 @@
 # Renguin World — Seamless side-view vertical slice (2026-09-15)
 
-Status: **VISUAL DECISION GATE**. The slice exists to decide the direction; it is
-not the full world. V1 (`/world`, isometric island) is unchanged and stays the
-default and the fallback.
+Status: **DIRECTION = APPROVED, VISUAL_ACCEPTANCE = PROVISIONAL** (user, 2026-09-15).
+The structure is the contract (`Renguin_World_Architecture.md`: composition
+rule, layer stacks, seamless navigation); art upgrades wait for
+`RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2.md`. V1 (`/world`, isometric island) is
+unchanged and remains the Production default until a later gate.
 
 ## What it proves
 
@@ -45,6 +47,7 @@ known facts only (district, current state, source authority).
 | `frontend/world/seamless-app.js` | mount, parallax, cable car, street pan, card/drawer, lifecycle |
 | `frontend/world/seamless.css` | world scale `--ws`, layers, day/dusk/night palettes |
 | `frontend/world/world-camera.js` | reusable camera utilities (anchored parallax, bounds, frame batching, drag-to-pan, reduced-motion scroll) |
+| `frontend/world/world-composition.js` | composition rule A: world scale, island lead, city height per viewport |
 | `backend/renguin_world/routes.py` | `GET /world/seamless` |
 
 No data authority changed: the slice reads the same `/api/world/state`

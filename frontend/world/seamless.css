@@ -263,7 +263,8 @@ a:focus-visible,
 .sw-world {
   position: relative;
   z-index: 0;
-  overflow-x: clip;
+  /* The world ends where its sections end: art that a composed section crops never lengthens the page. */
+  overflow: clip;
 }
 .sw-loading {
   min-height: 100vh;
@@ -277,20 +278,38 @@ a:focus-visible,
   position: relative;
   height: calc(var(--h) * var(--u));
 }
+/* Seams: each gradient starts on the colour the previous section ends with. */
 .sw-island {
+  /* Composition lead: extra (or trimmed) sky above the island so its focus band sits centred. */
+  height: calc(var(--h) * var(--u) + var(--island-lead, 0px));
   background: linear-gradient(var(--sky-0), var(--sky-1));
 }
 .sw-descent {
   background: linear-gradient(var(--sky-1), var(--sky-2) 52%, var(--sky-3));
 }
 .sw-city {
-  background: linear-gradient(var(--sky-3), var(--sky-4) 60%);
+  /* Composed height: soil the art does not reach continues in the same colour. */
+  background: linear-gradient(var(--sky-3), var(--sky-4) calc(640 * var(--u)), var(--sky-4) calc(900 * var(--u)), #86664b calc(900 * var(--u)));
 }
 .sw-layer {
   position: absolute;
   top: 0;
-  height: 100%;
   pointer-events: none;
+}
+/* Layers keep their art's own height whatever height the composition gives the section. */
+.sw-island > .sw-layer {
+  top: var(--island-lead, 0px);
+  height: calc(1000 * var(--u));
+}
+.sw-descent > .sw-layer {
+  height: calc(1500 * var(--u));
+}
+.sw-city .sw-layer {
+  height: calc(1080 * var(--u));
+}
+.sw-span {
+  left: 0;
+  width: calc(2800 * var(--u));
 }
 .sw-layer:not([data-depth="1"]) {
   will-change: transform;
@@ -462,29 +481,22 @@ a:focus-visible,
   width: 0;
   height: 0;
 }
-.sw-balloon {
-  position: absolute;
-  z-index: 3;
-  left: calc(50% - 640 * var(--u));
-  top: calc(520 * var(--u));
+.sw-fx-balloon {
   width: calc(120 * var(--u));
+  translate: -50% -100%;
   animation: sw-bob 5s ease-in-out infinite alternate;
 }
-.sw-balloon svg {
+.sw-fx-balloon svg {
   width: 100%;
   display: block;
 }
-.sw-bird {
-  position: absolute;
-  z-index: 2;
-  left: calc(50% + var(--bx) * var(--u));
-  top: calc(var(--by) * var(--u));
+.sw-fx-bird {
   width: calc(34 * var(--u));
   height: calc(12 * var(--u));
   animation: sw-flap 0.5s ease-in-out var(--delay) infinite alternate;
 }
-.sw-bird::before,
-.sw-bird::after {
+.sw-fx-bird::before,
+.sw-fx-bird::after {
   content: "";
   position: absolute;
   top: 0;
@@ -493,10 +505,10 @@ a:focus-visible,
   border-top: 3px solid #5b5470;
   border-radius: 60% 60% 0 0;
 }
-.sw-bird::before {
+.sw-fx-bird::before {
   left: 0;
 }
-.sw-bird::after {
+.sw-fx-bird::after {
   right: 0;
 }
 
@@ -518,17 +530,10 @@ a:focus-visible,
 }
 .sw-street {
   position: relative;
-  width: calc(2800 * var(--u));
+  width: calc(var(--w, 2800) * var(--u));
   height: 100%;
   /* Parallax layers slide inside the street; they must never widen what the street can scroll. */
   overflow: clip;
-}
-.sw-street-layer {
-  left: 0;
-  width: 100%;
-}
-.sw-city-far {
-  width: calc(2800 * var(--u));
 }
 .sw-swipe-hint {
   display: none;
@@ -594,15 +599,6 @@ a:focus-visible,
 }
 
 /* Residents: the authority's own images at a readable size, with name tags. */
-.sw-actors {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 4;
-}
-.sw-street-actors {
-  z-index: 6;
-}
 .sw-actor {
   position: absolute;
   left: calc(var(--x) * var(--u));
@@ -721,7 +717,6 @@ a:focus-visible,
 /* Small effects, compositor-only. */
 .sw-fx {
   position: absolute;
-  z-index: 3;
   left: calc(var(--x) * var(--u));
   top: calc(var(--y) * var(--u));
   pointer-events: none;
@@ -743,17 +738,12 @@ a:focus-visible,
   transform-origin: 50% 100%;
   animation: sw-flicker 0.45s ease-in-out infinite alternate;
 }
-.sw-firework {
-  position: absolute;
-  z-index: 2;
-  left: calc(var(--x) * var(--u));
-  top: calc(var(--y) * var(--u));
+.sw-fx-firework {
   width: calc(110 * var(--u));
   height: calc(110 * var(--u));
   translate: -50% -50%;
-  pointer-events: none;
 }
-.sw-firework::before {
+.sw-fx-firework::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -986,34 +976,6 @@ a:focus-visible,
   .sw-level strong {
     font-size: 12px;
   }
-  /* The altimeter becomes a small bar at the bottom; the street is explored by swiping. */
-  .sw-altimeter {
-    top: auto;
-    right: auto;
-    left: 50%;
-    bottom: calc(10px + env(safe-area-inset-bottom));
-    transform: translateX(-50%);
-    grid-auto-flow: column;
-    padding: 3px;
-  }
-  .sw-altimeter button {
-    grid-template-columns: 12px max-content;
-    min-height: 40px;
-    padding: 0 12px 0 10px;
-    white-space: nowrap;
-  }
-  .sw-end {
-    bottom: 72px;
-  }
-  .sw-descend {
-    bottom: calc(70px + env(safe-area-inset-bottom));
-  }
-  .sw-end span {
-    display: none;
-  }
-  .sw-street-nav {
-    display: none;
-  }
   .sw-banner {
     top: calc(64px + env(safe-area-inset-top));
     padding: 3px 10px;
@@ -1032,5 +994,45 @@ a:focus-visible,
     width: auto;
     top: auto;
     max-height: 78vh;
+  }
+}
+
+/* Compact is decided by world-composition.js (a portrait phone), so framing and controls agree. */
+.sw-app.is-compact {
+  --compact: 1;
+}
+/* Compact (composition rule): the altimeter becomes a small bar at the bottom; the street is explored by swiping. */
+.is-compact .sw-altimeter {
+  top: auto;
+  right: auto;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  grid-auto-flow: column;
+  padding: 3px;
+}
+.is-compact .sw-altimeter button {
+  grid-template-columns: 12px max-content;
+  min-height: 40px;
+  padding: 0 12px 0 10px;
+  white-space: nowrap;
+}
+.is-compact .sw-end {
+  bottom: 72px;
+}
+.is-compact .sw-descend {
+  bottom: calc(70px + env(safe-area-inset-bottom));
+}
+.is-compact .sw-end span {
+  display: none;
+}
+.is-compact .sw-street-nav {
+  display: none;
+}
+
+/* Short screens (a landscape phone): the side altimeter already leads down; keep the island clear. */
+@media (max-height: 480px) {
+  .sw-descend {
+    display: none;
   }
 }

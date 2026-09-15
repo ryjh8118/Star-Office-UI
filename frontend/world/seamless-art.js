@@ -2,8 +2,14 @@
  *
  * Pure: no DOM, no timers, no network, so Node tests can check it. One vertical
  * world in three sections that share a sky: the Star Office sky island, the
- * cloud descent, and one street of Renguin City. Every section is a stack of
- * layers with a depth; the page moves layers, never redraws them.
+ * cloud descent, and one street of Renguin City.
+ *
+ * `scene(state)` is the world's layer architecture: every section declares its
+ * stack (LAYER_STACKS) and each layer is independent — its own name, depth
+ * (parallax factor), z order, host (the section, or the street that pans
+ * sideways), kind (painted SVG, or DOM the page fills: residents, effects) and
+ * whether it may be culled. The page moves layers, never redraws them, so a
+ * layer can later be re-painted, animated or swapped for richer art alone.
  *
  * Art is code-native paper craft (shapes, offset paper shadows, one outline
  * colour) and reuses the V1 era palette. Characters are never drawn here: the
@@ -30,8 +36,38 @@
     character: 150,
     island: { width: 2200, height: 1000, ground: 552, wheel: [550, 470], spots: [-232, 286, -372], office: [-130, 238, 260, 314] },
     descent: { width: 2200, height: 1500 },
-    city: { width: 2800, height: 1080, ground: 740, feet: 782, wheel: [300, 486], spots: [360, 640, 900, 1250, 1450, 1720, 2010, 2250, 2520], poster: [1130, 598, 64, 78] },
+    city: { width: 2800, height: 1080, ground: 740, feet: 782, wheel: [300, 486], spots: [360, 640, 900, 1430, 1640, 1860, 2050, 2290, 2540], poster: [1130, 598, 64, 78] },
   };
+  // z steps of ten leave room for layers added later (weather, lighting, particles).
+  const LAYER_STACKS = {
+    island: [
+      { name: "sky", depth: 0.4, z: 10, host: "section", kind: "svg", cull: true },
+      { name: "terrain", depth: 1, z: 30, host: "section", kind: "svg" },
+      { name: "buildings", depth: 1, z: 40, host: "section", kind: "svg" },
+      { name: "residents", depth: 1, z: 70, host: "section", kind: "dom" },
+      { name: "effects", depth: 1, z: 80, host: "section", kind: "dom", cull: true },
+    ],
+    descent: [
+      { name: "distant", depth: 0.3, z: 10, host: "section", kind: "svg", cull: true },
+      { name: "clouds-far", depth: 0.5, z: 15, host: "section", kind: "svg", cull: true },
+      { name: "clouds-mid", depth: 0.78, z: 20, host: "section", kind: "svg" },
+      { name: "effects", depth: 0.85, z: 25, host: "section", kind: "dom", cull: true },
+      { name: "cloud-sea", depth: 1, z: 40, host: "section", kind: "svg" },
+      { name: "clouds-near", depth: 1.2, z: 60, host: "section", kind: "svg", cull: true },
+    ],
+    city: [
+      { name: "sky", depth: 0.15, z: 10, host: "section", kind: "svg", cull: true },
+      { name: "distant", depth: 0.35, z: 20, host: "section", kind: "svg", cull: true },
+      { name: "backdrop", depth: 0.7, z: 30, host: "street", kind: "svg" },
+      { name: "buildings", depth: 1, z: 40, host: "street", kind: "svg" },
+      { name: "street", depth: 1, z: 50, host: "street", kind: "svg" },
+      { name: "foreground", depth: 1.18, z: 60, host: "street", kind: "svg", cull: true },
+      { name: "residents", depth: 1, z: 70, host: "street", kind: "dom" },
+      { name: "effects", depth: 1, z: 80, host: "street", kind: "dom", cull: true },
+    ],
+  };
+  // The sky cable sits between the cloud sea and the near clouds, above street buildings.
+  const CABLE_Z = 55;
   const TYPE_LABEL = { MAIN_CHARACTER: "主角", SUPPORTING_CHARACTER: "主要配角", SPECIAL_GUEST: "特別來賓", GOOSEBABY: "鵝寶" };
   const SOURCE_LABEL = { "ASSET-01": "角色聖經", "ASSET-08": "會員角色庫" };
 
@@ -191,10 +227,12 @@
     return s + "</g>";
   }
 
+  const islandSvg = (body) => `<svg class="sw-art" viewBox="-1100 0 2200 1000" width="2200" height="1000" aria-hidden="true" focusable="false">${body}</svg>`;
+
   // ---------- A. Star Office sky island ----------
   function island(state) {
     const lit = (state?.activity?.lights_level ?? 60) > 30;
-    let s = `<svg class="sw-art" viewBox="-1100 0 2200 1000" width="2200" height="1000" aria-hidden="true" focusable="false">`;
+    let s = "";
     // Body: one rocky wedge; strata are clipped copies, so the cut edge stays one line.
     const body = "M-470 585C-460 560-430 552-380 552L380 552C430 552 462 560 472 585L440 640L400 662L385 722L330 748L300 822L220 852L170 926L90 952L40 994L-10 956L-90 930L-140 862L-220 832L-270 762L-345 736L-385 666L-440 640Z";
     s += `<defs><clipPath id="sw-island-clip"><path d="${body}"/></clipPath></defs>`;
@@ -230,6 +268,12 @@
     s += use("sw-pine", -300, 548, 0.85) + use("sw-tree", -420, 552, 1.15) + use("sw-tree", 210, 552, 0.9) + use("sw-bush", -168, 556, 0.8) + use("sw-flowers", 360, 552, 1.1) + use("sw-flowers", -120, 552, 1);
     s += `<g class="sw-telescope" transform="translate(620 0)"><path d="M-250 552L-236 470M-222 552L-236 470M-236 552V470" stroke="#6f5646" stroke-width="5" stroke-linecap="round"/><g transform="translate(-236 466) rotate(-32)"><rect x="-10" y="-11" width="86" height="22" rx="6" fill="#5b6f8f" stroke="${OUT}" stroke-opacity=".5" stroke-width="1.5"/><rect x="70" y="-15" width="16" height="30" rx="4" fill="#f2c46b" stroke="${OUT}" stroke-opacity=".5"/></g></g>`;
     s += `<path d="M-192 552V500" stroke="#8a6848" stroke-width="6"/>` + rect(-214, 470, 44, 32, "#e07d4f", ` rx="10"`) + `<path d="M-170 480h12v-18h-6" fill="none" stroke="#ffd35e" stroke-width="3"/>`;
+    // Cable-car station on a deck that overhangs the east lip.
+    s += `<g class="sw-station">` + rect(420, 540, 170, 14, "#b98a5a") + `<path d="M440 554L470 610M560 554L520 610" stroke="#8a6848" stroke-width="6"/>`;
+    s += `<path d="M470 540L540 420M590 540L540 420M505 480H575" stroke="#8a6848" stroke-width="8" stroke-linecap="round"/><circle cx="550" cy="470" r="20" fill="#d8c3a0" stroke="#6f5646" stroke-width="5"/><circle cx="550" cy="470" r="5" fill="#6f5646"/>`;
+    s += poly([[450, 420], [540, 380], [620, 420]], "#e07d4f") + `</g>`;
+    const terrain = s;
+    s = "";
     // The Star Office itself: cream walls, slate roof, a star in the gable window.
     const wall = "#f3e3c3",
       roof = "#5b6f8f";
@@ -245,22 +289,17 @@
     s += `<path d="M-32 552V486A32 32 0 0 1 32 486V552Z" fill="#6f5140" stroke="${OUT}" stroke-opacity=".45" stroke-width="1.5"/><circle cx="18" cy="518" r="4" fill="#f2c46b"/>`;
     s += rect(-58, 424, 116, 24, "#3a3150", ` rx="6"`) + `<text x="0" y="441" class="sw-sign">STAR OFFICE</text>`;
     s += `</g>`;
-    // Cable-car station on a deck that overhangs the east lip.
-    s += `<g class="sw-station">` + rect(420, 540, 170, 14, "#b98a5a") + `<path d="M440 554L470 610M560 554L520 610" stroke="#8a6848" stroke-width="6"/>`;
-    s += `<path d="M470 540L540 420M590 540L540 420M505 480H575" stroke="#8a6848" stroke-width="8" stroke-linecap="round"/><circle cx="550" cy="470" r="20" fill="#d8c3a0" stroke="#6f5646" stroke-width="5"/><circle cx="550" cy="470" r="5" fill="#6f5646"/>`;
-    s += poly([[450, 420], [540, 380], [620, 420]], "#e07d4f") + `</g>`;
     s += `<path d="M-300 470Q-220 500-150 470T0 470" fill="none" stroke="${OUT}" stroke-opacity=".35" stroke-width="1.5"/>`;
     for (let k = 0; k < 6; k++) s += `<circle cx="${-280 + k * 50}" cy="${r1(478 + Math.sin(k) * 8)}" r="6" class="sw-bulb" fill="#ffe39a"/>`;
-    return s + `</svg>`;
+    return { terrain: islandSvg(terrain), buildings: islandSvg(s) };
   }
 
   // Background sky over the island: high clouds and the sun/moon, all on one slow layer.
   function islandSky() {
-    let s = `<svg class="sw-art" viewBox="-1100 0 2200 1000" width="2200" height="1000" aria-hidden="true" focusable="false">`;
-    s += `<circle class="sw-sun" cx="620" cy="190" r="70"/>`;
+    let s = `<circle class="sw-sun" cx="620" cy="190" r="70"/>`;
     for (const [x, y, id, sc] of [[-980, 260, "sw-cloud-b", 0.8], [-560, 150, "sw-cloud-c", 1], [-260, 330, "sw-cloud-a", 0.7], [260, 120, "sw-cloud-c", 0.8], [760, 360, "sw-cloud-a", 0.9], [-900, 640, "sw-cloud-a", 1.1], [700, 760, "sw-cloud-b", 1]])
       s += use(id, x, y, sc, ` class="sw-far"`);
-    return s + `</svg>`;
+    return islandSvg(s);
   }
 
   // ---------- B. cloud descent: four cloud layers at different depths ----------
@@ -289,13 +328,13 @@
       far += `<g class="sw-distant" transform="translate(${x} ${y}) scale(${sc})"><path d="M-150 0C-140-18-110-24-60-24H70C120-24 146-16 152 0L120 30 90 36 70 80 20 96 0 130-30 92-80 70-100 34Z"/><path class="sw-distant-top" d="M-150 0C-140-18-110-24-60-24H70C120-24 146-16 152 0Q0 14-150 0Z"/><path d="M-40-24V-70L-10-96 20-70V-24Z"/><path d="M60-24V-54L80-70 100-54V-24Z"/></g>`;
     }
     far += `</svg>`;
-    return [
-      { depth: 0.3, z: 1, svg: far, cls: "sw-far" },
-      { depth: 0.5, z: 1, svg: layer("far", 8, [80, 1450], [0.5, 0.8]), cls: "sw-far" },
-      { depth: 0.78, z: 2, svg: layer("mid", 6, [160, 1400], [0.8, 1.1]), cls: "" },
-      { depth: 1, z: 4, svg: sea, cls: "" },
-      { depth: 1.2, z: 6, svg: layer("near", 4, [260, 1350], [1.1, 1.5]), cls: "sw-near" },
-    ];
+    return {
+      distant: far,
+      "clouds-far": layer("far", 8, [80, 1450], [0.5, 0.8]),
+      "clouds-mid": layer("mid", 6, [160, 1400], [0.8, 1.1]),
+      "cloud-sea": sea,
+      "clouds-near": layer("near", 4, [260, 1350], [1.1, 1.5]),
+    };
   }
 
   // ---------- C. one street of Renguin City ----------
@@ -319,11 +358,13 @@
     const backCount = Math.min(back.length, Math.max(0, total - frontCount));
     const svg = (cls, body) => `<svg class="sw-art ${cls}" viewBox="0 0 ${W} ${G.height}" width="${W}" height="${G.height}" aria-hidden="true" focusable="false">${body}</svg>`;
 
-    // Far background: mountains, hills, the era's skyline.
-    let bg = "";
-    for (const [x, y, id, sc] of [[80, 230, "sw-cloud-b", 0.9], [760, 140, "sw-cloud-c", 1], [1300, 260, "sw-cloud-a", 0.8], [1960, 170, "sw-cloud-b", 0.8], [2500, 250, "sw-cloud-c", 1.1]]) bg += use(id, x, y, sc, ` class="sw-far"`);
+    // Sky: clouds and kites, the slowest layer.
+    let sky = "";
+    for (const [x, y, id, sc] of [[80, 230, "sw-cloud-b", 0.9], [760, 140, "sw-cloud-c", 1], [1300, 260, "sw-cloud-a", 0.8], [1960, 170, "sw-cloud-b", 0.8], [2500, 250, "sw-cloud-c", 1.1]]) sky += use(id, x, y, sc, ` class="sw-far"`);
     for (const [x, y, c, r] of [[520, 250, "#f28c6d", -12], [1720, 150, "#7fc6c2", 10], [2380, 300, "#ffd35e", -6]])
-      bg += `<g class="sw-kite" transform="translate(${x} ${y}) rotate(${r})"><path d="M0-34L22 0L0 40L-22 0Z" fill="${c}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/><path d="M0-34V40M-22 0H22" stroke="#fff8ea" stroke-width="2"/><path d="M0 40C10 70-14 96 4 130S-6 180 10 214" fill="none" stroke="${OUT}" stroke-opacity=".35" stroke-width="1.5"/><path d="M-4 84l8 6-8 6ZM6 150l8 6-8 6Z" fill="${c}"/></g>`;
+      sky += `<g class="sw-kite" transform="translate(${x} ${y}) rotate(${r})"><path d="M0-34L22 0L0 40L-22 0Z" fill="${c}" stroke="${OUT}" stroke-opacity=".4" stroke-width="1.5"/><path d="M0-34V40M-22 0H22" stroke="#fff8ea" stroke-width="2"/><path d="M0 40C10 70-14 96 4 130S-6 180 10 214" fill="none" stroke="${OUT}" stroke-opacity=".35" stroke-width="1.5"/><path d="M-4 84l8 6-8 6ZM6 150l8 6-8 6Z" fill="${c}"/></g>`;
+    // Distant background: mountains, hills, far houses, the era's skyline.
+    let bg = "";
     bg += `<path class="sw-mountain" d="M0 560L220 390L360 470L560 330L760 480L980 360L1220 500L1420 380L1640 470L1880 340L2100 480L2340 370L2560 460L2800 360V1080H0Z"/><path class="sw-snow" d="M200 405L220 390L244 404L232 412ZM540 346L560 330L586 348L570 356ZM960 376L980 360L1002 374L988 382ZM1860 356L1880 340L1904 356L1890 364ZM2322 384L2340 370L2362 382L2348 390Z"/>`;
     bg += `<path class="sw-hill-far" d="M0 600Q180 520 400 560T820 540T1240 570T1680 530T2100 565T2520 535T2800 555V1080H0Z"/>`;
     if (idx >= 3) bg += `<g class="sw-skyline"><rect x="1210" y="330" width="96" height="260"/><circle cx="1258" cy="376" r="26" fill="#fff8e8" opacity=".75"/><path d="M1198 330L1258 258L1318 330Z"/></g>`;
@@ -338,7 +379,7 @@
     }
     bg += `<path class="sw-hill-near" d="M0 650Q240 590 520 630T1080 610T1620 640T2180 612T2800 630V1080H0Z"/>`;
 
-    // Back row: older, smaller houses and trees behind the street.
+    // Backdrop: older, smaller houses and trees behind the street.
     let backRow = "";
     const backStyle = STYLES[VARIANTS[Math.max(0, idx - 1)]];
     for (let k = 0; k < backCount; k++) {
@@ -350,7 +391,7 @@
       backRow += `<g class="sw-clock">` + rect(1250, 300, 100, 410, "#e6dac4") + poly([[1238, 300], [1300, 218], [1362, 300]], STYLES.town.roof) + `<circle cx="1300" cy="360" r="30" fill="#fff8e8" stroke="${OUT}" stroke-opacity=".5" stroke-width="2"/><path d="M1300 360V338M1300 360H1318" stroke="${OUT}" stroke-width="3" stroke-linecap="round"/></g>`;
     }
 
-    // Main street: station, homes, plaza, market, stream and bridge, construction.
+    // Buildings: station, homes, plaza, market, construction.
     let mid = "";
     // Gondola station where the sky cable lands.
     mid += `<g class="sw-station">` + rect(160, base - 26, 290, 26, "#b98a5a") + `<path d="M184 ${base - 26}V${base - 190}M426 ${base - 26}V${base - 190}" stroke="#8a6848" stroke-width="9"/>`;
@@ -417,12 +458,11 @@
     for (const x of [130, 700, 1100, 1560, 2060, 2600]) mid += use("sw-lamp", x, base, 1);
     for (const [x, sc, id] of [[60, 1.2, "sw-tree"], [1850, 0.9, "sw-pine"], [2720, 1.25, "sw-tree"], [2780, 0.8, "sw-pine"]]) mid += use(id, x, base, sc);
 
-    // Ground: the street surface, the stream cut and the soil cross-section.
+    // Street: the road surface, the bridge over the stream and the soil cross-section.
     let ground = "";
     const roads = visual.roads || "trail";
     const surface = roads === "asphalt" ? "#7d8591" : roads === "glow" ? "#a9c3cf" : roads === "stone" ? "url(#sw-slab)" : roads === "cobble" ? "url(#sw-cobble)" : "#dcc7a0";
     const river = idx >= 2;
-    const cut = river ? `M1900 ${base}` : "";
     ground += `<path d="M0 ${base - 6}H${W}V${G.height}H0Z" fill="#8fbd78"/>`;
     ground += `<rect x="0" y="${base}" width="${W}" height="64" fill="${surface}"/>`;
     if (roads === "trail" || roads === "dirt") for (let k = 0; k < 60; k++) ground += `<ellipse cx="${r1(hash("peb" + k) * W)}" cy="${r1(base + 10 + hash("peby" + k) * 44)}" rx="${r1(3 + hash("pebr" + k) * 5)}" ry="2.5" fill="#bda27a" opacity=".7"/>`;
@@ -447,7 +487,6 @@
       ground += `<path d="M1870 ${base - 44}H2170M1870 ${base - 24}H2170" stroke="#8a6848" stroke-width="5"/><path d="M1878 ${base - 4}V${base - 52}M1950 ${base - 4}V${base - 48}M2020 ${base - 4}V${base - 48}M2090 ${base - 4}V${base - 48}M2162 ${base - 4}V${base - 52}" stroke="#8a6848" stroke-width="7" stroke-linecap="round"/>`;
       ground += `<path d="M1892 ${base + 44}q-10-26 0-40M2150 ${base + 44}q10-26 0-36" stroke="#6ea35a" stroke-width="3.5" fill="none"/>`;
     }
-    void cut;
 
     // Foreground: low, placed between residents so nobody is ever hidden.
     let fg = "";
@@ -455,18 +494,65 @@
     for (const x of [250, 1060, 1590, 2380]) fg += use("sw-flowers", x, base + 72, 1.1);
     fg += use("sw-bush", 20, base + 96, 1.5) + use("sw-bush", W - 30, base + 96, 1.6) + use("sw-fence", 2560, base + 70, 1);
 
+    // Effects: descriptors only; the page draws them in its own layer.
+    const effects = [];
+    if (idx < 3) effects.push({ kind: "flame", x: 1300, y: base - 24 });
+    if ((activity.event_flags || []).some((f) => f === "FIREWORKS" || f === "SMALL_FIREWORKS"))
+      for (let k = 0; k < 4; k++) effects.push({ kind: "firework", x: 900 + k * 260, y: 180 + (k % 2) * 90, color: ["#ffd35e", "#ff7fa8", "#7fd6c2", "#9db8f2"][k], delay: k * 0.6 });
     return {
-      layers: [
-        { name: "bg", depth: 0.35, z: 1, svg: svg("sw-city-bg", bg) },
-        { name: "back", depth: 0.7, z: 2, svg: svg("sw-city-back", backRow) },
-        { name: "main", depth: 1, z: 3, svg: svg("sw-city-main", mid + ground) },
-        { name: "front", depth: 1.18, z: 5, svg: svg("sw-city-front", fg) },
-      ],
+      layers: {
+        sky: svg("sw-city-sky", sky),
+        distant: svg("sw-city-distant", bg),
+        backdrop: svg("sw-city-backdrop", backRow),
+        buildings: svg("sw-city-buildings", mid),
+        street: svg("sw-city-street", ground),
+        foreground: svg("sw-city-foreground", fg),
+      },
+      effects,
       stats: { variant, front_houses: frontCount, back_houses: backCount, river, market: landmarks.has("MARKET") || idx >= 3, fountain: idx >= 3, construction: visual.construction || null, poster: Boolean(poster) },
     };
   }
 
-  const api = { GEOMETRY, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, facade, eraIndex };
+  function scene(state) {
+    const fill = (zone, painted) => LAYER_STACKS[zone].map((spec) => ({ ...spec, svg: spec.kind === "svg" ? painted[spec.name] : null }));
+    const top = island(state);
+    const town = city(state);
+    const people = cast(state);
+    const half = GEOMETRY.island.width / 2;
+    return {
+      cable_z: CABLE_Z,
+      sections: [
+        {
+          zone: "island",
+          anchor: "top",
+          height: GEOMETRY.island.height,
+          layers: fill("island", { sky: islandSky(), terrain: top.terrain, buildings: top.buildings }),
+          residents: people.island.map((c) => ({ character: c, x: c.spot + half, y: GEOMETRY.island.ground, spot: c.spot })),
+          effects: [{ kind: "beacon", x: half, y: 170 }],
+        },
+        {
+          zone: "descent",
+          anchor: "center",
+          height: GEOMETRY.descent.height,
+          layers: fill("descent", descent(state)),
+          residents: [],
+          effects: [{ kind: "balloon", x: half - 640, y: 520 }, ...[[-420, 260], [380, 520], [120, 1040]].map(([x, y], k) => ({ kind: "bird", x: half + x, y, delay: k * 0.4 }))],
+        },
+        {
+          zone: "city",
+          anchor: "bottom",
+          height: GEOMETRY.city.height,
+          street: { width: GEOMETRY.city.width },
+          layers: fill("city", town.layers),
+          residents: people.city.map((c) => ({ character: c, x: c.spot, y: GEOMETRY.city.feet, spot: c.spot })),
+          effects: town.effects,
+          stats: town.stats,
+        },
+      ],
+    };
+  }
+
+  const api = { GEOMETRY, LAYER_STACKS, CABLE_Z, scene, cast, nameOf, roleOf, sourceOf, defs, island, islandSky, descent, city, facade, eraIndex };
   root.RenguinSeamlessArt = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
