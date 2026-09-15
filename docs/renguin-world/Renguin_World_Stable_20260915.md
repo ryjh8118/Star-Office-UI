@@ -54,7 +54,30 @@ revert of its changes, keeping user data and other sessions' changes intact;
 never reset/force-push or delete the user store. Public-statistics snapshots
 must be interpreted by a compatible version (unknown counts are null).
 
-Stable tag planned: `renguin-world-stable-20260915`. The tag names the final
+Stable checkpoint reference: `renguin-world-stable-20260915`. The tag names the final
 accepted commit, not a promise that unavailable external data became available.
 
-Production/remote verification: pending final release execution.
+## Production acceptance — PASS
+
+Local master fast-forwarded safely from `4aef2c1` to release candidate `5593105`.
+The existing controller proved owned-process shutdown and restarted Production.
+Both foreign staged and unstaged diff hashes are identical before/after merge.
+
+At `http://127.0.0.1:19000/world`, browser regression passed 29/29 and live
+desktop/mobile acceptance passed 24/24, with screenshots inspected. Full tests
+were repeated on actual local master: Python 162/162 and Node 90/90. No console
+errors, overflow or broken scene images were observed. The 100-content city
+measured 2.2 ms/s main-thread cost in the regression sample; physical-phone/GPU
+profiling is not claimed.
+
+Production sync again returned 19/19 mapped videos, 16 complete counts, 3
+declared null counts and 1 unresolved identity. World remained 20 / 74 / 14 /
+ERA_03. Production presentation metadata and the member registry were byte-hash
+equivalent before/after the release. All 111 included character derivatives
+matched currently public authority sources and their recorded hashes; no private
+avatar derivatives were included.
+
+The final documentation-only commit and stable tag retain this tested code.
+Remote publication is verified by comparing local master with the existing user
+fork's master and the stable tag target; no force push is permitted. Local live
+screenshots and detailed receipts remain in `.qa-runtime/stable-*`, outside Git.
