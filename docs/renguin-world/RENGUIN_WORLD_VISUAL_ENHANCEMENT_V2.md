@@ -1,4 +1,10 @@
-# RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2 (planned, not started)
+# RENGUIN_WORLD_VISUAL_ENHANCEMENT_V2 (first pass delivered 2026-09-16)
+
+First pass: [Renguin_World_V2_Visual_20260916.md](Renguin_World_V2_Visual_20260916.md) —
+building density, light and shadow, building evolution, district identity, underground
+band, night lighting and style-safe townsfolk, inside the unchanged architecture
+(section D of `Renguin_World_Architecture.md`). Still open from the scope below: weather,
+particles, animated residents, sound hooks, a painted gossip style.
 
 A separate phase, after the world is structurally complete and alive. It
 upgrades how the world looks inside the architecture in
@@ -37,5 +43,5 @@ layer contract or seamless navigation, and it may never redraw a character.
 - The river harbour is one cross-section; boats are static and the pier is plain.
 - Spotlights, the gate glow and marquee bulbs are flat shapes, not light sources.
 - The crowd is deliberately faceless pawns (NEUTRAL_PLACEHOLDER); any richer crowd must
-  stay non-character.
+  stay non-character. (Done 2026-09-16: style-safe townsfolk.)
 - Gossip bubbles are HTML paper cards; a painted speech style would sit better in the scene.

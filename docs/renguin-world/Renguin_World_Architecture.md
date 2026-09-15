@@ -48,7 +48,7 @@ Renguin City:
 | `buildings` | 40 | street | 1 | station, homes, plaza, market, construction; hotspots |
 | `street` | 50 | street | 1 | road surface, bridge and stream, soil |
 | `foreground` | 60 | street | 1.18 | tufts, flowers, bushes, fence — below residents |
-| `residents` | 70 | street | 1 | authority character DOM; behind them the anonymous crowd (neutral pawns, never a likeness) |
+| `residents` | 70 | street | 1 | authority character DOM; behind them the anonymous crowd (style-safe townsfolk, never a likeness) |
 | `effects` | 80 | street | 1 | effect descriptors → compositor-only elements; residents' gossip bubbles |
 
 The sky cable is `CABLE_Z = 55`: above street buildings and the cloud sea, below
@@ -100,6 +100,46 @@ clouds-far, clouds-mid, effects, cloud-sea, clouds-near`.
   the city if needed and pans the street scroller. The browser check walks every
   district this way and asserts the same URL and history.
 
+## D. Buildings, light and growth (`frontend/world/seamless-buildings.js`)
+
+Added by the V2 visual upgrade (2026-09-16). It paints inside the layer contract above;
+the composition rule, the stacks, the mount and navigation are unchanged.
+
+- **One lit kit for the whole street.** The main street and every district draw their
+  buildings with `house()`: light from the upper left, a contact shadow thrown right, a
+  darker side return, the era's wall material (patterns), eave shadow and ground
+  occlusion, recessed windows (`<use>` symbols), a framed door, and a roof with a lit and
+  a shaded plane. Awnings cast a shadow; chimneys, balconies, dormers, turrets and roof
+  gardens are parts.
+- **Rows give depth and density.** Each stretch has three rows: the street front
+  (`buildings`, scale 1), a set-back row behind it (`buildings`, scale 0.8, lifted, light
+  haze) and a hazy skyline (`backdrop`, scale 0.62, depth 0.7). Lots sit a few units apart,
+  so a grown street reads as blocks; the main street keeps its plaza open to a landmark.
+- **Evolution.** `grade(state)` is three steps per era (0 … 23) from the era and its
+  progress. A lot has the grade it first stands at (`since`); its level is how far the
+  world has grown past that, and the level adds width, a storey and parts. So when the
+  world grows the buildings already standing upgrade, the era rebuilds every lot in its
+  own material at once, and nothing is taken away. The engine's building count still
+  decides how many lots are filled. The main street's plaza landmark is a different
+  building per era (gathering tent, great hut, timber hall, clock tower, castle keep, TV
+  tower, sky spire) and gains wings within its era; districts upgrade their own
+  buildings (studio roof and mast, lighthouse gallery, hall columns and fly tower,
+  hatchery egg tower and crown, Ferris wheel lights). `stats.evolution` lists every lot.
+- **District identity.** Each district leans its walls and roofs toward its own palette,
+  more so in later eras, and keeps its own props; a closed district shows the faint
+  skyline it will become behind its fence.
+- **Ground.** The shared ground adds a curb, an era retaining wall and an underground
+  band that is rebuilt each era: root cellar and mine gallery, brick vaults, a subway,
+  a glass tube. Lamps throw light pools on the road.
+- **Day and night.** Windows carry a halo and lit glass whose opacity comes from
+  `--swb-lit` / `--swb-halo`, set per daypart in CSS, so the SVG never changes. At night
+  the painted city layers dim (`filter`), lit windows, lamp pools, bulbs and lanterns
+  stay warm, and the fixed night tint is lighter than before.
+- **Detail follows distance.** The street front gets every part; the set-back row uses a
+  lighter window and drops small parts; the skyline paints each window as one shape
+  (a `<use>` window is a dozen nodes in its shadow tree). Quoins and floor bands are one
+  path per building.
+
 ## Motion budget
 
 - No timers. Gossip bubbles advance on their own CSS animation's `animationiteration`,
@@ -109,8 +149,8 @@ clouds-far, clouds-mid, effects, cloud-sea, clouds-near`.
 - Chrome decides at animation start whether it can run on the compositor, and it
   refuses an element it judges invisible (`kAnimationHasNoVisibleChange`), which then
   ticks on the main thread forever. So a resident starts moving only after its image
-  has loaded (`is-ready`), and animated elements paint their own box (pawn bodies,
-  bird wings as the animated pseudo-elements).
+  has loaded (`is-ready`), and animated elements paint their own box (a townsperson's
+  sprite is the pawn's own background, bird wings are the animated pseudo-elements).
 
 ## Extending the world
 

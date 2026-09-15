@@ -8,6 +8,7 @@ const Cam = require("../frontend/world/world-camera.js");
 const Compose = require("../frontend/world/world-composition.js");
 
 const Districts = require("../frontend/world/seamless-districts.js");
+const Buildings = require("../frontend/world/seamless-buildings.js");
 
 const read = (...parts) => fs.readFileSync(path.join(__dirname, "..", ...parts), "utf8");
 const DISTRICT_NAMES = { MAIN_CITY: "主城區", CREATOR_DISTRICT: "創作者街區", TRAVEL_DISTRICT: "旅行港區", VIDEO_HALL: "影片大廳", MEMBER_DISTRICT: "鵝寶會員區", ENTERTAINMENT_DISTRICT: "娛樂夜市區", FUTURE_GATE: "星港之門" };
@@ -191,8 +192,8 @@ test("the slice is its own page: V1 keeps its route, bundle and budget", () => {
   const routes = read("backend/renguin_world/routes.py");
   assert.ok(routes.includes("@bp.get('/world')") && routes.includes("@bp.get('/world/seamless')"));
   const shell = read("frontend/world/seamless.html");
-  for (const f of ["world-scene.js", "world-camera.js", "world-composition.js", "seamless-art.js", "seamless-districts.js", "seamless-app.js", "seamless.css"]) assert.ok(shell.includes(`/static/world/${f}?v={{WORLD_VERSION}}`), f);
-  assert.ok(shell.indexOf("seamless-art.js") < shell.indexOf("seamless-districts.js") && shell.indexOf("seamless-districts.js") < shell.indexOf("seamless-app.js"), "districts load after the art kit and before the page");
+  for (const f of ["world-scene.js", "world-camera.js", "world-composition.js", "seamless-art.js", "seamless-buildings.js", "seamless-districts.js", "seamless-app.js", "seamless.css"]) assert.ok(shell.includes(`/static/world/${f}?v={{WORLD_VERSION}}`), f);
+  assert.ok(shell.indexOf("seamless-art.js") < shell.indexOf("seamless-buildings.js") && shell.indexOf("seamless-buildings.js") < shell.indexOf("seamless-districts.js") && shell.indexOf("seamless-districts.js") < shell.indexOf("seamless-app.js"), "the building kit and districts load after the art kit and before the page");
   assert.ok(shell.includes('href="/world"'), "V1 stays one click away for comparison");
   const v1 = read("frontend/world/index.html");
   assert.ok(!/seamless/.test(v1), "V1 does not load the slice");
@@ -335,4 +336,97 @@ test("V1 parity lives in the drawer and the street, without timers and without w
   const figure = app.slice(app.indexOf("function rosterFigure("), app.indexOf("async function loadRoster("));
   assert.ok(/public_visibility === true/.test(roster) && /"CANONICAL_CHARACTER", "PROFESSION_CHARACTER"/.test(roster) && /Art\.nameOf/.test(figure), "the roster shows only public, resolved characters, profession residents by profession");
   assert.ok(/refresh=1/.test(app) && /const unmount = \(\) =>/.test(app) && /unmount\(\);\s*const world/.test(app), "a refresh rebuilds the world after releasing the old one");
+});
+
+// ---------- V2 visual world: density, light, evolution, townsfolk ----------
+const grown = (variant, progress, over = {}) => state(variant, { era_progress: progress, visual: { ...state().visual, era_variant: variant, buildings: 20, building_height: 2, roads: "stone", ...over } });
+
+test("V2 density: a grown main street stands as blocks, not one house on an empty lot", () => {
+  const city = Art.city(grown("riverside", 0.66, { buildings: 12, building_height: 1 }));
+  const lots = city.stats.evolution;
+  assert.ok(city.stats.front_houses >= 5 && city.stats.back_houses >= 12, `front ${city.stats.front_houses}, behind ${city.stats.back_houses}`);
+  // Along the street no stretch without a building in any row is wider than a third of a screen, apart from the plaza.
+  const spans = lots.map((l) => [l.x, l.x + l.width]).sort((a, b) => a[0] - b[0]);
+  let reach = spans[0][1];
+  const gaps = [];
+  for (const [a, b] of spans.slice(1)) {
+    if (a > reach) gaps.push([reach, a]);
+    reach = Math.max(reach, b);
+  }
+  assert.ok(gaps.every(([a, b]) => b - a < 480 || (a >= 1000 && b <= 1600)), `gaps ${JSON.stringify(gaps)}`);
+  assert.ok(city.layers.backdrop.includes('class="sw-landmark"'), "a landmark rises behind the plaza");
+});
+
+test("V2 light and depth: every building has a contact shadow, a shaded return, recessed windows and a lit roof plane", () => {
+  const svg = Buildings.house({ x: 0, base: 740, w: 200, floors: 2, kind: "house", lvl: 5, parts: ["flowers", "chimney", "balcony", "dormer"], seed: "t", lit: true, wall: "#e0967a", roof: "#bb4d42", trim: "#fff1d6", stone: "#b8ab98", mat: "brick", shop: "#e07d4f" });
+  for (const part of ["url(#swb-contact)", "url(#swb-ao)", "url(#swb-lightwall)", "url(#swb-brick)", "url(#swb-sheen)", 'href="#swb-win-arch"', "sw-awning", 'href="#swb-chimney"', 'href="#swb-balcony"']) assert.ok(svg.includes(part), part);
+  const defs = Buildings.defs();
+  assert.ok(/id="swb-win"[\s\S]*var\(--swb-halo,0\)[\s\S]*var\(--swb-lit,0\)/.test(defs), "windows carry a halo and lit glass that the daypart switches on");
+  // The hazy skyline keeps each window to one shape, so a grown street stays light for the browser.
+  const far = Buildings.row([{ x: 0, w: 200, since: 0 }], { base: 740, g: 12, variant: "kingdom", district: "MAIN_CITY", lit: true, rowId: "s", haze: 0.32, scale: 0.62 }).svg;
+  assert.ok(!far.includes('<use href="#swb-win') && far.includes("swb-farwin"));
+  const css = read("frontend/world/seamless.css");
+  assert.ok(/data-daypart="night"\][^{]*\.swb-w\.is-lit \{[^}]*--swb-halo: 1/.test(css) && /\.swb-pool/.test(css), "night lights the windows and the lamp pools");
+});
+
+test("V2 evolution: when the world grows, the buildings already standing upgrade with it", () => {
+  const at = (variant, progress) => Object.fromEntries(Art.city(grown(variant, progress)).stats.evolution.map((l) => [l.id, l]));
+  const early = at("town", 0),
+    later = at("town", 0.9),
+    kingdom = at("kingdom", 0.9);
+  const standing = Object.keys(early);
+  assert.ok(standing.length >= 10, `${standing.length} lots`);
+  for (const id of standing) {
+    assert.ok(later[id] && later[id].lvl > early[id].lvl, `${id} levels up within the era`);
+    assert.ok(later[id].floors >= early[id].floors && later[id].width >= early[id].width && later[id].parts >= early[id].parts, `${id} never shrinks`);
+    assert.ok(kingdom[id].lvl > later[id].lvl && kingdom[id].width >= later[id].width, `${id} keeps growing into the next era`);
+  }
+  assert.ok(standing.some((id) => later[id].floors > early[id].floors || later[id].parts > early[id].parts), "someone gains a storey or new parts");
+  assert.ok(Object.keys(later).length >= standing.length, "nothing is taken away");
+  // The era rebuilds the same lots in its own material, and the plaza landmark is a new building each era.
+  const kinds = (variant) => new Set(Art.city(grown(variant, 0.5)).stats.evolution.map((l) => l.kind));
+  assert.ok(kinds("riverside").has("cabin") && kinds("town").has("house") && kinds("kingdom").has("manor") && kinds("starport").has("spire"));
+  const hall = (variant, p = 0.5) => Art.city(grown(variant, p)).layers.backdrop.match(/class="sw-landmark" data-era="(\w+)" data-step="(\d)"/);
+  assert.deepEqual(["camp", "riverside", "town", "kingdom", "modern", "starport"].map((v) => hall(v)[1]), ["camp", "riverside", "town", "kingdom", "modern", "starport"]);
+  assert.ok(+hall("town", 0)[2] < +hall("town", 0.9)[2], "the landmark gains wings within its era");
+  // Districts grow the same way: each open district is a block of its own, and it keeps adding lots.
+  const lots = (p) => Districts.paint({ ...grown("town", p), districts: districtRows("UNLOCKED") }).find((d) => d.id === "CREATOR_DISTRICT").stats.lots;
+  assert.ok(lots(0) >= 10 && lots(0.9) >= lots(0), `creator district ${lots(0)} → ${lots(0.9)} lots`);
+});
+
+test("V2 townsfolk: the crowd wears its role, never a character, and closed lots preview their district", () => {
+  const busy = state("riverside", { residents: { visible: 12, render_cap: { desktop: 28, mobile: 14 }, archetypes: [{ civilian_id: "CIVILIAN_TRAVELER", profession: "TRAVELER", district: "TRAVEL_DISTRICT", resolution: "NEUTRAL_PLACEHOLDER" }, { civilian_id: "CIVILIAN_NURSE", profession: "NURSE", district: "MAIN_CITY", resolution: "PROFESSION_CHARACTER", character_ref: "MEMBER_AVATAR_AAA" }] }, activity: { lights_level: 88, event_flags: [], crowd_density: "BUSY" }, districts: districtRows({ TRAVEL_DISTRICT: "UNLOCKED" }) });
+  const crowd = Districts.crowd(busy, Districts.layout(busy), 28);
+  assert.equal(crowd.length, 12);
+  assert.ok(crowd.every((p) => ["VILLAGER", "TRAVELER", "VENDOR", "FESTIVAL", "CITIZEN"].includes(p.role) && Number.isInteger(p.tone)), "every walker has a generic role and a palette");
+  for (const role of ["VILLAGER", "TRAVELER", "VENDOR", "FESTIVAL", "CITIZEN"]) {
+    const sprite = Buildings.townsfolk(role, 3);
+    assert.ok(sprite.startsWith("<svg") && !/<image|href=|MEMBER_AVATAR|character/i.test(sprite), `${role} is drawn from shapes only`);
+  }
+  const lot = Districts.paint(state("riverside", { districts: districtRows({ VIDEO_HALL: "LOCKED" }) })).find((d) => d.id === "VIDEO_HALL");
+  assert.ok(lot.stats.preview_lots >= 3 && lot.layers.backdrop.includes("sw-blueprint"), "a closed lot shows the faint skyline it will become");
+  const css = read("frontend/world/seamless.css");
+  assert.ok(/\.sw-pawn \{[^}]*background: var\(--folk\)/.test(css) && !/\.sw-pawn \{[^}]*border:/.test(css), "the pawn is a painted townsperson, not a grey outline");
+});
+
+test("Camera depth: light, air and near fronds frame the street without covering a resident", () => {
+  const s = grown("kingdom", 0.5);
+  const city = Art.city(s);
+  // Fronds grow only away from every resident spot, on the main street and in each district.
+  const fronds = (svg) => [...svg.matchAll(/class="swp-near[^"]*" d="M([\d.]+) /g)].map((m) => +m[1]);
+  const main = fronds(city.layers.foreground);
+  assert.ok(main.length >= 1, "the main street has near fronds");
+  for (const x of main) assert.ok(Art.GEOMETRY.city.spots.every((sx) => Math.abs(sx - (x + 62)) > 100), `frond at ${x} stands clear of the spots`);
+  for (const d of Districts.paint(s)) for (const x of fronds(d.layers.foreground)) assert.ok((d.spots || []).every((sx) => Math.abs(sx - (x + 62)) > 100), `${d.id} frond at ${x}`);
+  // Farther rows sit in more air; the hero landmark is backlit.
+  const veil = (svg) => [...svg.matchAll(/class="swp-mist"[^>]*height="(\d+)"[^>]*opacity="([\d.]+)"/g)].map((m) => [+m[1], +m[2]]);
+  const [sky] = veil(city.layers.backdrop);
+  const [back] = veil(city.layers.buildings);
+  assert.ok(sky && back && sky[0] > back[0] && sky[1] > back[1], "the skyline is hazier than the set-back row");
+  assert.ok(city.layers.backdrop.includes('class="swp-hero"'), "the main street's landmark is backlit");
+  // The light wash sits between the painted layers and the residents, so official characters stay clean.
+  const css = read("frontend/world/seamless.css");
+  const z = +css.match(/\.sw-city::after,\s*\.sw-island::after \{[^}]*z-index: (\d+)/)[1];
+  const stack = Object.fromEntries(Art.LAYER_STACKS.city.map((l) => [l.name, l.z]));
+  assert.ok(z > stack.foreground && z < stack.residents, `light wash z ${z}`);
 });
