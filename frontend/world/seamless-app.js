@@ -108,6 +108,7 @@
     districtEls: new Map(),
     cable: null,
     gondola: null,
+    host: null,
     wheels: null,
     talks: [],
     roster: null,
@@ -466,6 +467,13 @@
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2 + window.scrollX, y: r.top + r.height / 2 + window.scrollY };
   };
+  // The cable and its gondola are absolutely placed inside the world stage, but the
+  // wheels they hang between are measured against the page. Standalone the stage
+  // starts at the page's origin and the two agree; embedded, the Office is above it.
+  const hostOrigin = () => {
+    const r = $("sw-world").getBoundingClientRect();
+    return { x: r.left + window.scrollX, y: r.top + window.scrollY };
+  };
 
   // Districts within 60% of a screen of the street's view are worked; the rest are skipped by the browser.
   function cullStreet() {
@@ -547,21 +555,24 @@
     const a = pageRect(W.wheels[0]),
       b = pageRect(W.wheels[1]);
     W.cableEnds = { a, b };
+    W.host = hostOrigin();
     const dx = b.x - a.x,
       dy = b.y - a.y;
-    W.cable.style.left = a.x.toFixed(1) + "px";
-    W.cable.style.top = a.y.toFixed(1) + "px";
+    W.cable.style.left = (a.x - W.host.x).toFixed(1) + "px";
+    W.cable.style.top = (a.y - W.host.y).toFixed(1) + "px";
     W.cable.style.width = Math.hypot(dx, dy).toFixed(1) + "px";
     W.cable.style.transform = `rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
     placeGondola();
   }
 
   function placeGondola() {
-    if (!W.cableEnds) return;
+    if (!W.cableEnds || !W.host) return;
     const { a, b } = W.cableEnds;
+    // How far down the cable the middle of the screen has travelled, on the page's
+    // scale; where to draw it, on the stage's.
     const t = Cam.clamp((window.scrollY + window.innerHeight * 0.5 - a.y) / (b.y - a.y), 0, 1);
-    const x = Cam.lerp(a.x, b.x, t),
-      y = Cam.lerp(a.y, b.y, t);
+    const x = Cam.lerp(a.x, b.x, t) - W.host.x,
+      y = Cam.lerp(a.y, b.y, t) - W.host.y;
     move(W.gondola, `translate3d(${x.toFixed(0)}px, ${y.toFixed(0)}px, 0) scale(${W.ws})`);
     const docked = t >= 1 ? "city" : t <= 0 ? "island" : "moving";
     if (W.gondola.dataset.docked !== docked) W.gondola.dataset.docked = docked;
@@ -1068,7 +1079,10 @@
     if (!W.paused || !W.running) return;
     W.paused = false;
     $("sw-app").classList.remove("sw-paused");
-    // Scroll went unwatched while paused: put every layer where it belongs now.
+    // Scroll went unwatched while paused, and embedded the Office above may have
+    // grown or shrunk in the meantime: measure the cable again and put every layer
+    // where it belongs now.
+    placeCable();
     W.scroll?.();
   }
 
@@ -1142,7 +1156,7 @@
     if ($("sw-drawer")) delete $("sw-drawer").dataset.built;
     W.sections = [];
     W.layers = [];
-    W.street = W.plan = W.cable = W.gondola = W.wheels = W.cableEnds = W.comp = null;
+    W.street = W.plan = W.cable = W.gondola = W.wheels = W.cableEnds = W.host = W.comp = null;
     W.state = null;
     W.roster = null;
   }

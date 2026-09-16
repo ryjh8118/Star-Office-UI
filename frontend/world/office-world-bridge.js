@@ -15,6 +15,11 @@
 (() => {
   "use strict";
 
+  // ?world=off leaves the desk exactly as it was before this file existed: no band,
+  // no root, nothing appended. It is how the cost of the way down is measured
+  // against the same page without it, and how it is turned off if it ever misbehaves.
+  if (new URLSearchParams(location.search).get("world") === "off") return;
+
   const current = document.currentScript;
   const VERSION = (current && current.dataset.worldVersion) || "";
   const q = VERSION ? "?v=" + encodeURIComponent(VERSION) : "";
@@ -145,8 +150,8 @@
 
   // ------------------------------------------------------------------ booting
   let booted = false;
-  let active = null;
-  let chrome = null;
+  let running = null;
+  let showing = null;
 
   const sheet = (href) =>
     new Promise((resolve, reject) => {
@@ -182,14 +187,14 @@
       window.RenguinSeamlessWorld.start();
       watch();
     } catch (error) {
-      // An unreachable world is a band of sky and a link, never a broken desk.
-      booting.remove();
+      // An unreachable world is a band of sky and a way to reach it, never a broken
+      // desk and never invented scenery standing in for the real one.
       app.dataset.status = "error";
+      for (const gone of app.querySelectorAll(":scope > :not(.ow-gate)")) gone.remove();
       const box = el("div", "ow-booting");
-      const link = el("a", "ow-gate-hint", { href: "/world/seamless", textContent: "Renguin World 暫時無法在這裡載入，開啟世界頁 →" });
       box.style.display = "grid";
       box.style.placeContent = "center";
-      box.append(link);
+      box.append(el("a", "ow-gate-hint", { href: "/world/seamless", textContent: "Renguin World 暫時無法在這裡載入，開啟世界頁 →" }));
       app.append(box);
       console.warn("[renguin-world] embed boot failed:", error);
     }
@@ -221,14 +226,17 @@
     // the world is reached, so its layers are already where they belong when the
     // first of it appears; its chrome waits until the world actually holds the
     // screen, so no HUD floats over the desk on the way down.
-    active = new IntersectionObserver(
+    running = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) (e.isIntersecting ? world.resume : world.pause)();
+        for (const e of entries) {
+          if (e.isIntersecting) world.resume();
+          else world.pause();
+        }
       },
       { rootMargin: "40% 0px 40% 0px" },
     );
-    active.observe(stage);
-    chrome = new IntersectionObserver(
+    running.observe(stage);
+    showing = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           const on = e.isIntersecting;
@@ -243,7 +251,7 @@
       // count as "here" from the moment its first pixel appeared.
       { rootMargin: "0px 0px -80% 0px" },
     );
-    chrome.observe(stage);
+    showing.observe(stage);
   }
 
   // The desk's body is a padded, centred column. The world is the ground under it,
