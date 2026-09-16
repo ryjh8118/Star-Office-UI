@@ -34,14 +34,20 @@
      --sky-1 are defined on .sw-app and these fall out of use. */
   --ow-sky-0: #95c6e8;
   --ow-sky-1: #cae4f2;
+  --ow-key: #fff3cf;
+  --ow-key-a: 0.22;
 }
 .ow-embed[data-daypart="dusk"] {
   --ow-sky-0: #eea487;
   --ow-sky-1: #f8cdb0;
+  --ow-key: #ffc98f;
+  --ow-key-a: 0.3;
 }
 .ow-embed[data-daypart="night"] {
   --ow-sky-0: #161b46;
   --ow-sky-1: #2a3468;
+  --ow-key: #9fb2ff;
+  --ow-key-a: 0.18;
 }
 
 .ow-gate {
@@ -64,6 +70,24 @@
   background: var(--sky-0, var(--ow-sky-0));
   -webkit-mask-image: linear-gradient(#0000, #000 68%);
   mask-image: linear-gradient(#0000, #000 68%);
+}
+
+/* The world lights everything from one warm key in the upper left, and the island
+   below begins lit. If the band did not carry the same light the reader would see
+   it switch on: a bright line straight across the sky at the section's edge. So the
+   light reaches full strength at the band's own bottom corner and fades upward into
+   the Office's sky, and the two sides of the seam meet at the same colour. */
+.ow-gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    132% 150% at 10% 100%,
+    color-mix(in srgb, var(--key, var(--ow-key)) calc(var(--key-a, var(--ow-key-a)) * 100%), transparent),
+    transparent 60%
+  );
 }
 
 /* Two cloud bands drifting apart, so the descent starts before the world does.
