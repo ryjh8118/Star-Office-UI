@@ -127,6 +127,48 @@ in the world is animating and its scroll work returns immediately.
 the boundary until the desk's own scroll started carrying on into it; the check
 now names the two files it may load and refuses a mounted world on the desk.
 
-## Still to do
+## Production — 19000, 2026-09-16, merge `a5357b0`
 
-Production acceptance of the way down, in a real browser on 19000, after the merge.
+Merged `commit-tree` + `--ff-only`; the canonical checkout's foreign staged work
+(`renguin-star-office-extension.js`, `renguin-star-office-v2.js`, and one line
+each in `app.py` and `index.html`) was backed up, parked and restored byte for
+byte — `git status --short` is identical to how it was found. Restarted through
+the Content OS controller (`STOP_STAR_OFFICE_UI.ps1` then
+`START_STAR_OFFICE_UI.ps1`) with all four `RENGUIN_*` set; one runtime, owner
+11272.
+
+`node tests/visual/office-world-seamless-check.cjs http://127.0.0.1:19000` —
+**39/39**, on the user's real data, console errors 0.
+
+| | |
+| --- | --- |
+| `/api/renguin/projects` | 200, STALE, `error: null`, 400 projects, 1679 events |
+| `/api/creator/event-statuses` | 200, 1693 events |
+| `/api/world/state` | 200, LIVE, ERA_03 河畔聚落 (65.8%), 21 contents, 3/7 districts open, 11 characters |
+| `/api/renguin/operations` | 200, `native_coverage` non-null, 81 observations |
+| the desk | 34 製作中 / 18 完成 / 8 短影音製作 / 3 短影音完成, four member cards live |
+| the seam | worst step 4/255, entering 3, leaving 3 |
+| the band | 7 nodes, 440 bytes |
+| frames | 120 idle and 118 scrolling, with the way down and without — identical |
+| style work | idle −0.4%, scrolling −0.1% |
+| wall-clock | idle +5.1%, scrolling +7.6% |
+| desktop / phone | both reach the city on one scroll, no horizontal overflow |
+
+Regression on Production: V1 `world-check` 28/28, standalone
+`world-seamless-check` 64/64, `world-parity-check` 77/77.
+
+One check was wrong and was fixed rather than waived: it claimed "the band is a
+handful of nodes" by subtracting two pages' total node counts, which differed by
+−308, −64 and +270 across runs of identical code because the desk's own cards
+arrive when they arrive. The band is counted where it is now.
+
+## Not part of this work
+
+The Content OS progress ledger was carrying 875 `ACTIVE_JOB_EVENT_V1` lease
+events written by `11_Workflow_Governance/03_Runtime/agent_job_registry.py`
+between 2026-09-15 23:28 and 2026-09-16 00:54. The Office validates every ledger
+line against `OS_PROGRESS_LEDGER_ENTRY.schema.json`, so the first foreign line
+aborted the whole projection and the desk answered `SYNC_ERROR` with no projects
+at all. The lines were backed up and removed (all seven jobs terminal, every
+lease expired, every owner process gone) and the projection came back. That is
+the symptom; the writer is still there and belongs to Content OS.
