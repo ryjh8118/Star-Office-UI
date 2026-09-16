@@ -1,0 +1,205 @@
+/* The way down from the Office's sky island into Renguin World.
+ *
+ * This is the only part of the world the Office pays for on first load: one
+ * masked band of sky and two cloud layers, no images and no script. Everything
+ * else — the world's stylesheet, art and engine — arrives only when the reader
+ * scrolls near it (office-world-bridge.js).
+ *
+ * The band ends on the world's own --sky-0, so when seamless.css does arrive
+ * the island section continues the same colour with no seam. Until then the
+ * fallbacks in var() paint the daytime sky, which is what the band reads as.
+ */
+
+/* The world's region of the Office page: above the Office's fixed scenery
+   (#co-env sits at z-index -1), below every panel the Office puts on top. */
+.ow-embed {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  /* The desk lays its body out as a centred column; the world is not one of its
+     cards, it is the ground under them, so it takes the whole width and keeps
+     every pixel of its own height. */
+  align-self: stretch;
+  flex: none;
+  /* Out past the desk's own padding, so sky and city reach the window's edges.
+     office-world-bridge.js measures it; 0 until it has. */
+  margin-left: calc(var(--ow-gutter-x, 0px) * -1);
+  margin-right: calc(var(--ow-gutter-r, 0px) * -1);
+  margin-bottom: calc(var(--ow-gutter-b, 0px) * -1);
+  width: calc(100% + var(--ow-gutter-x, 0px) + var(--ow-gutter-r, 0px));
+  /* The world measures itself in world units; nothing of it may widen the desk. */
+  overflow-x: clip;
+  /* The band's own copy of the world's first two sky stops, so it is already the
+     right time of day before seamless.css arrives. Once it does, --sky-0 and
+     --sky-1 are defined on .sw-app and these fall out of use. */
+  --ow-sky-0: #95c6e8;
+  --ow-sky-1: #cae4f2;
+  --ow-key: #fff3cf;
+  --ow-key-a: 0.22;
+}
+.ow-embed[data-daypart="dusk"] {
+  --ow-sky-0: #eea487;
+  --ow-sky-1: #f8cdb0;
+  --ow-key: #ffc98f;
+  --ow-key-a: 0.3;
+}
+.ow-embed[data-daypart="night"] {
+  --ow-sky-0: #161b46;
+  --ow-sky-1: #2a3468;
+  --ow-key: #9fb2ff;
+  --ow-key-a: 0.18;
+}
+
+.ow-gate {
+  position: relative;
+  height: clamp(380px, 62vh, 720px);
+  overflow: clip;
+  /* Room for the hint above the island's own sky. */
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  padding-bottom: 28px;
+}
+
+/* The Office's sky dissolves into the world's: one masked band, never an edge. */
+.ow-gate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--sky-0, var(--ow-sky-0));
+  -webkit-mask-image: linear-gradient(#0000, #000 68%);
+  mask-image: linear-gradient(#0000, #000 68%);
+}
+
+/* The world lights everything from one warm key in the upper left, and the island
+   below begins lit. If the band did not carry the same light the reader would see
+   it switch on: a bright line straight across the sky at the section's edge. So the
+   light reaches full strength at the band's own bottom corner and fades upward into
+   the Office's sky, and the two sides of the seam meet at the same colour. */
+.ow-gate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    132% 150% at 10% 100%,
+    color-mix(in srgb, var(--key, var(--ow-key)) calc(var(--key-a, var(--ow-key-a)) * 100%), transparent),
+    transparent 60%
+  );
+}
+
+/* Two cloud bands drifting apart, so the descent starts before the world does.
+ * Both are still until the band is on screen: Chrome cannot composite an
+ * animation it judges invisible, so one left running off-screen would tick on
+ * the Office's main thread for the whole session. */
+.ow-gate-clouds {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  z-index: 1;
+  pointer-events: none;
+  background-repeat: repeat-x;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.ow-gate[data-onscreen] .ow-gate-clouds {
+  opacity: 1;
+  will-change: transform;
+}
+.ow-gate-clouds.is-far {
+  top: 34%;
+  height: 120px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='120'%3E%3Cg fill='%23ffffff' fill-opacity='.62'%3E%3Cellipse cx='96' cy='74' rx='96' ry='32'/%3E%3Cellipse cx='150' cy='58' rx='58' ry='34'/%3E%3Cellipse cx='340' cy='84' rx='110' ry='28'/%3E%3Cellipse cx='392' cy='68' rx='52' ry='30'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 520px 120px;
+}
+.ow-gate-clouds.is-near {
+  top: 58%;
+  height: 170px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='680' height='170'%3E%3Cg fill='%23fffdf8'%3E%3Cellipse cx='150' cy='118' rx='150' ry='46'/%3E%3Cellipse cx='214' cy='92' rx='84' ry='48'/%3E%3Cellipse cx='500' cy='128' rx='168' ry='42'/%3E%3Cellipse cx='568' cy='104' rx='78' ry='44'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 680px 170px;
+}
+.ow-gate[data-onscreen] .ow-gate-clouds.is-far {
+  animation: ow-gate-drift 78s linear infinite;
+}
+.ow-gate[data-onscreen] .ow-gate-clouds.is-near {
+  animation: ow-gate-drift 46s linear infinite reverse;
+}
+@keyframes ow-gate-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-680px, 0, 0);
+  }
+}
+
+/* An affordance, not a page switch: it scrolls the same page the wheel does. */
+.ow-gate-hint {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 1px solid #ffffff8c;
+  background: #fffaf0d1;
+  color: #2f2a44;
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.ow-gate[data-onscreen] .ow-gate-hint {
+  opacity: 1;
+}
+.ow-gate-hint:hover {
+  background: #fff3dc;
+}
+.ow-gate-hint i {
+  font-style: normal;
+}
+.ow-gate[data-onscreen] .ow-gate-hint i {
+  animation: ow-gate-nudge 2.4s ease-in-out infinite;
+}
+.ow-gate[data-onscreen] .ow-gate-hint:focus-visible {
+  outline: 3px solid #688a89;
+  outline-offset: 3px;
+}
+@keyframes ow-gate-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* The world's shell before its own stylesheet lands: a strip of the same sky,
+   so the page never grows a white or unstyled gap while the engine loads. */
+.ow-embed .ow-booting {
+  min-height: 60vh;
+  background: linear-gradient(var(--sky-0, var(--ow-sky-0)), var(--sky-1, var(--ow-sky-1)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ow-gate-clouds,
+  .ow-gate-hint i {
+    animation: none !important;
+  }
+}
+
+/* The hint is scenery until the band is on screen: nothing invisible takes focus. */
+.ow-gate:not([data-onscreen]) .ow-gate-hint {
+  visibility: hidden;
+}
+
+/* While the world holds the viewport it covers the Office completely, and the
+   Office's own fixed scenery is cost with nothing to show for it. */
+html[data-ow-world] #co-env {
+  visibility: hidden;
+}

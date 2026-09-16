@@ -14,6 +14,12 @@
   const Districts = window.RenguinSeamlessDistricts;
   const Cam = window.RenguinWorldCamera;
   const Compose = window.RenguinWorldComposition;
+  // The Office embeds this same world at the bottom of its own page so one scroll
+  // carries the reader from the desk down into the city. Embedded, the world is a
+  // region of a longer document rather than the document itself: it never moves the
+  // page's scroll, and the way back to the Office is a scroll, not a navigation.
+  // office-world-bridge.js sets this before loading this file.
+  const EMBED = window.RenguinSeamlessEmbed || null;
   const $ = (id) => document.getElementById(id);
   const G = Art.GEOMETRY;
   const TIMES = ["auto", "day", "dusk", "night"];
@@ -102,6 +108,7 @@
     districtEls: new Map(),
     cable: null,
     gondola: null,
+    host: null,
     wheels: null,
     talks: [],
     roster: null,
@@ -359,7 +366,13 @@
       }
       if (spec.zone === "island") {
         const office = hotspot("a", "sw-office-link", "進入 Star Office", "進入 Star Office", [G.island.office[0] + half, ...G.island.office.slice(1)]);
-        office.href = "/";
+        // Embedded, the Office is up the same page: going back is a scroll, never a load.
+        office.href = EMBED ? "#" : "/";
+        if (EMBED)
+          office.addEventListener("click", (event) => {
+            event.preventDefault();
+            EMBED.toOffice();
+          });
         byName.buildings.append(office);
         const wheel = node("i", undefined, "sw-wheel");
         wheel.style.cssText = `--x:${G.island.wheel[0] + half};--y:${G.island.wheel[1]}`;
@@ -454,6 +467,13 @@
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2 + window.scrollX, y: r.top + r.height / 2 + window.scrollY };
   };
+  // The cable and its gondola are absolutely placed inside the world stage, but the
+  // wheels they hang between are measured against the page. Standalone the stage
+  // starts at the page's origin and the two agree; embedded, the Office is above it.
+  const hostOrigin = () => {
+    const r = $("sw-world").getBoundingClientRect();
+    return { x: r.left + window.scrollX, y: r.top + window.scrollY };
+  };
 
   // Districts within 60% of a screen of the street's view are worked; the rest are skipped by the browser.
   function cullStreet() {
@@ -483,11 +503,17 @@
   //   section layer          lags vertically by depth; in a street section it also lags sideways
   //   street layer           slides sideways by depth, anchored at the start of its own district
   function onScroll() {
-    if (!W.running) return;
+    // Paused means the world is off screen (embedded, the reader is up in the Office)
+    // or the tab is hidden. Either way nothing it would compute can be seen.
+    if (!W.running || W.paused) return;
     const y = window.scrollY,
       vh = window.innerHeight,
       still = Cam.reducedMotion(),
-      left = W.street ? W.street.scrollLeft : 0;
+      left = W.street ? W.street.scrollLeft : 0,
+      // Where the world starts on the page. Standalone that is the top of the
+      // document; embedded, the Office is above it and offsetTop is measured from
+      // the world's own root. One read, before any transform is written this frame.
+      base = EMBED ? EMBED.root.getBoundingClientRect().top + y : 0;
     cullStreet();
     for (const l of W.layers) {
       if (!W.near.has(l.section)) continue;
@@ -503,14 +529,17 @@
         else for (const c of l.chunks) if (W.nearDistricts.has(c.district)) move(c.el, `translate3d(${((left - c.x * W.ws) * (1 - l.depth)).toFixed(0)}px, 0, 0)`);
         continue;
       }
-      const offset = Cam.anchorOffset(l.section.dataset.anchor, l.section.offsetTop, l.section.offsetHeight, y, vh);
+      const offset = Cam.anchorOffset(l.section.dataset.anchor, l.section.offsetTop + base, l.section.offsetHeight, y, vh);
       const x = streetSection ? (-left * l.depth).toFixed(0) : 0;
       move(l.el, `translate3d(${x}px, ${Cam.parallax(offset, l.depth).toFixed(0)}px, 0)`);
     }
     placeGondola();
-    // Which altitude are we at: the section holding the viewport's middle.
+    // Which altitude are we at: the section holding the viewport's middle. Above the
+    // world's first section is still the top of the world — embedded, that is the Office.
     const mid = y + vh * 0.5;
-    const zone = W.sections.find((s) => mid >= s.offsetTop && mid < s.offsetTop + s.offsetHeight)?.dataset.zone || (mid < 0 ? "island" : "city");
+    const zone =
+      W.sections.find((s) => mid >= s.offsetTop + base && mid < s.offsetTop + base + s.offsetHeight)?.dataset.zone ||
+      (mid < (W.sections[0] ? W.sections[0].offsetTop + base : 0) ? "island" : "city");
     if (zone !== W.zone) {
       W.zone = zone;
       $("sw-app").dataset.zone = zone;
@@ -526,21 +555,24 @@
     const a = pageRect(W.wheels[0]),
       b = pageRect(W.wheels[1]);
     W.cableEnds = { a, b };
+    W.host = hostOrigin();
     const dx = b.x - a.x,
       dy = b.y - a.y;
-    W.cable.style.left = a.x.toFixed(1) + "px";
-    W.cable.style.top = a.y.toFixed(1) + "px";
+    W.cable.style.left = (a.x - W.host.x).toFixed(1) + "px";
+    W.cable.style.top = (a.y - W.host.y).toFixed(1) + "px";
     W.cable.style.width = Math.hypot(dx, dy).toFixed(1) + "px";
     W.cable.style.transform = `rotate(${Math.atan2(dy, dx).toFixed(4)}rad)`;
     placeGondola();
   }
 
   function placeGondola() {
-    if (!W.cableEnds) return;
+    if (!W.cableEnds || !W.host) return;
     const { a, b } = W.cableEnds;
+    // How far down the cable the middle of the screen has travelled, on the page's
+    // scale; where to draw it, on the stage's.
     const t = Cam.clamp((window.scrollY + window.innerHeight * 0.5 - a.y) / (b.y - a.y), 0, 1);
-    const x = Cam.lerp(a.x, b.x, t),
-      y = Cam.lerp(a.y, b.y, t);
+    const x = Cam.lerp(a.x, b.x, t) - W.host.x,
+      y = Cam.lerp(a.y, b.y, t) - W.host.y;
     move(W.gondola, `translate3d(${x.toFixed(0)}px, ${y.toFixed(0)}px, 0) scale(${W.ws})`);
     const docked = t >= 1 ? "city" : t <= 0 ? "island" : "moving";
     if (W.gondola.dataset.docked !== docked) W.gondola.dataset.docked = docked;
@@ -558,15 +590,17 @@
   // Composition rule A: one world scale and two composed views for every viewport ratio.
   function applyScale(initial) {
     const doc = document.documentElement;
+    const app = $("sw-app");
     const ratio = doc.scrollHeight > window.innerHeight ? window.scrollY / (doc.scrollHeight - window.innerHeight) : 0;
     // Keep the same spot of the street in the middle when the scale changes.
     const centre = W.street && !initial ? (W.street.scrollLeft + W.street.clientWidth / 2) / W.ws : null;
     const comp = Compose.compose({ width: window.innerWidth, height: window.innerHeight, zoom: ZOOMS[W.zoom] });
     W.comp = comp;
     W.ws = comp.ws;
-    doc.style.setProperty("--ws", W.ws);
-    doc.style.setProperty("--island-lead", comp.island.lead + "px");
-    $("sw-app").classList.toggle("is-compact", comp.compact);
+    // The scale belongs to the world's root, not the document: embedded, the document is the Office's.
+    app.style.setProperty("--ws", W.ws);
+    app.style.setProperty("--island-lead", comp.island.lead + "px");
+    app.classList.toggle("is-compact", comp.compact);
     const city = W.sections.find((s) => s.dataset.zone === "city");
     if (city) city.style.setProperty("--h", comp.city.height);
     const squeeze = comp.island.squeeze(G.island.spots);
@@ -577,8 +611,12 @@
       const next = thumb({ character_id: img.closest(".sw-actor").dataset.character });
       if (next.endsWith("256") && !img.src.endsWith("256")) img.src = next;
     }
-    if (initial) window.scrollTo({ top: 0, behavior: "instant" });
-    else window.scrollTo({ top: ratio * (doc.scrollHeight - window.innerHeight), behavior: "instant" });
+    // A rescale keeps the same place in the world. Embedded, the page is the Office's
+    // and the world never moves it: the reader stays exactly where they were.
+    if (!EMBED) {
+      if (initial) window.scrollTo({ top: 0, behavior: "instant" });
+      else window.scrollTo({ top: ratio * (doc.scrollHeight - window.innerHeight), behavior: "instant" });
+    }
     if (centre !== null) W.street.scrollLeft = centre * W.ws - W.street.clientWidth / 2;
     // A new scale moves every district boundary: cull again from scratch.
     for (const id of W.nearDistricts) for (const el of W.districtEls.get(id) || []) el.removeAttribute("data-near");
@@ -593,7 +631,8 @@
   function goTo(zone) {
     const s = W.sections.find((x) => x.dataset.zone === zone);
     if (!s) return;
-    const top = zone === "city" ? s.offsetTop + s.offsetHeight - window.innerHeight : zone === "descent" ? s.offsetTop - window.innerHeight * 0.1 : 0;
+    const at = s.getBoundingClientRect().top + window.scrollY;
+    const top = zone === "city" ? at + s.offsetHeight - window.innerHeight : zone === "descent" ? at - window.innerHeight * 0.1 : at;
     Cam.scrollTo(window, { top });
   }
 
@@ -1040,6 +1079,11 @@
     if (!W.paused || !W.running) return;
     W.paused = false;
     $("sw-app").classList.remove("sw-paused");
+    // Scroll went unwatched while paused, and embedded the Office above may have
+    // grown or shrunk in the meantime: measure the cable again and put every layer
+    // where it belongs now.
+    placeCable();
+    W.scroll?.();
   }
 
   function start() {
@@ -1112,7 +1156,7 @@
     if ($("sw-drawer")) delete $("sw-drawer").dataset.built;
     W.sections = [];
     W.layers = [];
-    W.street = W.plan = W.cable = W.gondola = W.wheels = W.cableEnds = W.comp = null;
+    W.street = W.plan = W.cable = W.gondola = W.wheels = W.cableEnds = W.host = W.comp = null;
     W.state = null;
     W.roster = null;
   }
@@ -1152,9 +1196,13 @@
       nodes: document.getElementsByTagName("*").length,
     }),
   };
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) start();
-  });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
-  else start();
+  // Embedded, the Office decides when the world wakes up: the bridge calls start()
+  // once the reader is near it, so the desk never pays for a world nobody scrolled to.
+  if (!EMBED) {
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) start();
+    });
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+    else start();
+  }
 })();

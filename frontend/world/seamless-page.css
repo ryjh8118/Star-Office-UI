@@ -1,0 +1,19 @@
+/* What the standalone /world/seamless page needs from the document itself.
+ * seamless.css is scoped to .sw-app so the Office can load it into its own
+ * page; these rules are the part that cannot be, and only this page loads them. */
+:root {
+  color-scheme: light;
+}
+html {
+  scroll-behavior: auto;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: clip;
+  /* The soil under the city: what shows below the world's last section. */
+  background: #86664b;
+}
+.sw-app {
+  min-height: 100vh;
+}

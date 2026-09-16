@@ -1308,6 +1308,11 @@
 <link rel="stylesheet" href="/static/creator-transitions.css?v={{VERSION_TIMESTAMP}}">
 <script src="/static/creator-transitions.js?v={{VERSION_TIMESTAMP}}"></script>
 <script src="/static/creator-office.js?v={{VERSION_TIMESTAMP}}"></script>
+<!-- Past the bottom of the sky island the same scroll carries on into Renguin World.
+     These two files are all the desk pays for it; the world's stylesheet, art and
+     engine load only when the reader is close to the way down. -->
+<link rel="stylesheet" href="/static/world/office-gate.css?v={{WORLD_VERSION}}">
+<script src="/static/world/office-world-bridge.js?v={{WORLD_VERSION}}" data-world-version="{{WORLD_VERSION}}" defer></script>
     <script src="/static/vendor/phaser-3.80.1.min.js?v={{VERSION_TIMESTAMP}}"></script>
     <script>
         // 简易中英文切换

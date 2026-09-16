@@ -78,11 +78,18 @@ async function main() {
     await send("Network.setCacheDisabled", { cacheDisabled: true });
     await viewport(1440, 900);
 
-    // TEST 03/04/30: the Office loads nothing of the world.
+    // TEST 03/04/30: the Office loads nothing of the world but the way down to it.
+    // Since the desk's own scroll carries on into Renguin World it does load the band
+    // at the bottom of its sky — office-gate.css and office-world-bridge.js, together
+    // about 19 kB — and that is the whole list. No world stylesheet, no art, no engine
+    // and no world state until the reader scrolls near it; office-world-seamless-check.cjs
+    // is where the way down itself is checked.
+    const WAY_DOWN = ["/static/world/office-gate.css", "/static/world/office-world-bridge.js"];
     const office = await open(`${BASE}/?intro=off`, 7000);
     const officeRequests = requests(office);
-    check("Office loads no world bundle or world API", !officeRequests.some((u) => /\/static\/world\/|\/api\/world\/|\/world(\?|$)/.test(u)), officeRequests.filter((u) => /world/i.test(u)));
-    check("Office has no world renderer or NPC system", (await js("typeof window.RenguinWorld === 'undefined' && typeof window.RenguinWorldScene === 'undefined' && !document.querySelector('.rw-walker, .rw-stage')")) === true);
+    const fromWorld = officeRequests.filter((u) => /\/static\/world\/|\/api\/world\/|\/world(\?|$)/.test(u));
+    check("Office loads the way down and no more of the world", fromWorld.length === WAY_DOWN.length && fromWorld.every((u) => WAY_DOWN.some((f) => u.startsWith(f))), fromWorld);
+    check("Office has no world renderer or NPC system", (await js("typeof window.RenguinWorld === 'undefined' && typeof window.RenguinWorldScene === 'undefined' && typeof window.RenguinSeamlessWorld === 'undefined' && !document.querySelector('.rw-walker, .rw-stage, .sw-section')")) === true);
     check("Office offers a plain link to /world", (await js("document.querySelector('a.co-world-link')?.getAttribute('href')")) === "/world");
     const officeCost = await cost(5);
     check("Office main-thread cost measured (baseline)", true, officeCost);
