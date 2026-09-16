@@ -317,6 +317,18 @@ ensure_electron_standalone_snapshot()
 _INDEX_HTML_CACHE = None
 
 
+def _world_version():
+    """The world's own content hash, so the Office and /world/seamless cache the
+    same files under the same key. A world that cannot be read is not a reason the
+    desk cannot: fall back to this process's timestamp."""
+    try:
+        from renguin_world.routes import world_version
+
+        return world_version()
+    except Exception:  # noqa: BLE001 - the desk must open whatever the world does
+        return VERSION_TIMESTAMP
+
+
 @app.route("/", methods=["GET"])
 def index():
     """Serve the pixel office UI with built-in version cache busting"""
@@ -328,7 +340,9 @@ def index():
     if _INDEX_HTML_CACHE is None:
         with open(FRONTEND_INDEX_FILE, "r", encoding="utf-8") as f:
             raw_html = f.read()
-        _INDEX_HTML_CACHE = raw_html.replace("{{VERSION_TIMESTAMP}}", VERSION_TIMESTAMP)
+        _INDEX_HTML_CACHE = raw_html.replace("{{VERSION_TIMESTAMP}}", VERSION_TIMESTAMP).replace(
+            "{{WORLD_VERSION}}", _world_version()
+        )
 
     resp = make_response(_INDEX_HTML_CACHE)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
@@ -344,7 +358,7 @@ def electron_standalone_page():
         target = FRONTEND_INDEX_FILE
     with open(target, "r", encoding="utf-8") as f:
         html = f.read()
-    html = html.replace("{{VERSION_TIMESTAMP}}", VERSION_TIMESTAMP)
+    html = html.replace("{{VERSION_TIMESTAMP}}", VERSION_TIMESTAMP).replace("{{WORLD_VERSION}}", _world_version())
     resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp

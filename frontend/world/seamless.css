@@ -1,8 +1,27 @@
 /* Renguin World · seamless side-view slice.
  * Sizes are world units times --ws (one world scale); motion is transform and
  * opacity only, runs only in sections near the viewport, and .sw-paused or
- * reduced motion stops all of it. */
-:root {
+ * reduced motion stops all of it.
+ *
+ * Every rule here is scoped to .sw-app so this sheet can be loaded into a page
+ * it does not own — the Office embeds the world at the bottom of its own
+ * document. What the standalone /world/seamless page needs on html and body
+ * lives in seamless-page.css, which only that page loads. */
+.sw-app,
+.sw-app *,
+.sw-app *::before,
+.sw-app *::after {
+  box-sizing: border-box;
+}
+.sw-app [hidden] {
+  display: none !important;
+}
+.sw-app button {
+  font: inherit;
+}
+
+/* Sky palettes: every section's gradient starts where the previous one ends, so the sky is one piece. */
+.sw-app {
   --ws: 1;
   --u: calc(var(--ws) * 1px);
   --ink: #2f2a44;
@@ -10,31 +29,8 @@
   --paper: #fffaf0;
   --line: #e6dcc8;
   --accent: #567258;
-  color-scheme: light;
-}
-* {
-  box-sizing: border-box;
-}
-[hidden] {
-  display: none !important;
-}
-html {
-  scroll-behavior: auto;
-}
-body {
-  margin: 0;
-  min-height: 100vh;
-  overflow-x: clip;
   font: 15px/1.55 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
   color: var(--ink);
-  background: #86664b;
-}
-button {
-  font: inherit;
-}
-
-/* Sky palettes: every section's gradient starts where the previous one ends, so the sky is one piece. */
-.sw-app {
   --sky-0: #95c6e8;
   --sky-1: #cae4f2;
   --sky-2: #f6f2e8;
@@ -219,8 +215,7 @@ button {
   border-color: #405942;
   color: #fff8e6;
 }
-button:focus-visible,
-a:focus-visible,
+.sw-app :is(button, a):focus-visible,
 .sw-street-scroll:focus-visible {
   outline: 3px solid #688a89;
   outline-offset: 3px;
@@ -1562,5 +1557,38 @@ a:focus-visible,
 @media (max-height: 480px) {
   .sw-descend {
     display: none;
+  }
+}
+
+/* ----------------------------------------------------------------- embedded
+ * The Office mounts this same world at the bottom of its own page, so that one
+ * scroll carries the reader from the desk through the cloud sea into the city.
+ * Two things change there and nothing else: the world's fixed chrome belongs to
+ * the world, so it only exists while the world holds the viewport, and the world
+ * is one region of a longer page, so it is positioned above the Office's own
+ * fixed scenery instead of owning the document. */
+.sw-app.ow-embed {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+.sw-app.ow-embed:not(.is-active)
+  :is(.sw-hud, .sw-altimeter, .sw-banner, .sw-night, .sw-descend, .sw-street-nav, .sw-district-nav, .sw-card, .sw-drawer) {
+  display: none !important;
+}
+/* Nothing in the world reacts while the reader is up in the Office. */
+.sw-app.ow-embed:not(.is-active) .sw-world {
+  pointer-events: none;
+}
+/* The chrome arrives with the world rather than appearing on top of the desk. */
+.sw-app.ow-embed.is-active :is(.sw-hud, .sw-altimeter, .sw-street-nav, .sw-district-nav) {
+  animation: sw-chrome-in 0.35s ease both;
+}
+@keyframes sw-chrome-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
