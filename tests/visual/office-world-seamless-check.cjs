@@ -149,6 +149,13 @@ async function main() {
       { loadAssets, loadApi, engine: atLoad.engine },
     );
     check("The way down is already there, in the desk's own sky", atLoad.gate && atLoad.overflow <= 0, atLoad);
+    // Measured on the band itself. The desk's own node count drifts by hundreds
+    // between two loads of the same page — its cards and rows arrive when they
+    // arrive — so a difference of totals says nothing about what this added.
+    const band = await js(`JSON.stringify((function(){var a=document.getElementById('sw-app');
+      return {nodes: a.getElementsByTagName('*').length + 1, html: a.outerHTML.length};})())`).then(JSON.parse);
+    baseline.the_band = band;
+    check("The band itself is a handful of nodes, not a second page", band.nodes <= 12, band);
     check("The world takes the desk's time of day", atLoad.daypart === { MORNING: "day", DAY: "day", AFTERNOON: "day", SUNSET: "dusk", NIGHT: "night" }[atLoad.envTime], { daypart: atLoad.daypart, envTime: atLoad.envTime });
     baseline.desk_idle_top = await cost(3);
     // The desk as it stands, measured before anything is asked of the world: its own
@@ -399,7 +406,6 @@ async function main() {
     const c = baseline.desk_cost_of_the_way_down;
     check("Idle, the desk does no more style or script work for the way down being there", c.idle_style_recalcs_pct <= 5 && c.idle_script_pct <= 15, c);
     check("Scrolling, the desk does no more style or script work for the way down being there", c.scroll_style_recalcs_pct <= 5 && c.scroll_script_pct <= 15, c);
-    check("The band itself is a handful of nodes, not a second page", c.nodes <= 60, { nodes: c.nodes });
     check("Idle and scrolling wall-clock are within the machine's own spread", c.idle_main_pct <= 25 && c.scroll_main_pct <= 25, c);
     check("The desk still draws as many frames: the pixel office keeps walking at the same rate", c.idle_fps_pct >= -5 && c.scroll_fps_pct >= -5, { idle_fps: [a.idle_fps, z.idle_fps], scroll_fps: [a.scroll_fps, z.scroll_fps], ...c });
 
