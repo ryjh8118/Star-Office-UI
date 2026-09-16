@@ -93,6 +93,17 @@ async function main() {
         return new Promise(function(res){function s(){var p=Math.min(1,(performance.now()-t0)/d);
           window.scrollTo(0,a+(z-a)*p); if(p<1) requestAnimationFrame(s); else res(1);} requestAnimationFrame(s);})})()`);
     const jump = (y) => js(`window.scrollTo({top:${Math.round(y)},behavior:'instant'});1`);
+    // Frames the page actually produces. This is what "the character still walks" and
+    // "scrolling still feels the same" mean, so it is measured rather than inferred.
+    const fps = (ms) =>
+      js(`(function(){var n=0,t0=performance.now();
+        return new Promise(function(res){function f(){n++;
+          if(performance.now()-t0<${ms}) requestAnimationFrame(f);
+          else res(Math.round(n/((performance.now()-t0)/1000)));} requestAnimationFrame(f);})})()`);
+    const fpsWhile = async (during) => {
+      const [rate] = await Promise.all([fps(3600), during()]);
+      return rate;
+    };
     // Average colour of each row of a narrow strip of the page, read back through the
     // page's own canvas: what the reader actually sees, not what the CSS says.
     const strip = async (x, y, height, width = 8) => {
@@ -219,6 +230,76 @@ async function main() {
     check("No horizontal page overflow anywhere on the way down", arrived.overflow <= 0, arrived.overflow);
     baseline.idle_in_city = await cost(3);
 
+    // Resolution is chosen by how big a resident actually is on screen, and it is
+    // measured before anything zooms: the upgrade to the large cut-out is one-way,
+    // so a zoom earlier in the walk would make this pass for the wrong reason.
+    const lod = await js(`JSON.stringify((function(){
+      var at = function(){return [].map.call(document.querySelectorAll('.sw-city .sw-actor img'), function(i){return i.src.slice(-3)})};
+      return {plain: at()};})())`).then(JSON.parse);
+    check("At the world's own scale, residents are drawn from the small cut-out", lod.plain.length > 0 && lod.plain.every((s) => s === "160"), lod.plain.slice(0, 6));
+    const lodUp = await js(`(function(){document.getElementById('sw-zoom-in').click();
+      return new Promise(function(res){setTimeout(function(){document.getElementById('sw-zoom-in').click();
+        setTimeout(function(){res(JSON.stringify([].map.call(document.querySelectorAll('.sw-city .sw-actor img'), function(i){return i.src.slice(-3)})))},900)},900)})})()`).then(JSON.parse);
+    check("Zoomed in close, they are redrawn from the large one", lodUp.length > 0 && lodUp.every((s) => s === "256"), lodUp.slice(0, 6));
+    await js("document.getElementById('sw-zoom-out').click();1");
+    await sleep(700);
+    await js("document.getElementById('sw-zoom-out').click();1");
+    await sleep(900);
+
+
+
+    // ---------- the world still works down there ----------
+    // Every panel the world puts up is position: fixed. Inside someone else's page
+    // that is the trap: one transform, filter or contain on an ancestor and the
+    // viewport stops being what "fixed" is fixed to, and the card opens somewhere
+    // off the bottom of a 10,000px document where nobody will ever see it.
+    const drawer = await js(`(function(){document.getElementById('sw-data').click();
+      return new Promise(function(res){setTimeout(function(){var d=document.getElementById('sw-drawer');
+        var r=d.getBoundingClientRect();
+        res(JSON.stringify({open: !d.hidden, onScreen: r.top < innerHeight && r.bottom > 0 && r.left < innerWidth && r.right > 0,
+          rows: d.querySelectorAll('h3, dt, .sw-meter').length, top: Math.round(r.top), height: Math.round(r.height)}))},700)})})()`).then(JSON.parse);
+    check("世界資料 opens where the reader is, with the world's own figures in it", drawer.open && drawer.onScreen && drawer.rows > 0, drawer);
+    await js("document.getElementById('sw-drawer-close').click();1");
+    await sleep(400);
+
+    const card = await js(`(function(){var a=document.querySelector('.sw-city .sw-actor'); if(!a) return null; a.click();
+      return new Promise(function(res){setTimeout(function(){var c=document.getElementById('sw-card'); var r=c.getBoundingClientRect();
+        res(JSON.stringify({open: !c.hidden, onScreen: r.top < innerHeight && r.bottom > 0,
+          name: (document.getElementById('sw-card-name')||{}).textContent, top: Math.round(r.top)}))},700)})})()`).then((r) => (r ? JSON.parse(r) : null));
+    check("A resident's card opens on screen, naming that resident", card && card.open && card.onScreen && card.name, card);
+    await js("document.getElementById('sw-card-close').click();1");
+    await sleep(300);
+
+    const travel = await js(`(function(){var b=document.getElementById('sw-district'); b.click();
+      return new Promise(function(res){setTimeout(function(){var list=document.getElementById('sw-district-list');
+        var open=list.querySelectorAll('button[data-district]');
+        var target=open[open.length-1]; var want=target?target.dataset.district:null; if(target) target.click();
+        setTimeout(function(){res(JSON.stringify({want: want, at: window.RenguinSeamlessWorld.debug().district,
+          y: Math.round(scrollY), zone: window.RenguinSeamlessWorld.debug().zone, choices: open.length}))},2200)},500)})})()`).then(JSON.parse);
+    check("The street still travels: the district navigator reaches the district it names", travel.choices > 0 && travel.want === travel.at && travel.zone === "city", travel);
+
+    const zoomed = await js(`(function(){var before=window.RenguinSeamlessWorld.composition().ws, y=scrollY;
+      document.getElementById('sw-zoom-in').click();
+      return new Promise(function(res){setTimeout(function(){res(JSON.stringify({before: before,
+        after: window.RenguinSeamlessWorld.composition().ws, movedPage: Math.abs(scrollY - y) > 4,
+        zone: window.RenguinSeamlessWorld.debug().zone}))},900)})})()`).then(JSON.parse);
+    check("Zooming the world rescales it without taking the desk's scroll with it", zoomed.after > zoomed.before && !zoomed.movedPage, zoomed);
+    await js("document.getElementById('sw-zoom-out').click();1");
+    await sleep(800);
+
+    const night = await js(`(function(){document.getElementById('sw-time').click();
+      return new Promise(function(res){setTimeout(function(){res(JSON.stringify({
+        daypart: document.getElementById('sw-app').dataset.daypart,
+        gateLit: getComputedStyle(document.getElementById('ow-gate'), '::before').backgroundColor}))},600)})})()`).then(JSON.parse);
+    check("Changing the world's time of day carries through to the band above it", Boolean(night.daypart && night.gateLit && night.gateLit !== "rgba(0, 0, 0, 0)"), night);
+
+    const culled = await js(`JSON.stringify((function(){var d=window.RenguinSeamlessWorld.debug();
+      var all=window.RenguinSeamlessWorld.districts();
+      return {near: d.near, districts: all.length, worked: all.filter(function(x){return x.near}).length,
+        hiddenChunks: document.querySelectorAll('[data-layer="residents"] > .sw-chunk:not([data-near])').length};})())`).then(JSON.parse);
+    check("Only the stretch of street the reader is on is worked; the rest is skipped", culled.districts === 0 || culled.worked < culled.districts || culled.districts === 1, culled);
+    check("The island is not worked while the reader is down in the city", !culled.near.includes("island"), culled.near);
+
     // ---------- and back ----------
     const back = await js(`(function(){var b=document.querySelector('.sw-back'); if(!b) return null; b.click();
       return new Promise(function(res){setTimeout(function(){res(JSON.stringify({y: Math.round(scrollY),
@@ -227,6 +308,11 @@ async function main() {
         paused: window.RenguinSeamlessWorld.debug().paused}))},2600)})})()`).then((r) => JSON.parse(r));
     check("The way back is the same scroll in reverse, not a page", back.y === 0 && back.url === "/?intro=off" && back.navigations === 1, back);
     check("Back at the desk the world stops computing", back.paused && !back.chrome, back);
+    const suspended = await js(`JSON.stringify((function(){var d=window.RenguinSeamlessWorld.debug();
+      var running=document.getAnimations().filter(function(a){var t=a.effect&&a.effect.target;
+        return a.playState==='running' && t && t.closest && t.closest('#sw-world');}).length;
+      return {paused: d.paused, near: d.near, runningAnimations: running};})())`).then(JSON.parse);
+    check("Nothing in the world is still animating while the reader is at the desk", suspended.paused && suspended.runningAnimations === 0, suspended);
     baseline.desk_idle_after = await cost(3);
     check("No page errors on the whole walk", errors().length === 0, errors().slice(0, 3));
 
@@ -260,19 +346,62 @@ async function main() {
       overflow: document.documentElement.scrollWidth - innerWidth
     })`).then(JSON.parse);
     check("?world=off leaves the desk exactly as it was", !off.gate && !off.root && off.bridge === "undefined" && off.overflow <= 0, off);
-    baseline.desk_idle_top_without = await cost(3);
-    // The same stretch of the same desk, so the two numbers are comparable.
-    baseline.desk_scroll_without = await cost(0, () => glide(0, deskRunTo, 4000));
 
-    const budget = (a, b) => (b <= 0 ? 0 : +(((a - b) / b) * 100).toFixed(1));
+    // ---------- what the way down costs the desk ----------
+    // Wall-clock main-thread time on a working machine swings by half between two
+    // runs of the same code, so one measurement of each is worth nothing. The two
+    // variants are measured alternately, three times each, and compared on medians;
+    // the counters Chrome keeps exactly — style recalculations, layouts, script time,
+    // nodes — are what the gate is on, because those are what this change can move.
+    const med = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+    const samples = { with: [], without: [] };
+    for (let round = 0; round < 3; round++) {
+      for (const off of [true, false]) {
+        await open(`${BASE}/?intro=off` + (off ? "&world=off" : ""), 7000);
+        const idle = await cost(3);
+        const idleFps = await fps(3000);
+        await jump(0);
+        await sleep(400);
+        let scrollFps = 0;
+        const scrolled = await cost(0, async () => {
+          scrollFps = await fpsWhile(() => glide(0, deskRunTo, 4000));
+        });
+        samples[off ? "without" : "with"].push({ idle: { ...idle, fps: idleFps }, scrolled: { ...scrolled, fps: scrollFps } });
+      }
+    }
+    const roll = (key, phase, metric) => med(samples[key].map((s) => s[phase][metric]));
+    for (const key of ["with", "without"])
+      baseline["desk_" + key + "_the_way_down"] = {
+        idle_main_ms_per_s: roll(key, "idle", "main_thread_ms_per_s"),
+        idle_script_ms_per_s: roll(key, "idle", "script_ms_per_s"),
+        idle_style_recalcs_per_s: roll(key, "idle", "style_recalcs_per_s"),
+        scroll_main_ms_per_s: roll(key, "scrolled", "main_thread_ms_per_s"),
+        scroll_script_ms_per_s: roll(key, "scrolled", "script_ms_per_s"),
+        scroll_style_recalcs_per_s: roll(key, "scrolled", "style_recalcs_per_s"),
+        idle_fps: roll(key, "idle", "fps"),
+        scroll_fps: roll(key, "scrolled", "fps"),
+        dom_nodes: roll(key, "idle", "dom_nodes"),
+      };
+    const a = baseline.desk_with_the_way_down;
+    const z = baseline.desk_without_the_way_down;
+    const pct = (x, y) => (y <= 0 ? 0 : +(((x - y) / y) * 100).toFixed(1));
     baseline.desk_cost_of_the_way_down = {
-      idle_top_pct: budget(baseline.desk_idle_top.main_thread_ms_per_s, baseline.desk_idle_top_without.main_thread_ms_per_s),
-      scroll_pct: budget(baseline.desk_scroll.main_thread_ms_per_s, baseline.desk_scroll_without.main_thread_ms_per_s),
-      nodes: baseline.desk_idle_top.dom_nodes - baseline.desk_idle_top_without.dom_nodes,
+      idle_style_recalcs_pct: pct(a.idle_style_recalcs_per_s, z.idle_style_recalcs_per_s),
+      idle_script_pct: pct(a.idle_script_ms_per_s, z.idle_script_ms_per_s),
+      idle_main_pct: pct(a.idle_main_ms_per_s, z.idle_main_ms_per_s),
+      scroll_style_recalcs_pct: pct(a.scroll_style_recalcs_per_s, z.scroll_style_recalcs_per_s),
+      scroll_script_pct: pct(a.scroll_script_ms_per_s, z.scroll_script_ms_per_s),
+      scroll_main_pct: pct(a.scroll_main_ms_per_s, z.scroll_main_ms_per_s),
+      idle_fps_pct: pct(a.idle_fps, z.idle_fps),
+      scroll_fps_pct: pct(a.scroll_fps, z.scroll_fps),
+      nodes: a.dom_nodes - z.dom_nodes,
     };
     const c = baseline.desk_cost_of_the_way_down;
-    check("The desk's own idle cost is not measurably worse for the way down being there", c.idle_top_pct <= 10, c);
-    check("The desk's own scrolling is not measurably worse for the way down being there", c.scroll_pct <= 10, c);
+    check("Idle, the desk does no more style or script work for the way down being there", c.idle_style_recalcs_pct <= 5 && c.idle_script_pct <= 15, c);
+    check("Scrolling, the desk does no more style or script work for the way down being there", c.scroll_style_recalcs_pct <= 5 && c.scroll_script_pct <= 15, c);
+    check("The band itself is a handful of nodes, not a second page", c.nodes <= 60, { nodes: c.nodes });
+    check("Idle and scrolling wall-clock are within the machine's own spread", c.idle_main_pct <= 25 && c.scroll_main_pct <= 25, c);
+    check("The desk still draws as many frames: the pixel office keeps walking at the same rate", c.idle_fps_pct >= -5 && c.scroll_fps_pct >= -5, { idle_fps: [a.idle_fps, z.idle_fps], scroll_fps: [a.scroll_fps, z.scroll_fps], ...c });
 
     ws.close();
   } finally {
