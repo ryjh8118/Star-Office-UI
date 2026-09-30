@@ -86,6 +86,36 @@ def tail(path):
             f.readline()
         return f.read(LIMIT).splitlines()
 
+# What a journal's last megabyte says depends only on its bytes, and most sessions are not being written. Every
+# poll re-read, re-parsed and re-classified ~80 of them (the classification of a row does not depend on the clock;
+# only whether the row is already in the past does, and that is decided per request below). A journal is parsed again
+# when its size or modification time moves, and the cache is bounded.
+_CLASSIFIED = {}
+_CLASSIFIED_LIMIT = 256
+
+def classified(path, classify):
+    """[(stamp, when, event, mentions_bionic)] for every timestamped row in the journal's tail."""
+    info = path.stat()
+    key = (str(path), info.st_mtime_ns, info.st_size, classify.__name__)
+    rows = _CLASSIFIED.get(key)
+    if rows is not None:
+        return rows
+    rows = []
+    for line in tail(path):
+        try:
+            row = json.loads(line)
+            stamp = row.get('timestamp')
+            when = datetime.fromisoformat(stamp.replace('Z','+00:00'))
+            if not when.tzinfo:
+                continue
+        except (ValueError,TypeError,AttributeError):
+            continue
+        rows.append((stamp, when, classify(row), bionic_process_reference(row)))
+    if len(_CLASSIFIED) >= _CLASSIFIED_LIMIT:
+        _CLASSIFIED.clear()
+    _CLASSIFIED[key] = rows
+    return rows
+
 def enrich(board, home, office_root=Path(__file__).resolve().parents[1]):
     # The Office's own repository is its own layer. Identity comes from the Git
     # marker of the checkout serving this request, never from a folder name.
@@ -109,24 +139,17 @@ def enrich(board, home, office_root=Path(__file__).resolve().parents[1]):
         if not path.is_relative_to((Path(home) / store).resolve()):
             continue
         try:
-            rows = tail(path)
+            rows = classified(path, classify)
         except OSError:
             continue
         now = datetime.now(timezone.utc)
         latest = None
         bionic_ref_stamp = None
-        for line in rows:
-            try:
-                row = json.loads(line)
-                stamp = row.get('timestamp')
-                parsed = datetime.fromisoformat(stamp.replace('Z','+00:00'))
-                if not (parsed.tzinfo and parsed <= now):
-                    continue
-            except (ValueError,TypeError,AttributeError):
+        for stamp, when, event, mentions_bionic in rows:
+            if not when <= now:
                 continue
-            if bionic_process_reference(row):
+            if mentions_bionic:
                 bionic_ref_stamp = stamp
-            event = classify(row)
             if event:
                 latest = {'timestamp':stamp,'type':'RECENT_WORK_EVENT','action':event[0],'terminal':event[1]}
         if latest:
