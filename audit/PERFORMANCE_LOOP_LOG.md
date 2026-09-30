@@ -10,11 +10,12 @@ on its own Preview port; it reproduced Production's profile to within run-to-run
 
 - GitHub authority `fork/master` = local `master` = canonical checkout HEAD = `4108ce0` (matches the known SHA).
 - **The runtime is not master.** Production (19000) runs the canonical checkout's working tree: `4108ce0` plus four
-  uncommitted files that belong to other work — `backend/app.py` (+1 line), `frontend/index.html` (+1 line),
+  uncommitted files that are not this work's — `backend/app.py` (+1 line), `frontend/index.html` (+1 line),
   `frontend/renguin-star-office-extension.js` (+429/−38 lines staged, and a further unstaged edit that appeared during
-  this session, i.e. another session is editing it right now) and `frontend/renguin-star-office-v2.js` (new). They are
-  not touched by this work except where a merge has to move past them (dry-run on a scratch clone: status before ==
-  status after).
+  this session) and `frontend/renguin-star-office-v2.js` (new). They are what Content OS's adapter installs into the checkout
+  (`setup_star_office_ui.py` copies its extension and v2 script into `frontend/` and patches `index.html` / `app.py` to load
+  them). They are not touched by this work except where a merge has to move past them (dry-run on a scratch clone, then the
+  real merge: status before == status after).
 - One branch (`claude/star-office-performance-v1-29c635`), fast-forwarded to master before any change.
 
 ## Round 1 — the desk stutters while it sits still, and much more when it scrolls
@@ -138,8 +139,9 @@ No animation was removed or slowed; a loop resumes where it stopped when the rea
 (`hideUpstreamCat`: keep the upstream cat sprite hidden and its bubble destroyed) needs doing once, not 120 times a second; the
 first half of the function reads `Phaser.GAMES`, which does not exist in the bundled Phaser 3.80. With Phaser asleep it is the
 only thing that keeps the page producing a main frame every vsync (243 → 69 ms/s at the top when it is dropped as well —
-the upper bound; the cat would come back). The file carries another session's uncommitted work, so it is left alone; the
-change and its numbers are in `docs/performance/Office_Extension_Handoff_20260930.md`.
+the upper bound; the cat would come back). The file in the canonical checkout is Content OS's adapter extension, installed and
+uncommitted there, so it is left alone; the change and its numbers are in
+`docs/performance/Office_Extension_Handoff_20260930.md`.
 
 ## Round 3 — the frame loop and the load
 
@@ -232,9 +234,29 @@ page, whose P99 and worst frame did not move (its tiles are drawn for the first 
   failure is a 404 for `/static/renguin-achievements.json`, an untracked file the Preview worktrees do not have; identical on
   both). No console error and no non-GET request in any measured run (desktop, phone, soak, spikes, audit).
 
+## Deployment (2026-09-30)
+
+- `master` `4108ce0` -> `d5c93b8` (merge of `claude/star-office-performance-v1-29c635`), pushed to `fork` (fast-forward). Remote
+  `d5c93b857f49c37f281b5cb96fcfb1eee4393b07` = local master = the canonical checkout's HEAD.
+- The canonical checkout (Production's files) was fast-forwarded after a dry run on a scratch clone that reproduced its dirty state:
+  the four installed files (`backend/app.py`, `frontend/index.html`, `frontend/renguin-star-office-extension.js`,
+  `frontend/renguin-star-office-v2.js`) kept exactly their staged/unstaged edits (`git status` before == after); the two of them the
+  merge also touches were parked and re-applied. All Node (16) and Python (16) test files pass on the merged tree with that overlay.
+- Production's backend was restarted alone (python `backend\app.py`, pids 14636/35392 -> 34464/55156 at 23:45:02, the launcher's
+  environment: canonical/producer = Content OS, source roots `["E:/"]`, native home = the user profile; bridges untouched).
+  Reconciliation before and after: 446 projects, identical counts (`ai_running 0, blocked 1, my_turn 0, review 1`), status `STALE`
+  both times (Content OS's own freshness verdict), 5 jobs, `native_coverage` present, 188 presentation projects, 1766 events. New:
+  `projection_stable_digest` is served, `?known=<digest>` answers `projection_unchanged` (23.7 KB instead of 6.65 MB), the registry
+  file carries its ETag, and `index.html` loads `creator-fetch-cache.js` with the new version stamp.
+- Production measured with the harness (2 runs, same warm profile; `audit/PERFORMANCE_PRODUCTION_AFTER.md`): at rest 120 fps, worst
+  frame 8.6 ms, 0 hitches, 0 missed frames, no long task; warm scroll P99 20.9 ms, 6.0 % missed frames, worst 33 ms; expanded-deck
+  and world scenarios were not repeated there. Time to usable UI 1348 ms cold / 1051 ms warm. Idle cost by position 182 / 298 / 285 /
+  224 / 209 / 114 / 249 / 244 ms/s: the same shape as the change server, a little higher in the lower half (the runtime shares the
+  machine with Content OS's two activity bridges). No console error, no non-GET request.
+
 ## Remaining known bottlenecks
 
-1. **The extension's frame loop** (`suppressUpstreamCat`, another session's file): with the pixel office asleep it is the only
+1. **The extension's frame loop** (`suppressUpstreamCat`, in Content OS's adapter extension): with the pixel office asleep it is the only
    thing that keeps the page producing a main frame every vsync; dropped as well, the top of the page falls from 243 to 70 ms/s
    (an upper bound: the upstream cat has to be hidden some other way). Handed off in `Office_Extension_Handoff_20260930.md`.
 2. **Rest at the top of the page is ~160-170 ms/s**, not zero: the pixel office draws at 120 Hz by design (the frame rate was not

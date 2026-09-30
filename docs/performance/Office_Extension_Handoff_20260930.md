@@ -1,8 +1,11 @@
 # Handoff to the owner of `renguin-star-office-extension.js` — what the desk's performance work found in it
 
-The file carries uncommitted work by another session in the canonical checkout (staged + unstaged edits, a new
-`renguin-star-office-v2.js`), so the performance work did **not** touch it. These are the findings that need a change
-there, each with the measurement behind it. Measured 2026-09-30, real Chrome 154, 3392×862 CSS px at DPR 1.5, 120 Hz.
+In the canonical checkout this file is not what master holds: Content OS's `setup_star_office_ui.py` installs its adapter's
+`renguin-star-office-extension.js` and `renguin-star-office-v2.js` into `frontend/` and patches `index.html` / `app.py` to load
+them, and the result sits in the checkout as staged, uncommitted changes (plus a further unstaged edit while this work ran). The
+source of the extension is therefore Content OS's adapter (`10_AI_Editorial_Engine/04_Adapters/Star_Office/`), and the fixes
+below belong there. The performance work did **not** touch the file. Each finding has the measurement behind it. Measured
+2026-09-30, real Chrome 154, 3392×862 CSS px at DPR 1.5, 120 Hz.
 
 ## 1. `suppressUpstreamCat` is a requestAnimationFrame loop that never ends
 
