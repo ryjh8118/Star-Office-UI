@@ -240,19 +240,24 @@ html:is([data-env-weather="SNOW"], [data-env-weather="HEAVY_SNOW"]) .co-isle-cre
   top: 76%;
   width: 11px;
   height: 150px;
-  background:
-    repeating-linear-gradient(180deg, #ffffff80 0 7px, #ffffff00 7px 19px) 0 0 / auto 19px,
-    linear-gradient(90deg, #d6f1ff00, #d6f1ffd9 30% 70%, #d6f1ff00);
+  background: linear-gradient(90deg, #d6f1ff00, #d6f1ffd9 30% 70%, #d6f1ff00);
   mask: linear-gradient(180deg, #000 30%, #0000);
+  overflow: hidden;
 }
-.is-zone-live .co-isle-fall {
+/* The falling streaks slide as a layer of their own (one 19px period a turn, so the loop is seamless): moving a
+   background-position is a repaint of the page every frame, sliding a layer is the compositor's. */
+.co-isle-fall::before {
+  content: "";
+  position: absolute;
+  inset: -19px 0 0;
+  background: repeating-linear-gradient(180deg, #ffffff80 0 7px, #ffffff00 7px 19px) 0 0 / auto 19px;
+}
+.is-zone-live .co-isle-fall::before {
   animation: co-isle-pour 0.9s linear infinite;
 }
 @keyframes co-isle-pour {
   to {
-    background-position:
-      0 19px,
-      0 0;
+    translate: 0 19px;
   }
 }
 .co-isle-pebble {
@@ -412,6 +417,14 @@ html[data-env-time="NIGHT"] .cw-stardust,
   position: absolute;
   visibility: hidden;
 }
+/* Whatever the camera cannot see is hidden, and Chrome will not run an animation on a hidden target on the
+   compositor: it stays on the main thread and asks for a frame every vsync, for nothing anyone can see. */
+.cw-world > :not(.is-shown),
+.cw-world > :not(.is-shown) *,
+.cw-world > :not(.is-shown) *::before,
+.cw-world > :not(.is-shown) *::after {
+  animation-play-state: paused !important;
+}
 .cw-stage.is-flying .cw-world > * {
   will-change: transform, opacity;
 }
@@ -529,8 +542,11 @@ html[data-env-time="NIGHT"] .cw-stardust,
   opacity: 0;
 }
 .cw-isle:not(.is-home) .cw-life,
+.cw-isle:not(.is-home) .cw-life::before,
 .cw-stage:not(.is-live) .cw-life,
-.cw-stage.is-hidden-tab .cw-life {
+.cw-stage:not(.is-live) .cw-life::before,
+.cw-stage.is-hidden-tab .cw-life,
+.cw-stage.is-hidden-tab .cw-life::before {
   animation-play-state: paused !important;
 }
 .cw-isle[data-island="work"] .cw-life {
@@ -565,12 +581,25 @@ html[data-env-time="NIGHT"] .cw-stardust,
   aspect-ratio: auto;
   border-radius: 40%;
   opacity: 0.75;
-  background: linear-gradient(180deg, #0000, #ffffffc0 40%, #0000 62%) 0 0 / 100% 38% repeat-y;
+  background: none;
+  overflow: hidden;
+  animation: none;
+}
+/* A falling glow is one tile of gradient (38% of the streak) sliding down a tile a turn. The tile is a layer of its
+   own, one tile taller than the streak and shifted up by one, that the compositor slides; animating a
+   background-position instead repainted the page every frame. */
+.cw-isle[data-island="work"] .cw-life:nth-child(n + 5)::before {
+  content: "";
+  position: absolute;
+  inset: -38% 0 0;
+  background: linear-gradient(180deg, #0000, #ffffffc0 40%, #0000 62%) 0 0 / 100% 27.536% repeat-y;
   animation: cw-pour 1.5s linear infinite;
 }
 .cw-isle[data-island="work"] .cw-life:nth-child(6) {
   left: 25.4%;
   width: 2%;
+}
+.cw-isle[data-island="work"] .cw-life:nth-child(6)::before {
   animation-duration: 1.05s;
 }
 .cw-isle[data-island="result"] .cw-life {
@@ -2476,7 +2505,7 @@ html[data-env-time="NIGHT"] .cw-stardust,
 }
 @keyframes cw-pour {
   to {
-    background-position: 0 calc(118px * var(--u));
+    translate: 0 27.536%;
   }
 }
 @keyframes cw-mote {
@@ -2736,10 +2765,14 @@ html[data-env-time="NIGHT"] .cw-stardust,
    nothing idles, bobs, flaps or streaks, and decks simply fade in. */
 @media (prefers-reduced-motion: reduce) {
   .co-isle-fall,
+  .co-isle-fall::before,
   .co-isle-pebble {
     animation: none !important;
   }
   .cw-stage :is(.cw-isle-float, .cw-life, .cw-flyer-path, .cw-flyer-rig, .cw-gem-core, .cw-gem, .cw-isle-ripple) {
+    animation: none !important;
+  }
+  .cw-stage .cw-life::before {
     animation: none !important;
   }
   .cw-ride::before,

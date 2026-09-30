@@ -180,6 +180,16 @@
 .co-member.is-running::after {
   display: none;
 }
+/* creator-office.js marks the lodge is-off-screen while it is more than a screen's edge away; the members' loops
+   (the working pulse, the running portrait) rest meanwhile, as the yards' and crystals' do. */
+.co-section#office-members.is-off-screen .co-member,
+.co-section#office-members.is-off-screen .co-member::before,
+.co-section#office-members.is-off-screen .co-member::after,
+.co-section#office-members.is-off-screen .co-member *,
+.co-section#office-members.is-off-screen .co-member *::before,
+.co-section#office-members.is-off-screen .co-member *::after {
+  animation-play-state: paused !important;
+}
 @keyframes co-lodge-beat {
   50% {
     opacity: 0.3;

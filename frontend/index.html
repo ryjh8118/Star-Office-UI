@@ -1288,6 +1288,7 @@
         <button id="lang-btn-cn" onclick="setUILanguage('zh')" style="padding:8px 10px; font-family:ArkPixel,monospace; font-size:13px; cursor:pointer; border:2px solid #333; border-radius:5px; background:#333; color:#fff;">CN</button>
     </div>
 
+<script src="/static/creator-fetch-cache.js?v={{VERSION_TIMESTAMP}}"></script>
 <script src="/static/renguin-freshness.js"></script>
     <script src="/static/renguin-control-semantics.js"></script>
     <script src="/static/renguin-operations.js"></script>
@@ -1557,6 +1558,14 @@
             height: 720,
             parent: 'game-container',
             pixelArt: true,
+            // The office plays no sound. Without this Phaser builds a Web Audio context (a 30 ms task at load) and keeps
+            // it for the life of the page.
+            audio: { noAudio: true },
+            // Phaser swallows every wheel event over its canvas (a non-passive listener that calls preventDefault),
+            // so a reader whose pointer sits on the pixel office could not scroll the page at all, and Chrome had to
+            // wait for the main thread before it dared to scroll anywhere near it. Nothing in the office uses the
+            // wheel, so the page scrolls under the pointer like everywhere else.
+            input: { mouse: { preventDefaultWheel: false } },
             // 桌面端保持 FIT；手机端用 RESIZE，并在相机里按高度做 fit（可横向 pan）
             scale: {
                 mode: IS_TOUCH_DEVICE ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
@@ -2773,6 +2782,34 @@ function toggleBrokerPanel() {
                     st.style.maxWidth = 'calc(100% - 28px)';
                 }
             }
+        }
+
+        // The pixel office is redrawn every frame whether or not anyone can see it. Scrolled off the screen it is a
+        // WebGL canvas drawn 120 times a second for nobody, and because it is a frame loop it also keeps the whole page
+        // producing a frame every vsync, which makes Chrome sample every running CSS animation on the main thread each
+        // time. Off screen (with room to wake before it comes back) the loop sleeps. The status and guest polls the
+        // loop drives keep their pace on timers meanwhile, and stop while the tab is hidden, as the loop's did.
+        function sleepWhenOffscreen(phaser) {
+            const stage = document.getElementById('game-container');
+            const loop = phaser && phaser.loop;
+            if (!stage || !loop || typeof loop.sleep !== 'function' || typeof loop.wake !== 'function' || typeof IntersectionObserver !== 'function') return;
+            let onScreen = true;
+            let timers = [];
+            const stopPolling = () => { timers.forEach(clearInterval); timers = []; };
+            const apply = () => {
+                stopPolling();
+                if (onScreen) {
+                    if (!loop.running) loop.wake(true);
+                    return;
+                }
+                if (loop.running) loop.sleep();
+                if (!document.hidden) timers = [setInterval(fetchStatus, FETCH_INTERVAL), setInterval(fetchGuestAgents, GUEST_AGENTS_FETCH_INTERVAL)];
+            };
+            new IntersectionObserver((entries) => {
+                onScreen = entries[entries.length - 1].isIntersecting;
+                apply();
+            }, { rootMargin: '200px 0px' }).observe(stage);
+            document.addEventListener('visibilitychange', () => { if (!onScreen) apply(); });
         }
 
         function showRoomLoadingOverlay(baseText) {
@@ -4053,6 +4090,7 @@ function toggleBrokerPanel() {
 
         function create() {
             game = this;
+            sleepWhenOffscreen(this.game);
             hideGameSkeleton();
             officeBgSprite = this.add.image(640, 360, 'office_bg');
 
@@ -4307,7 +4345,22 @@ function toggleBrokerPanel() {
             statusText = document.getElementById('status-text');
             placeOverlayAndStatusAtCanvasBottomLeft();
             window.addEventListener('resize', placeOverlayAndStatusAtCanvasBottomLeft);
-            window.addEventListener('scroll', placeOverlayAndStatusAtCanvasBottomLeft, { passive: true });
+            // A scroll moves the canvas but never the status text's place inside it, and the only thing
+            // that has to follow the canvas is the loading overlay, which is hidden except while a room
+            // loads. Measuring the canvas on every scroll event forced a layout each time (0.8 ms on
+            // average, 7 ms at worst, on every frame of a scroll): a scroll now only re-places the overlay
+            // when it is showing, and a change in the canvas' or its container's size re-places the rest.
+            window.addEventListener('scroll', function () {
+                const overlay = document.getElementById('room-loading-overlay');
+                if (overlay && overlay.style.display === 'flex') placeOverlayAndStatusAtCanvasBottomLeft();
+            }, { passive: true });
+            if (typeof ResizeObserver === 'function') {
+                const placer = new ResizeObserver(() => placeOverlayAndStatusAtCanvasBottomLeft());
+                const stage = document.getElementById('game-container');
+                if (stage) placer.observe(stage);
+                const canvas = stage && stage.querySelector('canvas');
+                if (canvas) placer.observe(canvas);
+            }
             coordsOverlay = document.getElementById('coords-overlay');
             coordsDisplay = document.getElementById('coords-display');
             coordsToggle = document.getElementById('coords-toggle');

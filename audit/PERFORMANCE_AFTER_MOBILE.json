@@ -1,0 +1,5223 @@
+{
+ "meta": {
+  "label": "change",
+  "base": "http://127.0.0.1:19393",
+  "when": "2026-09-30T14:46:49.748Z",
+  "viewport": "mobile",
+  "viewport_css": {
+   "width": 500,
+   "height": 900,
+   "dpr": 2,
+   "mobile": true,
+   "emulate": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 2
+   }
+  },
+  "runs": 2,
+  "headless": true,
+  "scenarios": [
+   "load",
+   "idle",
+   "scroll",
+   "regions",
+   "world"
+  ],
+  "node": "v24.19.0",
+  "office": {
+   "acceptance": "NOT_YET_ACCEPTED",
+   "canonical_read_only": true,
+   "canonical_root": "E:\\Renguin_AISystem\\Content_OS",
+   "kind": "RENGUIN_ISOLATED_P0_PREVIEW",
+   "office_revision": "eea5e0a74dd7d78242b5df0a072e4510dbdc9565",
+   "office_revision_source": "DETACHED_HEAD",
+   "office_worktree": "C:\\Users\\User\\AppData\\Local\\Temp\\claude\\E--Renguin-AISystem-Star-Office-UI--claude-worktrees-seamless-renguin-world-merge-039a71\\db270f79-7eb7-428e-941c-bef34d8ad847\\scratchpad\\wt-after",
+   "pid": 60064,
+   "producer_worktree": "C:\\Users\\User\\.codex\\visualizations\\2026\\09\\08\\01a08239-462a-7150-8123-a739ec86aece\\content-os-entry-cert",
+   "production_deployed": false,
+   "started_at": 1790776192.301838,
+   "state_directory": "C:\\Users\\User\\AppData\\Local\\Temp\\claude\\E--Renguin-AISystem-Star-Office-UI--claude-worktrees-seamless-renguin-world-merge-039a71\\db270f79-7eb7-428e-941c-bef34d8ad847\\scratchpad\\wt-after\\.preview-runtime"
+  },
+  "merged_from": [
+   "B-mobile-r1.json",
+   "B-mobile-r2.json"
+  ]
+ },
+ "runs": [
+  {
+   "load": {
+    "cold": {
+     "time_to_usable_ms": 1364,
+     "first_card_ms": 1364,
+     "canvas_ms": 369,
+     "ttfb_ms": 3,
+     "dcl_ms": 378,
+     "load_ms": 454,
+     "fcp_ms": 140,
+     "lcp_ms": 356,
+     "cls": 0.7279,
+     "main_at_usable": {
+      "task_ms": 1054,
+      "script_ms": 501,
+      "layout_ms": 225,
+      "style_ms": 68,
+      "recalcs": 110,
+      "layouts": 51
+     },
+     "long_tasks": {
+      "count": 4,
+      "sum_ms": 271,
+      "max_ms": 77
+     },
+     "loaf_worst": [
+      {
+       "s": 720.6,
+       "d": 137.3,
+       "block": 17.5,
+       "render": 136.5,
+       "style": 136.7,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8a2c3c3a-52bb-48af-82af-f22d0f7505a4\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 31,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/b21d96c7-cd73-4822-98af-abd506c91af3\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 66.6,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/9a1d16ae-8f15-4781-a39b-b571037ad133\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 38.5,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 9.4,
+       "d": 115.1,
+       "block": 55.6,
+       "render": 11.3,
+       "style": 11.3,
+       "scripts": []
+      },
+      {
+       "s": 609.8,
+       "d": 110.1,
+       "block": 0,
+       "render": 109,
+       "style": 109.2,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8b45826d-ad39-4ded-a9ee-b246c359ab55\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 27.4,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/332c79ae-947e-45dd-816c-02b926da9f3d\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 27.8,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/e27dcc69-312f-4766-af5a-0db263325db7\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 7.3,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/20ad8779-04f7-400c-b6fb-b2939096e821\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 33.9,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 134.6,
+       "d": 90.4,
+       "block": 28.8,
+       "render": 89.1,
+       "style": 89.2,
+       "scripts": [
+        {
+         "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+         "type": "classic-script",
+         "src": "/static/creator-office.js?v=20260930_214952",
+         "fn": "",
+         "ch": 0,
+         "d": 73.6,
+         "forced": 55.2
+        }
+       ]
+      }
+     ],
+     "requests": 144,
+     "transferred_kb": 38604,
+     "by_type": {
+      "Document": {
+       "n": 1,
+       "kb": 247
+      },
+      "js": {
+       "n": 20,
+       "kb": 1620
+      },
+      "css": {
+       "n": 11,
+       "kb": 268
+      },
+      "json": {
+       "n": 22,
+       "kb": 19181
+      },
+      "image": {
+       "n": 37,
+       "kb": 16551
+      },
+      "Font": {
+       "n": 1,
+       "kb": 727
+      },
+      "Image": {
+       "n": 49,
+       "kb": 0
+      },
+      "Fetch": {
+       "n": 3,
+       "kb": 10
+      }
+     },
+     "errors": []
+    },
+    "warm": {
+     "time_to_usable_ms": 876,
+     "first_card_ms": 876,
+     "canvas_ms": 239,
+     "ttfb_ms": 3,
+     "dcl_ms": 251,
+     "load_ms": 303,
+     "fcp_ms": 184,
+     "lcp_ms": 236,
+     "cls": 0.03,
+     "main_at_usable": {
+      "task_ms": 867,
+      "script_ms": 418,
+      "layout_ms": 170,
+      "style_ms": 52,
+      "recalcs": 59,
+      "layouts": 33
+     },
+     "long_tasks": {
+      "count": 3,
+      "sum_ms": 227,
+      "max_ms": 111
+     },
+     "loaf_worst": [
+      {
+       "s": 9,
+       "d": 147.9,
+       "block": 74.4,
+       "render": 134.6,
+       "style": 134.6,
+       "scripts": [
+        {
+         "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+         "type": "classic-script",
+         "src": "/static/creator-office.js?v=20260930_214952",
+         "fn": "",
+         "ch": 0,
+         "d": 111.1,
+         "forced": 94.4
+        }
+       ]
+      },
+      {
+       "s": 498.1,
+       "d": 137.2,
+       "block": 17.8,
+       "render": 136.2,
+       "style": 136.5,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/3cc43087-0b33-496f-be0c-488747fa60e3\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 36.1,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/1a740d75-45b2-4417-b30f-29772e0605f1\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 32.1,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/ec02ac57-141d-44b0-9f21-ff106866638f\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 66.8,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 380.9,
+       "d": 116.4,
+       "block": 0,
+       "render": 114.7,
+       "style": 115.3,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8f908cec-a693-4e3c-a629-5c45810b232b\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 17.7,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/00faa607-954b-47d6-96ec-d556cc34619d\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 5.4,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/ea25bb4b-8a7a-4ba0-ae2d-ad68885124b4\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 10.3,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/63434634-cdda-41a1-ba22-a649952fa12b\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 25.6,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/74e2c5d3-c69b-452c-825c-46019d5463fe\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 9.7,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/acdfdc32-d69b-496a-a41e-8e4ebb263815\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 5.2,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/5216a771-655d-4e7d-8347-cb1fb540cbc4\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 28.4,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 635.9,
+       "d": 74.3,
+       "block": 12.6,
+       "render": 62.4,
+       "style": 64.3,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/525ff40c-1061-49a1-bd10-2b70225b8559\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 50.6,
+         "forced": 0.2
+        }
+       ]
+      }
+     ],
+     "requests": 140,
+     "transferred_kb": 19773,
+     "by_type": {
+      "Document": {
+       "n": 1,
+       "kb": 247
+      },
+      "js": {
+       "n": 20,
+       "kb": 288
+      },
+      "css": {
+       "n": 11,
+       "kb": 47
+      },
+      "json": {
+       "n": 21,
+       "kb": 19181
+      },
+      "Font": {
+       "n": 1,
+       "kb": 0
+      },
+      "Image": {
+       "n": 49,
+       "kb": 0
+      },
+      "image": {
+       "n": 34,
+       "kb": 0
+      },
+      "Fetch": {
+       "n": 3,
+       "kb": 10
+      }
+     },
+     "errors": []
+    },
+    "headline": {
+     "time_to_usable_ms_cold": 1364,
+     "time_to_usable_ms_warm": 876
+    }
+   },
+   "desk": {
+    "usable_ms": 1467,
+    "refresh_hz": 120,
+    "idle": {
+     "label": "idle",
+     "seconds": 15.01,
+     "frames": {
+      "frames": 1802,
+      "seconds": 15.01,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 120,
+      "mean_ms": 8.333,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.5,
+      "p999_ms": 8.6,
+      "worst_ms": 8.6,
+      "gt_8_33": 0,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 0,
+      "hitches_per_min": 0,
+      "hitch_ms_per_s": 0,
+      "missed_frames": 0,
+      "missed_ratio": 0
+     },
+     "main": {
+      "task_ms_per_s": 145.5,
+      "script_ms_per_s": 21.1,
+      "layout_ms_per_s": 1.88,
+      "style_ms_per_s": 44.7,
+      "style_recalcs_per_s": 121.7,
+      "layouts_per_s": 6.8,
+      "heap_mb": 17.5,
+      "dom_nodes": 4131,
+      "listeners": 456,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 27.5,
+      "gpu": 24.8,
+      "browser": 0.6,
+      "total": 53.3
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 55,
+      "total_kb": 1943,
+      "kb_per_s": 129.4,
+      "non_get": []
+     },
+     "animations": {
+      "total": 71,
+      "running": 47
+     },
+     "layers_note": "see spikes/audit for attribution"
+    },
+    "idle_quiet": {
+     "label": "idle-quiet",
+     "seconds": 10.01,
+     "frames": null,
+     "main": {
+      "task_ms_per_s": 138.7,
+      "script_ms_per_s": 17.2,
+      "layout_ms_per_s": 1.66,
+      "style_ms_per_s": 43.8,
+      "style_recalcs_per_s": 121.7,
+      "layouts_per_s": 5.5,
+      "heap_mb": 21.1,
+      "dom_nodes": 4147,
+      "listeners": 456,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 27.3,
+      "gpu": 24.6,
+      "browser": 0.6,
+      "total": 52.9
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 38,
+      "total_kb": 1723,
+      "kb_per_s": 172.1,
+      "non_get": []
+     }
+    },
+    "scroll_range_px": 8424,
+    "wheel_over_canvas_scrolls": true,
+    "scroll_first": {
+     "label": "scroll-first",
+     "seconds": 20.5,
+     "frames": {
+      "frames": 2402,
+      "seconds": 20.49,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 117.2,
+      "mean_ms": 8.535,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 41.56,
+      "worst_ms": 58.3,
+      "gt_8_33": 41,
+      "gt_16_67": 6,
+      "gt_33_3": 4,
+      "gt_50": 1,
+      "hitches": 41,
+      "hitches_per_min": 120,
+      "hitch_ms_per_s": 23.53,
+      "missed_frames": 58,
+      "missed_ratio": 0.0236
+     },
+     "main": {
+      "task_ms_per_s": 179,
+      "script_ms_per_s": 11.7,
+      "layout_ms_per_s": 2.28,
+      "style_ms_per_s": 38.9,
+      "style_recalcs_per_s": 121.2,
+      "layouts_per_s": 6.6,
+      "heap_mb": 18.6,
+      "dom_nodes": 9391,
+      "listeners": 553,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 29.9,
+      "gpu": 32.6,
+      "browser": 2.2,
+      "total": 65.2
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 83,
+      "total_kb": 3128,
+      "kb_per_s": 152.6,
+      "non_get": []
+     }
+    },
+    "scroll_normal": {
+     "label": "scroll-normal",
+     "seconds": 40.53,
+     "frames": {
+      "frames": 4796,
+      "seconds": 40.53,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 118.3,
+      "mean_ms": 8.452,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 16.8,
+      "worst_ms": 25.1,
+      "gt_8_33": 67,
+      "gt_16_67": 1,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 67,
+      "hitches_per_min": 99.2,
+      "hitch_ms_per_s": 13.97,
+      "missed_frames": 68,
+      "missed_ratio": 0.014
+     },
+     "main": {
+      "task_ms_per_s": 184.1,
+      "script_ms_per_s": 11.7,
+      "layout_ms_per_s": 1.88,
+      "style_ms_per_s": 38.1,
+      "style_recalcs_per_s": 122.4,
+      "layouts_per_s": 6.5,
+      "heap_mb": 20.3,
+      "dom_nodes": 8919,
+      "listeners": 523,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 30.4,
+      "gpu": 28.3,
+      "browser": 2.3,
+      "total": 61.4
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 154,
+      "total_kb": 6292,
+      "kb_per_s": 155.3,
+      "non_get": []
+     }
+    },
+    "scroll_fast": {
+     "label": "scroll-fast",
+     "seconds": 24.16,
+     "frames": {
+      "frames": 2843,
+      "seconds": 24.16,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 117.6,
+      "mean_ms": 8.5,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.7,
+      "p999_ms": 16.8,
+      "worst_ms": 16.8,
+      "gt_8_33": 58,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 57,
+      "hitches_per_min": 141.6,
+      "hitch_ms_per_s": 19.67,
+      "missed_frames": 57,
+      "missed_ratio": 0.0197
+     },
+     "main": {
+      "task_ms_per_s": 190.3,
+      "script_ms_per_s": 11.4,
+      "layout_ms_per_s": 1.93,
+      "style_ms_per_s": 39.7,
+      "style_recalcs_per_s": 121.6,
+      "layouts_per_s": 7,
+      "heap_mb": 18.5,
+      "dom_nodes": 8833,
+      "listeners": 522,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 31.6,
+      "gpu": 29.8,
+      "browser": 1.9,
+      "total": 63.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 92,
+      "total_kb": 3531,
+      "kb_per_s": 146.2,
+      "non_get": []
+     }
+    },
+    "errors": [],
+    "non_get": []
+   },
+   "regions": {
+    "page_height": 10636,
+    "y0": {
+     "task_ms_per_s": 144.8,
+     "script_ms_per_s": 18.8,
+     "style_ms_per_s": 44.3,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 27.8,
+      "gpu": 24.7,
+      "browser": 0.8,
+      "total": 53.8
+     },
+     "running_animations": 47
+    },
+    "y800": {
+     "task_ms_per_s": 181.1,
+     "script_ms_per_s": 7.9,
+     "style_ms_per_s": 45.9,
+     "style_recalcs_per_s": 122,
+     "cpu_pct_of_one_core": {
+      "renderer": 29.9,
+      "gpu": 20.2,
+      "browser": 0.6,
+      "total": 51.1
+     },
+     "running_animations": 49
+    },
+    "y1600": {
+     "task_ms_per_s": 179.1,
+     "script_ms_per_s": 7.2,
+     "style_ms_per_s": 43.4,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 30.5,
+      "gpu": 27.5,
+      "browser": 0.7,
+      "total": 59.3
+     },
+     "running_animations": 43
+    },
+    "y2600": {
+     "task_ms_per_s": 150.8,
+     "script_ms_per_s": 7,
+     "style_ms_per_s": 32.2,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 25.3,
+      "gpu": 24.4,
+      "browser": 0.4,
+      "total": 50.4
+     },
+     "running_animations": 29
+    },
+    "y3600": {
+     "task_ms_per_s": 157.7,
+     "script_ms_per_s": 7.4,
+     "style_ms_per_s": 33.1,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 26.7,
+      "gpu": 25.1,
+      "browser": 0.5,
+      "total": 52.6
+     },
+     "running_animations": 29
+    },
+    "y4900": {
+     "task_ms_per_s": 153,
+     "script_ms_per_s": 7,
+     "style_ms_per_s": 32.3,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 26.2,
+      "gpu": 25.8,
+      "browser": 0.5,
+      "total": 52.9
+     },
+     "running_animations": 30
+    },
+    "y5900": {
+     "task_ms_per_s": 145.2,
+     "script_ms_per_s": 7.3,
+     "style_ms_per_s": 31.7,
+     "style_recalcs_per_s": 121.9,
+     "cpu_pct_of_one_core": {
+      "renderer": 25.5,
+      "gpu": 24.4,
+      "browser": 1.3,
+      "total": 51.9
+     },
+     "running_animations": 30
+    },
+    "y6600": {
+     "task_ms_per_s": 145.8,
+     "script_ms_per_s": 6.7,
+     "style_ms_per_s": 33.1,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 24.4,
+      "gpu": 20.9,
+      "browser": 0.6,
+      "total": 46.4
+     },
+     "running_animations": 31
+    },
+    "errors": []
+   },
+   "world": {
+    "desk_idle_before": {
+     "fps": 120,
+     "p99_ms": 8.6,
+     "task_ms_per_s": 143.5,
+     "running": 47
+    },
+    "descent": {
+     "label": "descent",
+     "seconds": 13.71,
+     "frames": {
+      "frames": 1617,
+      "seconds": 13.71,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 117.9,
+      "mean_ms": 8.483,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 19.918,
+      "worst_ms": 41.5,
+      "gt_8_33": 25,
+      "gt_16_67": 2,
+      "gt_33_3": 1,
+      "gt_50": 0,
+      "hitches": 25,
+      "hitches_per_min": 109.4,
+      "hitch_ms_per_s": 17.59,
+      "missed_frames": 29,
+      "missed_ratio": 0.0176
+     },
+     "main": {
+      "task_ms_per_s": 191.2,
+      "script_ms_per_s": 11.8,
+      "layout_ms_per_s": 2.94,
+      "style_ms_per_s": 37.2,
+      "style_recalcs_per_s": 144.9,
+      "layouts_per_s": 8.5,
+      "heap_mb": 21.1,
+      "dom_nodes": 8992,
+      "listeners": 532,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 30.6,
+      "gpu": 32,
+      "browser": 1.9,
+      "total": 65.1
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 62,
+      "total_kb": 2682,
+      "kb_per_s": 195.6,
+      "non_get": []
+     }
+    },
+    "world_boot_wait_ms": 1,
+    "world_assets": [
+     {
+      "u": "/static/world/seamless-buildings.js",
+      "kb": 59,
+      "ms": 10
+     },
+     {
+      "u": "/static/world/seamless-art.js",
+      "kb": 56,
+      "ms": 9
+     },
+     {
+      "u": "/static/world/seamless-app.js",
+      "kb": 56,
+      "ms": 11
+     },
+     {
+      "u": "/static/world/seamless-districts.js",
+      "kb": 54,
+      "ms": 9
+     },
+     {
+      "u": "/api/world/character-thumb/MEMBER_AVATAR_6A58318F0D21",
+      "kb": 43,
+      "ms": 20
+     },
+     {
+      "u": "/static/world/world-scene.js",
+      "kb": 38,
+      "ms": 9
+     },
+     {
+      "u": "/static/world/seamless.css",
+      "kb": 37,
+      "ms": 3
+     },
+     {
+      "u": "/static/world/office-world-bridge.js",
+      "kb": 13,
+      "ms": 39
+     },
+     {
+      "u": "/api/world/state",
+      "kb": 11,
+      "ms": 9
+     },
+     {
+      "u": "/static/world/office-gate.css",
+      "kb": 7,
+      "ms": 18
+     }
+    ],
+    "world_asset_total_kb": 374,
+    "arrived": {
+     "zone": "city",
+     "paused": false,
+     "residents": 7,
+     "docH": 12900
+    },
+    "city_idle": {
+     "label": "city-idle",
+     "seconds": 15.01,
+     "frames": {
+      "frames": 1803,
+      "seconds": 15.02,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 120,
+      "mean_ms": 8.333,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.5,
+      "p999_ms": 8.6,
+      "worst_ms": 8.6,
+      "gt_8_33": 0,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 0,
+      "hitches_per_min": 0,
+      "hitch_ms_per_s": 0,
+      "missed_frames": 0,
+      "missed_ratio": 0
+     },
+     "main": {
+      "task_ms_per_s": 184.1,
+      "script_ms_per_s": 9.3,
+      "layout_ms_per_s": 2.2,
+      "style_ms_per_s": 26.4,
+      "style_recalcs_per_s": 121.6,
+      "layouts_per_s": 6.5,
+      "heap_mb": 27.2,
+      "dom_nodes": 9235,
+      "listeners": 550,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 27.6,
+      "gpu": 14.9,
+      "browser": 0.6,
+      "total": 43.6
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 60,
+      "total_kb": 2606,
+      "kb_per_s": 173.5,
+      "non_get": []
+     }
+    },
+    "city_animations": {
+     "total": 54,
+     "running": 18
+    },
+    "city_interactions": {
+     "label": "city-interactions",
+     "seconds": 10.72,
+     "frames": {
+      "frames": 1285,
+      "seconds": 10.72,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 119.8,
+      "mean_ms": 8.346,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.6,
+      "p999_ms": 14.293,
+      "worst_ms": 16.7,
+      "gt_8_33": 2,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 2,
+      "hitches_per_min": 11.2,
+      "hitch_ms_per_s": 1.54,
+      "missed_frames": 2,
+      "missed_ratio": 0.0016
+     },
+     "main": {
+      "task_ms_per_s": 204.6,
+      "script_ms_per_s": 12.5,
+      "layout_ms_per_s": 7.89,
+      "style_ms_per_s": 31.2,
+      "style_recalcs_per_s": 188.2,
+      "layouts_per_s": 26.9,
+      "heap_mb": 24.6,
+      "dom_nodes": 9999,
+      "listeners": 571,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 29.6,
+      "gpu": 16.2,
+      "browser": 0.6,
+      "total": 46.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 44,
+      "total_kb": 1297,
+      "kb_per_s": 121,
+      "non_get": []
+     }
+    },
+    "city_interaction_latency_ms": {
+     "open_data_drawer": 25.6,
+     "close_data_drawer": 11.2,
+     "open_resident_card": 13.5,
+     "close_resident_card": 15.2,
+     "zoom_in": 20.9,
+     "zoom_out": 19.1,
+     "time_of_day": 18.4,
+     "district_menu": 17.6
+    },
+    "ascent": {
+     "label": "ascent",
+     "seconds": 12.84,
+     "frames": {
+      "frames": 1520,
+      "seconds": 12.84,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 118.3,
+      "mean_ms": 8.454,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 16.8,
+      "worst_ms": 16.8,
+      "gt_8_33": 22,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 22,
+      "hitches_per_min": 102.8,
+      "hitch_ms_per_s": 14.27,
+      "missed_frames": 22,
+      "missed_ratio": 0.0143
+     },
+     "main": {
+      "task_ms_per_s": 198.3,
+      "script_ms_per_s": 13.6,
+      "layout_ms_per_s": 2.2,
+      "style_ms_per_s": 39.1,
+      "style_recalcs_per_s": 145,
+      "layouts_per_s": 7.8,
+      "heap_mb": 25.8,
+      "dom_nodes": 9501,
+      "listeners": 531,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 32.2,
+      "gpu": 27.8,
+      "browser": 2.2,
+      "total": 62.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 48,
+      "total_kb": 2139,
+      "kb_per_s": 166.6,
+      "non_get": []
+     }
+    },
+    "back_at_desk": {
+     "scrollY": 0,
+     "world_booted": true,
+     "paused": true,
+     "near": [],
+     "world_running_animations": 0,
+     "all_running": 49
+    },
+    "desk_idle_after": {
+     "fps": 120,
+     "p99_ms": 8.6,
+     "task_ms_per_s": 163.6,
+     "running": 49
+    },
+    "world_heap_mb": 23.4,
+    "errors": []
+   }
+  },
+  {
+   "load": {
+    "cold": {
+     "time_to_usable_ms": 1243,
+     "first_card_ms": 1243,
+     "canvas_ms": 328,
+     "ttfb_ms": 3,
+     "dcl_ms": 338,
+     "load_ms": 394,
+     "fcp_ms": 108,
+     "lcp_ms": 316,
+     "cls": 0.3253,
+     "main_at_usable": {
+      "task_ms": 1012,
+      "script_ms": 499,
+      "layout_ms": 181,
+      "style_ms": 63,
+      "recalcs": 97,
+      "layouts": 72
+     },
+     "long_tasks": {
+      "count": 5,
+      "sum_ms": 332,
+      "max_ms": 92
+     },
+     "loaf_worst": [
+      {
+       "s": 584.1,
+       "d": 136.7,
+       "block": 12.1,
+       "render": 135.8,
+       "style": 136.1,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/bdcc8225-386b-4dc9-b4b6-323fcfadbe93\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 7,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/5779b5e1-f978-4400-bdc8-91b0d6df914e\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 26,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/d9f67f0e-d263-4911-b8c4-9b1040d912f0\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 41.3,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/b82b4471-baef-4c1d-9b8a-c9c0e53d46a6\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 61.2,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 66.1,
+       "d": 108.4,
+       "block": 56.6,
+       "render": 93.8,
+       "style": 93.8,
+       "scripts": [
+        {
+         "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+         "type": "classic-script",
+         "src": "/static/creator-office.js?v=20260930_214952",
+         "fn": "",
+         "ch": 0,
+         "d": 85.7,
+         "forced": 64.1
+        }
+       ]
+      },
+      {
+       "s": 177.6,
+       "d": 82.1,
+       "block": 27.2,
+       "render": 80.9,
+       "style": 81,
+       "scripts": [
+        {
+         "inv": "http://127.0.0.1:19393/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "type": "classic-script",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 0,
+         "d": 75.4,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 739.2,
+       "d": 81.7,
+       "block": 0,
+       "render": 80.7,
+       "style": 80.9,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/c5c781fd-1a51-433a-b908-c32a7d0a3893\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 31.4,
+         "forced": 0
+        }
+       ]
+      }
+     ],
+     "requests": 141,
+     "transferred_kb": 38596,
+     "by_type": {
+      "Document": {
+       "n": 1,
+       "kb": 247
+      },
+      "js": {
+       "n": 20,
+       "kb": 1620
+      },
+      "css": {
+       "n": 11,
+       "kb": 268
+      },
+      "json": {
+       "n": 22,
+       "kb": 19181
+      },
+      "Font": {
+       "n": 1,
+       "kb": 727
+      },
+      "Image": {
+       "n": 49,
+       "kb": 0
+      },
+      "image": {
+       "n": 34,
+       "kb": 16543
+      },
+      "Fetch": {
+       "n": 3,
+       "kb": 10
+      }
+     },
+     "errors": []
+    },
+    "warm": {
+     "time_to_usable_ms": 869,
+     "first_card_ms": 869,
+     "canvas_ms": 245,
+     "ttfb_ms": 2,
+     "dcl_ms": 254,
+     "load_ms": 314,
+     "fcp_ms": 184,
+     "lcp_ms": 244,
+     "cls": 0.0328,
+     "main_at_usable": {
+      "task_ms": 857,
+      "script_ms": 416,
+      "layout_ms": 174,
+      "style_ms": 49,
+      "recalcs": 60,
+      "layouts": 38
+     },
+     "long_tasks": {
+      "count": 3,
+      "sum_ms": 232,
+      "max_ms": 114
+     },
+     "loaf_worst": [
+      {
+       "s": 8.6,
+       "d": 153.1,
+       "block": 78.9,
+       "render": 138.9,
+       "style": 139,
+       "scripts": [
+        {
+         "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+         "type": "classic-script",
+         "src": "/static/creator-office.js?v=20260930_214952",
+         "fn": "",
+         "ch": 0,
+         "d": 114.7,
+         "forced": 97.9
+        }
+       ]
+      },
+      {
+       "s": 515.5,
+       "d": 135.1,
+       "block": 19.7,
+       "render": 134.2,
+       "style": 134.5,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/75ec74a8-4443-4885-be5c-c30fd2a5cbf4\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 33.8,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8d7d03aa-edb3-4e70-b74f-ec5546c83e98\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 31.3,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/fa67a9d3-5949-4466-b085-cbcb6066d2cf\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 68.7,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 397.4,
+       "d": 117.1,
+       "block": 0,
+       "render": 107.4,
+       "style": 107.9,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/f1f51ff8-e553-450e-b039-011c1803aaf8\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 16.7,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/6df4348f-78f4-4905-b40c-85b1db41bdae\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 9.9,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/db4aa6b3-ed35-4c99-b3b6-cf37ccd82a19\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 23.9,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/e42885f2-069c-49b7-a3b9-3910202b6715\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 7.9,
+         "forced": 0
+        },
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/3217f057-3f96-4df1-89d5-2d1e1cd3d698\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 23.6,
+         "forced": 0
+        }
+       ]
+      },
+      {
+       "s": 651.5,
+       "d": 73.4,
+       "block": 2.7,
+       "render": 71.1,
+       "style": 72.7,
+       "scripts": [
+        {
+         "inv": "IMG[src=\"blob:http://127.0.0.1:19393/9b3eedfb-854e-4af7-9514-81b974516cd0\"].onload",
+         "type": "event-listener",
+         "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+         "fn": "",
+         "ch": 556014,
+         "d": 50.4,
+         "forced": 0.2
+        }
+       ]
+      }
+     ],
+     "requests": 140,
+     "transferred_kb": 19774,
+     "by_type": {
+      "Document": {
+       "n": 1,
+       "kb": 247
+      },
+      "js": {
+       "n": 20,
+       "kb": 288
+      },
+      "css": {
+       "n": 11,
+       "kb": 47
+      },
+      "json": {
+       "n": 21,
+       "kb": 19181
+      },
+      "Font": {
+       "n": 1,
+       "kb": 0
+      },
+      "Image": {
+       "n": 49,
+       "kb": 0
+      },
+      "image": {
+       "n": 34,
+       "kb": 0
+      },
+      "Fetch": {
+       "n": 3,
+       "kb": 10
+      }
+     },
+     "errors": []
+    },
+    "headline": {
+     "time_to_usable_ms_cold": 1243,
+     "time_to_usable_ms_warm": 869
+    }
+   },
+   "desk": {
+    "usable_ms": 1206,
+    "refresh_hz": 120,
+    "idle": {
+     "label": "idle",
+     "seconds": 15.01,
+     "frames": {
+      "frames": 1803,
+      "seconds": 15.02,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 120,
+      "mean_ms": 8.333,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.6,
+      "p999_ms": 8.6,
+      "worst_ms": 8.6,
+      "gt_8_33": 0,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 0,
+      "hitches_per_min": 0,
+      "hitch_ms_per_s": 0,
+      "missed_frames": 0,
+      "missed_ratio": 0
+     },
+     "main": {
+      "task_ms_per_s": 137.3,
+      "script_ms_per_s": 20.8,
+      "layout_ms_per_s": 1.75,
+      "style_ms_per_s": 40.9,
+      "style_recalcs_per_s": 121.8,
+      "layouts_per_s": 6.8,
+      "heap_mb": 27.5,
+      "dom_nodes": 4473,
+      "listeners": 476,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 26.9,
+      "gpu": 24.5,
+      "browser": 0.6,
+      "total": 52.4
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 55,
+      "total_kb": 1943,
+      "kb_per_s": 129.4,
+      "non_get": []
+     },
+     "animations": {
+      "total": 71,
+      "running": 47
+     },
+     "layers_note": "see spikes/audit for attribution"
+    },
+    "idle_quiet": {
+     "label": "idle-quiet",
+     "seconds": 10,
+     "frames": null,
+     "main": {
+      "task_ms_per_s": 137.5,
+      "script_ms_per_s": 17.8,
+      "layout_ms_per_s": 1.57,
+      "style_ms_per_s": 43,
+      "style_recalcs_per_s": 121.4,
+      "layouts_per_s": 5.3,
+      "heap_mb": 28.4,
+      "dom_nodes": 4572,
+      "listeners": 476,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 27,
+      "gpu": 24.9,
+      "browser": 0.6,
+      "total": 52.9
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 35,
+      "total_kb": 1699,
+      "kb_per_s": 169.9,
+      "non_get": []
+     }
+    },
+    "scroll_range_px": 8424,
+    "wheel_over_canvas_scrolls": true,
+    "scroll_first": {
+     "label": "scroll-first",
+     "seconds": 20.28,
+     "frames": {
+      "frames": 2394,
+      "seconds": 20.28,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 118,
+      "mean_ms": 8.473,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 16.8,
+      "worst_ms": 50,
+      "gt_8_33": 36,
+      "gt_16_67": 1,
+      "gt_33_3": 1,
+      "gt_50": 0,
+      "hitches": 36,
+      "hitches_per_min": 106.5,
+      "hitch_ms_per_s": 16.41,
+      "missed_frames": 40,
+      "missed_ratio": 0.0164
+     },
+     "main": {
+      "task_ms_per_s": 180.9,
+      "script_ms_per_s": 11.8,
+      "layout_ms_per_s": 2.15,
+      "style_ms_per_s": 39.6,
+      "style_recalcs_per_s": 122.4,
+      "layouts_per_s": 6.7,
+      "heap_mb": 30,
+      "dom_nodes": 9376,
+      "listeners": 553,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 30.2,
+      "gpu": 34,
+      "browser": 2.2,
+      "total": 66.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 84,
+      "total_kb": 3147,
+      "kb_per_s": 155.2,
+      "non_get": []
+     }
+    },
+    "scroll_normal": {
+     "label": "scroll-normal",
+     "seconds": 40.6,
+     "frames": {
+      "frames": 4804,
+      "seconds": 40.59,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 118.3,
+      "mean_ms": 8.451,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.6,
+      "p999_ms": 16.8,
+      "worst_ms": 16.9,
+      "gt_8_33": 68,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 68,
+      "hitches_per_min": 100.5,
+      "hitch_ms_per_s": 13.95,
+      "missed_frames": 68,
+      "missed_ratio": 0.014
+     },
+     "main": {
+      "task_ms_per_s": 183.6,
+      "script_ms_per_s": 11.5,
+      "layout_ms_per_s": 1.92,
+      "style_ms_per_s": 37.8,
+      "style_recalcs_per_s": 122.5,
+      "layouts_per_s": 6.4,
+      "heap_mb": 33.2,
+      "dom_nodes": 9351,
+      "listeners": 548,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 30.2,
+      "gpu": 28.4,
+      "browser": 2.3,
+      "total": 61.4
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 154,
+      "total_kb": 6292,
+      "kb_per_s": 155,
+      "non_get": []
+     }
+    },
+    "scroll_fast": {
+     "label": "scroll-fast",
+     "seconds": 24.14,
+     "frames": {
+      "frames": 2833,
+      "seconds": 24.13,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 117.3,
+      "mean_ms": 8.522,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 16.7,
+      "p999_ms": 16.8,
+      "worst_ms": 33.2,
+      "gt_8_33": 61,
+      "gt_16_67": 2,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 61,
+      "hitches_per_min": 151.7,
+      "hitch_ms_per_s": 22.03,
+      "missed_frames": 64,
+      "missed_ratio": 0.0221
+     },
+     "main": {
+      "task_ms_per_s": 188.3,
+      "script_ms_per_s": 11.4,
+      "layout_ms_per_s": 1.9,
+      "style_ms_per_s": 39.2,
+      "style_recalcs_per_s": 121.6,
+      "layouts_per_s": 7.1,
+      "heap_mb": 22.4,
+      "dom_nodes": 8960,
+      "listeners": 523,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 31.2,
+      "gpu": 30.2,
+      "browser": 1.9,
+      "total": 63.7
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 93,
+      "total_kb": 3667,
+      "kb_per_s": 151.9,
+      "non_get": []
+     }
+    },
+    "errors": [],
+    "non_get": []
+   },
+   "regions": {
+    "page_height": 10636,
+    "y0": {
+     "task_ms_per_s": 141.7,
+     "script_ms_per_s": 18.2,
+     "style_ms_per_s": 43.2,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 27.4,
+      "gpu": 24.3,
+      "browser": 0.7,
+      "total": 52.9
+     },
+     "running_animations": 47
+    },
+    "y800": {
+     "task_ms_per_s": 178.5,
+     "script_ms_per_s": 7.4,
+     "style_ms_per_s": 44.6,
+     "style_recalcs_per_s": 121.9,
+     "cpu_pct_of_one_core": {
+      "renderer": 29,
+      "gpu": 19.7,
+      "browser": 0.6,
+      "total": 49.7
+     },
+     "running_animations": 49
+    },
+    "y1600": {
+     "task_ms_per_s": 184.1,
+     "script_ms_per_s": 7.1,
+     "style_ms_per_s": 44.7,
+     "style_recalcs_per_s": 121.8,
+     "cpu_pct_of_one_core": {
+      "renderer": 31.6,
+      "gpu": 28.7,
+      "browser": 0.7,
+      "total": 61.5
+     },
+     "running_animations": 43
+    },
+    "y2600": {
+     "task_ms_per_s": 153.3,
+     "script_ms_per_s": 6.9,
+     "style_ms_per_s": 32.4,
+     "style_recalcs_per_s": 121.5,
+     "cpu_pct_of_one_core": {
+      "renderer": 25.6,
+      "gpu": 24.5,
+      "browser": 0.5,
+      "total": 50.9
+     },
+     "running_animations": 29
+    },
+    "y3600": {
+     "task_ms_per_s": 154.6,
+     "script_ms_per_s": 7.2,
+     "style_ms_per_s": 31.6,
+     "style_recalcs_per_s": 121.6,
+     "cpu_pct_of_one_core": {
+      "renderer": 26.7,
+      "gpu": 24.4,
+      "browser": 0.4,
+      "total": 51.9
+     },
+     "running_animations": 29
+    },
+    "y4900": {
+     "task_ms_per_s": 159.8,
+     "script_ms_per_s": 7.1,
+     "style_ms_per_s": 33.4,
+     "style_recalcs_per_s": 121.4,
+     "cpu_pct_of_one_core": {
+      "renderer": 27.3,
+      "gpu": 26.5,
+      "browser": 0.5,
+      "total": 54.7
+     },
+     "running_animations": 30
+    },
+    "y5900": {
+     "task_ms_per_s": 150.4,
+     "script_ms_per_s": 7.4,
+     "style_ms_per_s": 32.5,
+     "style_recalcs_per_s": 121.9,
+     "cpu_pct_of_one_core": {
+      "renderer": 25.8,
+      "gpu": 24.5,
+      "browser": 1.3,
+      "total": 52.3
+     },
+     "running_animations": 30
+    },
+    "y6600": {
+     "task_ms_per_s": 145,
+     "script_ms_per_s": 7.2,
+     "style_ms_per_s": 32.5,
+     "style_recalcs_per_s": 121.9,
+     "cpu_pct_of_one_core": {
+      "renderer": 24.4,
+      "gpu": 20.7,
+      "browser": 0.6,
+      "total": 46.2
+     },
+     "running_animations": 31
+    },
+    "errors": []
+   },
+   "world": {
+    "desk_idle_before": {
+     "fps": 120,
+     "p99_ms": 8.6,
+     "task_ms_per_s": 143.6,
+     "running": 47
+    },
+    "descent": {
+     "label": "descent",
+     "seconds": 41.24,
+     "frames": {
+      "frames": 4946,
+      "seconds": 41.23,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 119.9,
+      "mean_ms": 8.338,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.6,
+      "p999_ms": 8.6,
+      "worst_ms": 16.6,
+      "gt_8_33": 3,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 3,
+      "hitches_per_min": 4.4,
+      "hitch_ms_per_s": 0.6,
+      "missed_frames": 3,
+      "missed_ratio": 0.0006
+     },
+     "main": {
+      "task_ms_per_s": 196.1,
+      "script_ms_per_s": 10.3,
+      "layout_ms_per_s": 1.94,
+      "style_ms_per_s": 48,
+      "style_recalcs_per_s": 121.6,
+      "layouts_per_s": 6,
+      "heap_mb": 28.9,
+      "dom_nodes": 4576,
+      "listeners": 481,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 32.3,
+      "gpu": 23.1,
+      "browser": 1.3,
+      "total": 57.1
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 157,
+      "total_kb": 6950,
+      "kb_per_s": 168.5,
+      "non_get": []
+     }
+    },
+    "world_boot_wait_ms": null,
+    "world_assets": [
+     {
+      "u": "/static/world/office-world-bridge.js",
+      "kb": 13,
+      "ms": 40
+     },
+     {
+      "u": "/static/world/office-gate.css",
+      "kb": 7,
+      "ms": 21
+     }
+    ],
+    "world_asset_total_kb": 20,
+    "arrived": {
+     "residents": 0,
+     "docH": 10636
+    },
+    "city_idle": {
+     "label": "city-idle",
+     "seconds": 15.01,
+     "frames": {
+      "frames": 1802,
+      "seconds": 15.01,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 120,
+      "mean_ms": 8.333,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.6,
+      "p999_ms": 8.6,
+      "worst_ms": 8.6,
+      "gt_8_33": 0,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 0,
+      "hitches_per_min": 0,
+      "hitch_ms_per_s": 0,
+      "missed_frames": 0,
+      "missed_ratio": 0
+     },
+     "main": {
+      "task_ms_per_s": 184.8,
+      "script_ms_per_s": 9.8,
+      "layout_ms_per_s": 1.86,
+      "style_ms_per_s": 45.3,
+      "style_recalcs_per_s": 121.4,
+      "layouts_per_s": 5.5,
+      "heap_mb": 25.1,
+      "dom_nodes": 4452,
+      "listeners": 477,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 30.9,
+      "gpu": 21.4,
+      "browser": 0.8,
+      "total": 53.5
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 55,
+      "total_kb": 1944,
+      "kb_per_s": 129.5,
+      "non_get": []
+     }
+    },
+    "city_animations": {
+     "total": 83,
+     "running": 49
+    },
+    "city_interactions": {
+     "label": "city-interactions",
+     "seconds": 10.72,
+     "frames": {
+      "frames": 1286,
+      "seconds": 10.71,
+      "interval_ms": 8.334,
+      "refresh_hz": 120,
+      "fps": 120,
+      "mean_ms": 8.334,
+      "median_ms": 8.3,
+      "p95_ms": 8.5,
+      "p99_ms": 8.6,
+      "p999_ms": 8.6,
+      "worst_ms": 8.7,
+      "gt_8_33": 0,
+      "gt_16_67": 0,
+      "gt_33_3": 0,
+      "gt_50": 0,
+      "hitches": 0,
+      "hitches_per_min": 0,
+      "hitch_ms_per_s": 0,
+      "missed_frames": 0,
+      "missed_ratio": 0
+     },
+     "main": {
+      "task_ms_per_s": 202.1,
+      "script_ms_per_s": 10.7,
+      "layout_ms_per_s": 2.45,
+      "style_ms_per_s": 51.5,
+      "style_recalcs_per_s": 121.5,
+      "layouts_per_s": 6.8,
+      "heap_mb": 17.4,
+      "dom_nodes": 4101,
+      "listeners": 452,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 33.1,
+      "gpu": 22.6,
+      "browser": 0.6,
+      "total": 56.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 39,
+      "total_kb": 1720,
+      "kb_per_s": 160.5,
+      "non_get": []
+     }
+    },
+    "city_interaction_latency_ms": {
+     "open_data_drawer": 12,
+     "close_data_drawer": 14.3,
+     "open_resident_card": 17.6,
+     "close_resident_card": 15.7,
+     "zoom_in": 14.5,
+     "zoom_out": 18.6,
+     "time_of_day": 15.1,
+     "district_menu": 14.1
+    },
+    "ascent": {
+     "label": "ascent",
+     "seconds": 2.77,
+     "frames": {
+      "frames": 305,
+      "seconds": 2.76,
+      "interval_ms": 8.333,
+      "refresh_hz": 120,
+      "fps": 110.2,
+      "mean_ms": 9.073,
+      "median_ms": 8.3,
+      "p95_ms": 8.585,
+      "p99_ms": 24.997,
+      "p999_ms": 62.465,
+      "worst_ms": 75.1,
+      "gt_8_33": 15,
+      "gt_16_67": 5,
+      "gt_33_3": 2,
+      "gt_50": 1,
+      "hitches": 15,
+      "hitches_per_min": 326.3,
+      "hitch_ms_per_s": 81.58,
+      "missed_frames": 27,
+      "missed_ratio": 0.0816
+     },
+     "main": {
+      "task_ms_per_s": 288.2,
+      "script_ms_per_s": 28.6,
+      "layout_ms_per_s": 8.77,
+      "style_ms_per_s": 94.2,
+      "style_recalcs_per_s": 168.2,
+      "layouts_per_s": 58.6,
+      "heap_mb": 30.4,
+      "dom_nodes": 4595,
+      "listeners": 472,
+      "documents": 23,
+      "frames_count": 23
+     },
+     "cpu_pct_of_one_core": {
+      "renderer": 48.6,
+      "gpu": 84,
+      "browser": 1.5,
+      "total": 134.8
+     },
+     "long_tasks": {
+      "count": 0,
+      "over_100": 0,
+      "sum_ms": 0,
+      "max_ms": 0
+     },
+     "network": {
+      "requests": 16,
+      "total_kb": 841,
+      "kb_per_s": 304,
+      "non_get": []
+     }
+    },
+    "back_at_desk": {
+     "scrollY": 1560,
+     "world_booted": false,
+     "world_running_animations": 0,
+     "all_running": 36
+    },
+    "desk_idle_after": {
+     "fps": 120,
+     "p99_ms": 8.5,
+     "task_ms_per_s": 175.6,
+     "running": 36
+    },
+    "world_heap_mb": 29.5,
+    "errors": []
+   }
+  }
+ ],
+ "median": {
+  "load": {
+   "cold": {
+    "time_to_usable_ms": 1303.5,
+    "first_card_ms": 1303.5,
+    "canvas_ms": 348.5,
+    "ttfb_ms": 3,
+    "dcl_ms": 358,
+    "load_ms": 424,
+    "fcp_ms": 124,
+    "lcp_ms": 336,
+    "cls": 0.527,
+    "main_at_usable": {
+     "task_ms": 1033,
+     "script_ms": 500,
+     "layout_ms": 203,
+     "style_ms": 65.5,
+     "recalcs": 103.5,
+     "layouts": 61.5
+    },
+    "long_tasks": {
+     "count": 4.5,
+     "sum_ms": 301.5,
+     "max_ms": 84.5,
+     "list": [
+      {
+       "s": 134.6,
+       "d": 77
+      },
+      {
+       "s": 228.9,
+       "d": 73
+      },
+      {
+       "s": 394.2,
+       "d": 55
+      },
+      {
+       "s": 751.7,
+       "d": 66
+      }
+     ]
+    },
+    "loaf_worst": [
+     {
+      "s": 720.6,
+      "d": 137.3,
+      "block": 17.5,
+      "render": 136.5,
+      "style": 136.7,
+      "scripts": [
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8a2c3c3a-52bb-48af-82af-f22d0f7505a4\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 31,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/b21d96c7-cd73-4822-98af-abd506c91af3\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 66.6,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/9a1d16ae-8f15-4781-a39b-b571037ad133\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 38.5,
+        "forced": 0
+       }
+      ]
+     },
+     {
+      "s": 9.4,
+      "d": 115.1,
+      "block": 55.6,
+      "render": 11.3,
+      "style": 11.3,
+      "scripts": []
+     },
+     {
+      "s": 609.8,
+      "d": 110.1,
+      "block": 0,
+      "render": 109,
+      "style": 109.2,
+      "scripts": [
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8b45826d-ad39-4ded-a9ee-b246c359ab55\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 27.4,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/332c79ae-947e-45dd-816c-02b926da9f3d\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 27.8,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/e27dcc69-312f-4766-af5a-0db263325db7\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 7.3,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/20ad8779-04f7-400c-b6fb-b2939096e821\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 33.9,
+        "forced": 0
+       }
+      ]
+     },
+     {
+      "s": 134.6,
+      "d": 90.4,
+      "block": 28.8,
+      "render": 89.1,
+      "style": 89.2,
+      "scripts": [
+       {
+        "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+        "type": "classic-script",
+        "src": "/static/creator-office.js?v=20260930_214952",
+        "fn": "",
+        "ch": 0,
+        "d": 73.6,
+        "forced": 55.2
+       }
+      ]
+     }
+    ],
+    "requests": 142.5,
+    "transferred_kb": 38600,
+    "by_type": {
+     "Document": {
+      "n": 1,
+      "kb": 247
+     },
+     "js": {
+      "n": 20,
+      "kb": 1620
+     },
+     "css": {
+      "n": 11,
+      "kb": 268
+     },
+     "json": {
+      "n": 22,
+      "kb": 19181
+     },
+     "image": {
+      "n": 35.5,
+      "kb": 16547
+     },
+     "Font": {
+      "n": 1,
+      "kb": 727
+     },
+     "Image": {
+      "n": 49,
+      "kb": 0
+     },
+     "Fetch": {
+      "n": 3,
+      "kb": 10
+     }
+    },
+    "biggest": [
+     "/static/renguin-projects-v2.json 11660KB",
+     "/api/renguin/projects 6652KB",
+     "/static/coffee-machine-v3-grid.webp 2501KB",
+     "/static/sync-animation-v3-grid.webp 2056KB",
+     "/static/star-idle-v5.png 1872KB",
+     "/static/error-bug-spritesheet-grid.webp 1841KB",
+     "/static/renguin-characters/residents/resident-05.png 1476KB",
+     "/static/star-working-spritesheet-grid.webp 1378KB"
+    ],
+    "errors": []
+   },
+   "warm": {
+    "time_to_usable_ms": 872.5,
+    "first_card_ms": 872.5,
+    "canvas_ms": 242,
+    "ttfb_ms": 2.5,
+    "dcl_ms": 252.5,
+    "load_ms": 308.5,
+    "fcp_ms": 184,
+    "lcp_ms": 240,
+    "cls": 0.031,
+    "main_at_usable": {
+     "task_ms": 862,
+     "script_ms": 417,
+     "layout_ms": 172,
+     "style_ms": 50.5,
+     "recalcs": 59.5,
+     "layouts": 35.5
+    },
+    "long_tasks": {
+     "count": 3,
+     "sum_ms": 229.5,
+     "max_ms": 112.5,
+     "list": [
+      {
+       "s": 29.5,
+       "d": 111
+      },
+      {
+       "s": 567.3,
+       "d": 66
+      },
+      {
+       "s": 635.9,
+       "d": 50
+      }
+     ]
+    },
+    "loaf_worst": [
+     {
+      "s": 9,
+      "d": 147.9,
+      "block": 74.4,
+      "render": 134.6,
+      "style": 134.6,
+      "scripts": [
+       {
+        "inv": "http://127.0.0.1:19393/static/creator-office.js?v=20260930_214952",
+        "type": "classic-script",
+        "src": "/static/creator-office.js?v=20260930_214952",
+        "fn": "",
+        "ch": 0,
+        "d": 111.1,
+        "forced": 94.4
+       }
+      ]
+     },
+     {
+      "s": 498.1,
+      "d": 137.2,
+      "block": 17.8,
+      "render": 136.2,
+      "style": 136.5,
+      "scripts": [
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/3cc43087-0b33-496f-be0c-488747fa60e3\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 36.1,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/1a740d75-45b2-4417-b30f-29772e0605f1\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 32.1,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/ec02ac57-141d-44b0-9f21-ff106866638f\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 66.8,
+        "forced": 0
+       }
+      ]
+     },
+     {
+      "s": 380.9,
+      "d": 116.4,
+      "block": 0,
+      "render": 114.7,
+      "style": 115.3,
+      "scripts": [
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/8f908cec-a693-4e3c-a629-5c45810b232b\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 17.7,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/00faa607-954b-47d6-96ec-d556cc34619d\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 5.4,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/ea25bb4b-8a7a-4ba0-ae2d-ad68885124b4\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 10.3,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/63434634-cdda-41a1-ba22-a649952fa12b\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 25.6,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/74e2c5d3-c69b-452c-825c-46019d5463fe\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 9.7,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/acdfdc32-d69b-496a-a41e-8e4ebb263815\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 5.2,
+        "forced": 0
+       },
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/5216a771-655d-4e7d-8347-cb1fb540cbc4\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 28.4,
+        "forced": 0
+       }
+      ]
+     },
+     {
+      "s": 635.9,
+      "d": 74.3,
+      "block": 12.6,
+      "render": 62.4,
+      "style": 64.3,
+      "scripts": [
+       {
+        "inv": "IMG[src=\"blob:http://127.0.0.1:19393/525ff40c-1061-49a1-bd10-2b70225b8559\"].onload",
+        "type": "event-listener",
+        "src": "/static/vendor/phaser-3.80.1.min.js?v=20260930_214952",
+        "fn": "",
+        "ch": 556014,
+        "d": 50.6,
+        "forced": 0.2
+       }
+      ]
+     }
+    ],
+    "requests": 140,
+    "transferred_kb": 19773.5,
+    "by_type": {
+     "Document": {
+      "n": 1,
+      "kb": 247
+     },
+     "js": {
+      "n": 20,
+      "kb": 288
+     },
+     "css": {
+      "n": 11,
+      "kb": 47
+     },
+     "json": {
+      "n": 21,
+      "kb": 19181
+     },
+     "Font": {
+      "n": 1,
+      "kb": 0
+     },
+     "Image": {
+      "n": 49,
+      "kb": 0
+     },
+     "image": {
+      "n": 34,
+      "kb": 0
+     },
+     "Fetch": {
+      "n": 3,
+      "kb": 10
+     }
+    },
+    "biggest": [
+     "/static/renguin-projects-v2.json 11660KB",
+     "/api/renguin/projects 6652KB",
+     "/api/creator/presentation 373KB",
+     "/api/creator/event-statuses 265KB",
+     "/ 247KB",
+     "/static/creator-office.js 153KB",
+     "/api/renguin/operations 136KB",
+     "/static/renguin-star-office-extension.js 63KB"
+    ],
+    "errors": []
+   },
+   "headline": {
+    "time_to_usable_ms_cold": 1303.5,
+    "time_to_usable_ms_warm": 872.5
+   }
+  },
+  "desk": {
+   "usable_ms": 1336.5,
+   "refresh_hz": 120,
+   "idle": {
+    "label": "idle",
+    "seconds": 15.01,
+    "frames": {
+     "frames": 1802.5,
+     "seconds": 15.015,
+     "interval_ms": 8.333,
+     "refresh_hz": 120,
+     "fps": 120,
+     "mean_ms": 8.333,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 8.55,
+     "p999_ms": 8.6,
+     "worst_ms": 8.6,
+     "gt_8_33": 0,
+     "gt_16_67": 0,
+     "gt_33_3": 0,
+     "gt_50": 0,
+     "hitches": 0,
+     "hitches_per_min": 0,
+     "hitch_ms_per_s": 0,
+     "missed_frames": 0,
+     "missed_ratio": 0
+    },
+    "where": {
+     "hitches_by_scroll_y": [],
+     "worst_frames": [
+      {
+       "ms": 8.6,
+       "at_s": 13.63,
+       "scroll_y": 0
+      },
+      {
+       "ms": 8.6,
+       "at_s": 1.58,
+       "scroll_y": 0
+      },
+      {
+       "ms": 8.6,
+       "at_s": 2.52,
+       "scroll_y": 0
+      },
+      {
+       "ms": 8.6,
+       "at_s": 2.79,
+       "scroll_y": 0
+      },
+      {
+       "ms": 8.6,
+       "at_s": 3.38,
+       "scroll_y": 0
+      },
+      {
+       "ms": 8.6,
+       "at_s": 5.39,
+       "scroll_y": 0
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 141.4,
+     "script_ms_per_s": 20.95,
+     "layout_ms_per_s": 1.815,
+     "style_ms_per_s": 42.8,
+     "style_recalcs_per_s": 121.75,
+     "layouts_per_s": 6.8,
+     "heap_mb": 22.5,
+     "dom_nodes": 4302,
+     "listeners": 466,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 27.2,
+     "gpu": 24.65,
+     "browser": 0.6,
+     "total": 52.85
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [],
+    "network": {
+     "requests": 55,
+     "total_kb": 1943,
+     "kb_per_s": 129.4,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 373.1,
+       "kb_per_s": 49.7,
+       "interval_s": 5.63,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 264.7,
+       "kb_per_s": 35.3,
+       "interval_s": 5.64,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 136.3,
+       "kb_per_s": 27.2,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 10,
+       "per_min": 40,
+       "kb_per_req": 13.6,
+       "kb_per_s": 9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 10,
+       "per_min": 40,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 23.2,
+       "kb_per_s": 3.1,
+       "interval_s": 5.72,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 15,
+       "per_min": 60,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.4,
+       "interval_s": 1.01,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 4,
+       "per_min": 16,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.51,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 10,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0,
+       "interval_s": 5.72,
+       "methods": "GET"
+      }
+     ]
+    },
+    "animations": {
+     "total": 71,
+     "running": 47
+    },
+    "layers_note": "see spikes/audit for attribution"
+   },
+   "idle_quiet": {
+    "label": "idle-quiet",
+    "seconds": 10.005,
+    "main": {
+     "task_ms_per_s": 138.1,
+     "script_ms_per_s": 17.5,
+     "layout_ms_per_s": 1.615,
+     "style_ms_per_s": 43.4,
+     "style_recalcs_per_s": 121.55,
+     "layouts_per_s": 5.4,
+     "heap_mb": 24.75,
+     "dom_nodes": 4359.5,
+     "listeners": 466,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 27.15,
+     "gpu": 24.75,
+     "browser": 0.6,
+     "total": 52.9
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [],
+    "network": {
+     "requests": 36.5,
+     "total_kb": 1711,
+     "kb_per_s": 171,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 373.1,
+       "kb_per_s": 74.5,
+       "interval_s": 5.59,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 264.7,
+       "kb_per_s": 52.9,
+       "interval_s": 5.61,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 136.3,
+       "kb_per_s": 27.2,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 6,
+       "per_min": 36,
+       "kb_per_req": 13.6,
+       "kb_per_s": 8.1,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 23.6,
+       "kb_per_s": 4.7,
+       "interval_s": 5.71,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 6,
+       "per_min": 36,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.1,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 10,
+       "per_min": 59.9,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.4,
+       "interval_s": 1.01,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.1,
+       "interval_s": 5.71,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 3,
+       "per_min": 18,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.51,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 2,
+       "per_min": 12,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 1,
+       "per_min": 6,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": null,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "scroll_range_px": 8424,
+   "wheel_over_canvas_scrolls": true,
+   "scroll_first": {
+    "label": "scroll-first",
+    "seconds": 20.39,
+    "frames": {
+     "frames": 2398,
+     "seconds": 20.385,
+     "interval_ms": 8.334,
+     "refresh_hz": 120,
+     "fps": 117.6,
+     "mean_ms": 8.504,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 16.6,
+     "p999_ms": 29.18,
+     "worst_ms": 54.15,
+     "gt_8_33": 38.5,
+     "gt_16_67": 3.5,
+     "gt_33_3": 2.5,
+     "gt_50": 0.5,
+     "hitches": 38.5,
+     "hitches_per_min": 113.25,
+     "hitch_ms_per_s": 19.97,
+     "missed_frames": 49,
+     "missed_ratio": 0.02
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 750,
+       "hitches": 2,
+       "lost_ms": 83,
+       "worst_ms": 58
+      },
+      {
+       "at_y": 7500,
+       "hitches": 4,
+       "lost_ms": 58,
+       "worst_ms": 42
+      },
+      {
+       "at_y": 2000,
+       "hitches": 3,
+       "lost_ms": 41,
+       "worst_ms": 33
+      },
+      {
+       "at_y": 6500,
+       "hitches": 2,
+       "lost_ms": 41,
+       "worst_ms": 42
+      },
+      {
+       "at_y": 500,
+       "hitches": 3,
+       "lost_ms": 33,
+       "worst_ms": 25
+      },
+      {
+       "at_y": 4000,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3250,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 1500,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 58.3,
+       "at_s": 1.02,
+       "scroll_y": 968
+      },
+      {
+       "ms": 41.7,
+       "at_s": 9.26,
+       "scroll_y": 7517
+      },
+      {
+       "ms": 41.6,
+       "at_s": 0.92,
+       "scroll_y": 845
+      },
+      {
+       "ms": 41.5,
+       "at_s": 8.16,
+       "scroll_y": 6618
+      },
+      {
+       "ms": 33.2,
+       "at_s": 2.52,
+       "scroll_y": 2005
+      },
+      {
+       "ms": 24.9,
+       "at_s": 0.82,
+       "scroll_y": 696
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 179.95,
+     "script_ms_per_s": 11.75,
+     "layout_ms_per_s": 2.215,
+     "style_ms_per_s": 39.25,
+     "style_recalcs_per_s": 121.8,
+     "layouts_per_s": 6.65,
+     "heap_mb": 24.3,
+     "dom_nodes": 9383.5,
+     "listeners": 553,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 30.05,
+     "gpu": 33.3,
+     "browser": 2.2,
+     "total": 66
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0.5,
+     "worst_ms": 30.9,
+     "top": [
+      {
+       "s": 37555.1,
+       "d": 61.8,
+       "block": 0,
+       "render": 60.9,
+       "style": 61.5,
+       "scripts": []
+      }
+     ]
+    },
+    "slow_events": [
+     {
+      "type": "pointerover",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerenter",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "pointerdown",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     },
+     {
+      "type": "touchstart",
+      "s": 36582.8,
+      "delay": 15.2,
+      "d": 48
+     }
+    ],
+    "network": {
+     "requests": 83.5,
+     "total_kb": 3137.5,
+     "kb_per_s": 153.9,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 3,
+       "per_min": 8.8,
+       "kb_per_req": 373.1,
+       "kb_per_s": 54.6,
+       "interval_s": 5.53,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 3,
+       "per_min": 8.8,
+       "kb_per_req": 264.7,
+       "kb_per_s": 38.7,
+       "interval_s": 5.52,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 4,
+       "per_min": 11.7,
+       "kb_per_req": 136.3,
+       "kb_per_s": 26.6,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 13,
+       "per_min": 38,
+       "kb_per_req": 13.6,
+       "kb_per_s": 8.6,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 13,
+       "per_min": 38,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.3,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 3,
+       "per_min": 8.8,
+       "kb_per_req": 23.6,
+       "kb_per_s": 3.4,
+       "interval_s": 5.54,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-buildings.js",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 59.1,
+       "kb_per_s": 2.9,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-art.js",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 56.9,
+       "kb_per_s": 2.8,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-app.js",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 56.8,
+       "kb_per_s": 2.8,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-districts.js",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 54.1,
+       "kb_per_s": 2.6,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/world-scene.js",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 38.1,
+       "kb_per_s": 1.9,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless.css",
+       "n": 1,
+       "per_min": 2.9,
+       "kb_per_req": 37.7,
+       "kb_per_s": 1.8,
+       "interval_s": null,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "scroll_normal": {
+    "label": "scroll-normal",
+    "seconds": 40.565,
+    "frames": {
+     "frames": 4800,
+     "seconds": 40.56,
+     "interval_ms": 8.334,
+     "refresh_hz": 120,
+     "fps": 118.3,
+     "mean_ms": 8.452,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 16.6,
+     "p999_ms": 16.8,
+     "worst_ms": 21,
+     "gt_8_33": 67.5,
+     "gt_16_67": 0.5,
+     "gt_33_3": 0,
+     "gt_50": 0,
+     "hitches": 67.5,
+     "hitches_per_min": 99.85,
+     "hitch_ms_per_s": 13.96,
+     "missed_frames": 68,
+     "missed_ratio": 0.014
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 5750,
+       "hitches": 7,
+       "lost_ms": 58,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3000,
+       "hitches": 6,
+       "lost_ms": 50,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3250,
+       "hitches": 5,
+       "lost_ms": 42,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 500,
+       "hitches": 5,
+       "lost_ms": 42,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 2500,
+       "hitches": 4,
+       "lost_ms": 33,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 5000,
+       "hitches": 4,
+       "lost_ms": 33,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 2000,
+       "hitches": 4,
+       "lost_ms": 33,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 6250,
+       "hitches": 2,
+       "lost_ms": 25,
+       "worst_ms": 25
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 25.1,
+       "at_s": 12.58,
+       "scroll_y": 6342
+      },
+      {
+       "ms": 16.8,
+       "at_s": 12.18,
+       "scroll_y": 6527
+      },
+      {
+       "ms": 16.8,
+       "at_s": 13.24,
+       "scroll_y": 5839
+      },
+      {
+       "ms": 16.8,
+       "at_s": 16.24,
+       "scroll_y": 3331
+      },
+      {
+       "ms": 16.8,
+       "at_s": 17.8,
+       "scroll_y": 1823
+      },
+      {
+       "ms": 16.8,
+       "at_s": 21.14,
+       "scroll_y": 702
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 183.85,
+     "script_ms_per_s": 11.6,
+     "layout_ms_per_s": 1.9,
+     "style_ms_per_s": 37.95,
+     "style_recalcs_per_s": 122.45,
+     "layouts_per_s": 6.45,
+     "heap_mb": 26.75,
+     "dom_nodes": 9135,
+     "listeners": 535.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 30.3,
+     "gpu": 28.35,
+     "browser": 2.3,
+     "total": 61.4
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [
+     {
+      "type": "pointerover",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "pointerdown",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     },
+     {
+      "type": "touchstart",
+      "s": 58519.6,
+      "delay": 11.9,
+      "d": 32
+     }
+    ],
+    "network": {
+     "requests": 154,
+     "total_kb": 6292,
+     "kb_per_s": 155.15,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 7,
+       "per_min": 10.4,
+       "kb_per_req": 373.1,
+       "kb_per_s": 64.4,
+       "interval_s": 5.65,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 7,
+       "per_min": 10.4,
+       "kb_per_req": 264.7,
+       "kb_per_s": 45.7,
+       "interval_s": 5.64,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 8,
+       "per_min": 11.8,
+       "kb_per_req": 136.3,
+       "kb_per_s": 26.9,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 27,
+       "per_min": 40,
+       "kb_per_req": 13.6,
+       "kb_per_s": 9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 27,
+       "per_min": 40,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 7,
+       "per_min": 10.4,
+       "kb_per_req": 23.6,
+       "kb_per_s": 4.1,
+       "interval_s": 5.66,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 40,
+       "per_min": 59.2,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.4,
+       "interval_s": 1,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 12,
+       "per_min": 17.8,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 7,
+       "per_min": 10.4,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.1,
+       "interval_s": 5.66,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 4,
+       "per_min": 5.9,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 10,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 8,
+       "per_min": 11.8,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "scroll_fast": {
+    "label": "scroll-fast",
+    "seconds": 24.15,
+    "frames": {
+     "frames": 2838,
+     "seconds": 24.145,
+     "interval_ms": 8.334,
+     "refresh_hz": 120,
+     "fps": 117.45,
+     "mean_ms": 8.511,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 16.7,
+     "p999_ms": 16.8,
+     "worst_ms": 25,
+     "gt_8_33": 59.5,
+     "gt_16_67": 1,
+     "gt_33_3": 0,
+     "gt_50": 0,
+     "hitches": 59,
+     "hitches_per_min": 146.65,
+     "hitch_ms_per_s": 20.85,
+     "missed_frames": 60.5,
+     "missed_ratio": 0.021
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 2000,
+       "hitches": 5,
+       "lost_ms": 42,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 5250,
+       "hitches": 4,
+       "lost_ms": 34,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3500,
+       "hitches": 4,
+       "lost_ms": 33,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 5000,
+       "hitches": 4,
+       "lost_ms": 33,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 6250,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 7000,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 2500,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 750,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 16.8,
+       "at_s": 0.49,
+       "scroll_y": 754
+      },
+      {
+       "ms": 16.8,
+       "at_s": 3.73,
+       "scroll_y": 5126
+      },
+      {
+       "ms": 16.8,
+       "at_s": 7.36,
+       "scroll_y": 6377
+      },
+      {
+       "ms": 16.8,
+       "at_s": 8.1,
+       "scroll_y": 5358
+      },
+      {
+       "ms": 16.8,
+       "at_s": 11.52,
+       "scroll_y": 547
+      },
+      {
+       "ms": 16.8,
+       "at_s": 13.03,
+       "scroll_y": 1523
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 189.3,
+     "script_ms_per_s": 11.4,
+     "layout_ms_per_s": 1.915,
+     "style_ms_per_s": 39.45,
+     "style_recalcs_per_s": 121.6,
+     "layouts_per_s": 7.05,
+     "heap_mb": 20.45,
+     "dom_nodes": 8896.5,
+     "listeners": 522.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 31.4,
+     "gpu": 30,
+     "browser": 1.9,
+     "total": 63.75
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [
+     {
+      "type": "pointerover",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "pointerdown",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     },
+     {
+      "type": "touchstart",
+      "s": 100473.1,
+      "delay": 17.5,
+      "d": 40
+     }
+    ],
+    "network": {
+     "requests": 92.5,
+     "total_kb": 3599,
+     "kb_per_s": 149.05,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 4,
+       "per_min": 9.9,
+       "kb_per_req": 373.1,
+       "kb_per_s": 61.8,
+       "interval_s": 5.67,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 4,
+       "per_min": 9.9,
+       "kb_per_req": 264.7,
+       "kb_per_s": 43.8,
+       "interval_s": 5.67,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 4,
+       "per_min": 9.9,
+       "kb_per_req": 136.3,
+       "kb_per_s": 22.6,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 16,
+       "per_min": 39.7,
+       "kb_per_req": 13.6,
+       "kb_per_s": 9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 16,
+       "per_min": 39.7,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 4,
+       "per_min": 9.9,
+       "kb_per_req": 23.6,
+       "kb_per_s": 3.9,
+       "interval_s": 5.65,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 24,
+       "per_min": 59.6,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.4,
+       "interval_s": 1,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 4,
+       "per_min": 9.9,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.1,
+       "interval_s": 5.65,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 8,
+       "per_min": 19.9,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 3,
+       "per_min": 7.5,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 10,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 5,
+       "per_min": 12.4,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "errors": [],
+   "non_get": []
+  },
+  "regions": {
+   "page_height": 10636,
+   "y0": {
+    "task_ms_per_s": 143.25,
+    "script_ms_per_s": 18.5,
+    "style_ms_per_s": 43.75,
+    "style_recalcs_per_s": 121.8,
+    "cpu_pct_of_one_core": {
+     "renderer": 27.6,
+     "gpu": 24.5,
+     "browser": 0.75,
+     "total": 53.35
+    },
+    "running_animations": 47
+   },
+   "y800": {
+    "task_ms_per_s": 179.8,
+    "script_ms_per_s": 7.65,
+    "style_ms_per_s": 45.25,
+    "style_recalcs_per_s": 121.95,
+    "cpu_pct_of_one_core": {
+     "renderer": 29.45,
+     "gpu": 19.95,
+     "browser": 0.6,
+     "total": 50.4
+    },
+    "running_animations": 49
+   },
+   "y1600": {
+    "task_ms_per_s": 181.6,
+    "script_ms_per_s": 7.15,
+    "style_ms_per_s": 44.05,
+    "style_recalcs_per_s": 121.8,
+    "cpu_pct_of_one_core": {
+     "renderer": 31.05,
+     "gpu": 28.1,
+     "browser": 0.7,
+     "total": 60.4
+    },
+    "running_animations": 43
+   },
+   "y2600": {
+    "task_ms_per_s": 152.05,
+    "script_ms_per_s": 6.95,
+    "style_ms_per_s": 32.3,
+    "style_recalcs_per_s": 121.65,
+    "cpu_pct_of_one_core": {
+     "renderer": 25.45,
+     "gpu": 24.45,
+     "browser": 0.45,
+     "total": 50.65
+    },
+    "running_animations": 29
+   },
+   "y3600": {
+    "task_ms_per_s": 156.15,
+    "script_ms_per_s": 7.3,
+    "style_ms_per_s": 32.35,
+    "style_recalcs_per_s": 121.7,
+    "cpu_pct_of_one_core": {
+     "renderer": 26.7,
+     "gpu": 24.75,
+     "browser": 0.45,
+     "total": 52.25
+    },
+    "running_animations": 29
+   },
+   "y4900": {
+    "task_ms_per_s": 156.4,
+    "script_ms_per_s": 7.05,
+    "style_ms_per_s": 32.85,
+    "style_recalcs_per_s": 121.6,
+    "cpu_pct_of_one_core": {
+     "renderer": 26.75,
+     "gpu": 26.15,
+     "browser": 0.5,
+     "total": 53.8
+    },
+    "running_animations": 30
+   },
+   "y5900": {
+    "task_ms_per_s": 147.8,
+    "script_ms_per_s": 7.35,
+    "style_ms_per_s": 32.1,
+    "style_recalcs_per_s": 121.9,
+    "cpu_pct_of_one_core": {
+     "renderer": 25.65,
+     "gpu": 24.45,
+     "browser": 1.3,
+     "total": 52.1
+    },
+    "running_animations": 30
+   },
+   "y6600": {
+    "task_ms_per_s": 145.4,
+    "script_ms_per_s": 6.95,
+    "style_ms_per_s": 32.8,
+    "style_recalcs_per_s": 121.85,
+    "cpu_pct_of_one_core": {
+     "renderer": 24.4,
+     "gpu": 20.8,
+     "browser": 0.6,
+     "total": 46.3
+    },
+    "running_animations": 31
+   },
+   "errors": []
+  },
+  "world": {
+   "desk_idle_before": {
+    "fps": 120,
+    "p99_ms": 8.6,
+    "task_ms_per_s": 143.55,
+    "running": 47
+   },
+   "descent": {
+    "label": "descent",
+    "seconds": 27.475,
+    "frames": {
+     "frames": 3281.5,
+     "seconds": 27.47,
+     "interval_ms": 8.334,
+     "refresh_hz": 120,
+     "fps": 118.9,
+     "mean_ms": 8.41,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 12.6,
+     "p999_ms": 14.259,
+     "worst_ms": 29.05,
+     "gt_8_33": 14,
+     "gt_16_67": 1,
+     "gt_33_3": 0.5,
+     "gt_50": 0,
+     "hitches": 14,
+     "hitches_per_min": 56.9,
+     "hitch_ms_per_s": 9.095,
+     "missed_frames": 16,
+     "missed_ratio": 0.009
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 7500,
+       "hitches": 2,
+       "lost_ms": 42,
+       "worst_ms": 42
+      },
+      {
+       "at_y": 2000,
+       "hitches": 3,
+       "lost_ms": 25,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3000,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 500,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 1750,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 7000,
+       "hitches": 1,
+       "lost_ms": 17,
+       "worst_ms": 25
+      },
+      {
+       "at_y": 4500,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 2500,
+       "hitches": 1,
+       "lost_ms": 8,
+       "worst_ms": 17
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 41.5,
+       "at_s": 6.81,
+       "scroll_y": 7571
+      },
+      {
+       "ms": 24.9,
+       "at_s": 6.44,
+       "scroll_y": 7112
+      },
+      {
+       "ms": 16.8,
+       "at_s": 1.61,
+       "scroll_y": 1774
+      },
+      {
+       "ms": 16.8,
+       "at_s": 2.86,
+       "scroll_y": 3035
+      },
+      {
+       "ms": 16.8,
+       "at_s": 2.41,
+       "scroll_y": 2554
+      },
+      {
+       "ms": 16.8,
+       "at_s": 4.75,
+       "scroll_y": 5079
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 193.65,
+     "script_ms_per_s": 11.05,
+     "layout_ms_per_s": 2.44,
+     "style_ms_per_s": 42.6,
+     "style_recalcs_per_s": 133.25,
+     "layouts_per_s": 7.25,
+     "heap_mb": 25,
+     "dom_nodes": 6784,
+     "listeners": 506.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 31.45,
+     "gpu": 27.55,
+     "browser": 1.6,
+     "total": 61.1
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [
+     {
+      "type": "pointerover",
+      "s": 12159.8,
+      "delay": 12.6,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerenter",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "pointerdown",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     },
+     {
+      "type": "touchstart",
+      "s": 12159.8,
+      "delay": 12.7,
+      "d": 40
+     }
+    ],
+    "network": {
+     "requests": 109.5,
+     "total_kb": 4816,
+     "kb_per_s": 182.05,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 3,
+       "per_min": 13.1,
+       "kb_per_req": 373.1,
+       "kb_per_s": 81.6,
+       "interval_s": 5.59,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 2,
+       "per_min": 8.8,
+       "kb_per_req": 264.7,
+       "kb_per_s": 38.6,
+       "interval_s": 5.6,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 3,
+       "per_min": 13.1,
+       "kb_per_req": 136.3,
+       "kb_per_s": 29.8,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 10,
+       "per_min": 43.8,
+       "kb_per_req": 13.6,
+       "kb_per_s": 9.9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 10,
+       "per_min": 43.8,
+       "kb_per_req": 6.8,
+       "kb_per_s": 5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-buildings.js",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 59.1,
+       "kb_per_s": 4.3,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-art.js",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 56.9,
+       "kb_per_s": 4.1,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-app.js",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 56.8,
+       "kb_per_s": 4.1,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/seamless-districts.js",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 54.1,
+       "kb_per_s": 3.9,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 2,
+       "per_min": 8.8,
+       "kb_per_req": 23.6,
+       "kb_per_s": 3.4,
+       "interval_s": 5.6,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/MEMBER_AVATAR_6A58318F0D21",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 43.3,
+       "kb_per_s": 3.2,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/world/world-scene.js",
+       "n": 1,
+       "per_min": 4.4,
+       "kb_per_req": 38.1,
+       "kb_per_s": 2.8,
+       "interval_s": null,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "world_boot_wait_ms": 1,
+   "world_assets": [
+    {
+     "u": "/static/world/seamless-buildings.js",
+     "kb": 59,
+     "ms": 10
+    },
+    {
+     "u": "/static/world/seamless-art.js",
+     "kb": 56,
+     "ms": 9
+    },
+    {
+     "u": "/static/world/seamless-app.js",
+     "kb": 56,
+     "ms": 11
+    },
+    {
+     "u": "/static/world/seamless-districts.js",
+     "kb": 54,
+     "ms": 9
+    },
+    {
+     "u": "/api/world/character-thumb/MEMBER_AVATAR_6A58318F0D21",
+     "kb": 43,
+     "ms": 20
+    },
+    {
+     "u": "/static/world/world-scene.js",
+     "kb": 38,
+     "ms": 9
+    },
+    {
+     "u": "/static/world/seamless.css",
+     "kb": 37,
+     "ms": 3
+    },
+    {
+     "u": "/static/world/office-world-bridge.js",
+     "kb": 13,
+     "ms": 39
+    },
+    {
+     "u": "/api/world/state",
+     "kb": 11,
+     "ms": 9
+    },
+    {
+     "u": "/static/world/office-gate.css",
+     "kb": 7,
+     "ms": 18
+    }
+   ],
+   "world_asset_total_kb": 197,
+   "arrived": {
+    "zone": "city",
+    "paused": false,
+    "residents": 3.5,
+    "docH": 11768
+   },
+   "city_idle": {
+    "label": "city-idle",
+    "seconds": 15.01,
+    "frames": {
+     "frames": 1802.5,
+     "seconds": 15.015,
+     "interval_ms": 8.333,
+     "refresh_hz": 120,
+     "fps": 120,
+     "mean_ms": 8.333,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 8.55,
+     "p999_ms": 8.6,
+     "worst_ms": 8.6,
+     "gt_8_33": 0,
+     "gt_16_67": 0,
+     "gt_33_3": 0,
+     "gt_50": 0,
+     "hitches": 0,
+     "hitches_per_min": 0,
+     "hitch_ms_per_s": 0,
+     "missed_frames": 0,
+     "missed_ratio": 0
+    },
+    "where": {
+     "hitches_by_scroll_y": [],
+     "worst_frames": [
+      {
+       "ms": 8.6,
+       "at_s": 8.13,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 0.23,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 1.27,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 1.37,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 4.24,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 2.25,
+       "scroll_y": 12057
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 184.45,
+     "script_ms_per_s": 9.55,
+     "layout_ms_per_s": 2.03,
+     "style_ms_per_s": 35.85,
+     "style_recalcs_per_s": 121.5,
+     "layouts_per_s": 6,
+     "heap_mb": 26.15,
+     "dom_nodes": 6843.5,
+     "listeners": 513.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 29.25,
+     "gpu": 18.15,
+     "browser": 0.7,
+     "total": 48.55
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [],
+    "network": {
+     "requests": 57.5,
+     "total_kb": 2275,
+     "kb_per_s": 151.5,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 373.1,
+       "kb_per_s": 74.5,
+       "interval_s": 5.65,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 264.7,
+       "kb_per_s": 52.9,
+       "interval_s": 5.6,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 136.3,
+       "kb_per_s": 27.2,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 10,
+       "per_min": 40,
+       "kb_per_req": 13.6,
+       "kb_per_s": 9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 23.6,
+       "kb_per_s": 4.7,
+       "interval_s": 5.6,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 10,
+       "per_min": 40,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 15,
+       "per_min": 59.9,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.4,
+       "interval_s": 1,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 5,
+       "per_min": 20,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.1,
+       "interval_s": 5.6,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 2,
+       "per_min": 8,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 10,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 3,
+       "per_min": 12,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "city_animations": {
+    "total": 68.5,
+    "running": 33.5
+   },
+   "city_interactions": {
+    "label": "city-interactions",
+    "seconds": 10.72,
+    "frames": {
+     "frames": 1285.5,
+     "seconds": 10.715,
+     "interval_ms": 8.334,
+     "refresh_hz": 120,
+     "fps": 119.9,
+     "mean_ms": 8.34,
+     "median_ms": 8.3,
+     "p95_ms": 8.5,
+     "p99_ms": 8.6,
+     "p999_ms": 11.447,
+     "worst_ms": 12.7,
+     "gt_8_33": 1,
+     "gt_16_67": 0,
+     "gt_33_3": 0,
+     "gt_50": 0,
+     "hitches": 1,
+     "hitches_per_min": 5.6,
+     "hitch_ms_per_s": 0.77,
+     "missed_frames": 1,
+     "missed_ratio": 0.001
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 12000,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 16.7,
+       "at_s": 0.02,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 16.5,
+       "at_s": 8.47,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.7,
+       "at_s": 2.98,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 0.12,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 2.63,
+       "scroll_y": 12057
+      },
+      {
+       "ms": 8.6,
+       "at_s": 2.99,
+       "scroll_y": 12057
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 203.35,
+     "script_ms_per_s": 11.6,
+     "layout_ms_per_s": 5.17,
+     "style_ms_per_s": 41.35,
+     "style_recalcs_per_s": 154.85,
+     "layouts_per_s": 16.85,
+     "heap_mb": 21,
+     "dom_nodes": 7050,
+     "listeners": 511.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 31.35,
+     "gpu": 19.4,
+     "browser": 0.6,
+     "total": 51.8
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0,
+     "worst_ms": 0,
+     "top": []
+    },
+    "slow_events": [],
+    "network": {
+     "requests": 41.5,
+     "total_kb": 1508.5,
+     "kb_per_s": 140.75,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 373.1,
+       "kb_per_s": 34.8,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 2,
+       "per_min": 11.2,
+       "kb_per_req": 136.3,
+       "kb_per_s": 25.4,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 264.7,
+       "kb_per_s": 24.7,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 7,
+       "per_min": 39.2,
+       "kb_per_req": 13.6,
+       "kb_per_s": 8.9,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 7,
+       "per_min": 39.2,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.4,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 2,
+       "per_min": 11.2,
+       "kb_per_req": 23.6,
+       "kb_per_s": 4.4,
+       "interval_s": 5.61,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/DOLA",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 46.6,
+       "kb_per_s": 4.3,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/DODO",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 37,
+       "kb_per_s": 3.4,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/LUDI",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 35.7,
+       "kb_per_s": 3.3,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/ERIC",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 32.7,
+       "kb_per_s": 3,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/XUEBAO",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 31.2,
+       "kb_per_s": 2.9,
+       "interval_s": null,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/world/character-thumb/RENGUIN",
+       "n": 1,
+       "per_min": 5.6,
+       "kb_per_req": 8.3,
+       "kb_per_s": 0.8,
+       "interval_s": null,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "city_interaction_latency_ms": {
+    "open_data_drawer": 18.8,
+    "close_data_drawer": 12.75,
+    "open_resident_card": 15.55,
+    "close_resident_card": 15.45,
+    "zoom_in": 17.7,
+    "zoom_out": 18.85,
+    "time_of_day": 16.75,
+    "district_menu": 15.85
+   },
+   "ascent": {
+    "label": "ascent",
+    "seconds": 7.805,
+    "frames": {
+     "frames": 912.5,
+     "seconds": 7.8,
+     "interval_ms": 8.333,
+     "refresh_hz": 120,
+     "fps": 114.25,
+     "mean_ms": 8.764,
+     "median_ms": 8.3,
+     "p95_ms": 8.543,
+     "p99_ms": 20.799,
+     "p999_ms": 39.633,
+     "worst_ms": 45.95,
+     "gt_8_33": 18.5,
+     "gt_16_67": 2.5,
+     "gt_33_3": 1,
+     "gt_50": 0.5,
+     "hitches": 18.5,
+     "hitches_per_min": 214.55,
+     "hitch_ms_per_s": 47.925,
+     "missed_frames": 24.5,
+     "missed_ratio": 0.048
+    },
+    "where": {
+     "hitches_by_scroll_y": [
+      {
+       "at_y": 5250,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 4750,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 3750,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 2750,
+       "hitches": 2,
+       "lost_ms": 17,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 1750,
+       "hitches": 2,
+       "lost_ms": 16,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 6250,
+       "hitches": 1,
+       "lost_ms": 8,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 8250,
+       "hitches": 1,
+       "lost_ms": 8,
+       "worst_ms": 17
+      },
+      {
+       "at_y": 8750,
+       "hitches": 1,
+       "lost_ms": 8,
+       "worst_ms": 17
+      }
+     ],
+     "worst_frames": [
+      {
+       "ms": 16.8,
+       "at_s": 5.18,
+       "scroll_y": 6477
+      },
+      {
+       "ms": 16.8,
+       "at_s": 6.24,
+       "scroll_y": 5343
+      },
+      {
+       "ms": 16.8,
+       "at_s": 6.18,
+       "scroll_y": 5455
+      },
+      {
+       "ms": 16.7,
+       "at_s": 3.32,
+       "scroll_y": 8499
+      },
+      {
+       "ms": 16.7,
+       "at_s": 7.64,
+       "scroll_y": 3918
+      },
+      {
+       "ms": 16.7,
+       "at_s": 2.95,
+       "scroll_y": 8964
+      }
+     ]
+    },
+    "main": {
+     "task_ms_per_s": 243.25,
+     "script_ms_per_s": 21.1,
+     "layout_ms_per_s": 5.485,
+     "style_ms_per_s": 66.65,
+     "style_recalcs_per_s": 156.6,
+     "layouts_per_s": 33.2,
+     "heap_mb": 28.1,
+     "dom_nodes": 7048,
+     "listeners": 501.5,
+     "documents": 23,
+     "frames_count": 23
+    },
+    "cpu_pct_of_one_core": {
+     "renderer": 40.4,
+     "gpu": 55.9,
+     "browser": 1.85,
+     "total": 98.8
+    },
+    "long_tasks": {
+     "count": 0,
+     "over_100": 0,
+     "sum_ms": 0,
+     "max_ms": 0,
+     "list": []
+    },
+    "loaf": {
+     "count": 0.5,
+     "worst_ms": 33.3,
+     "top": []
+    },
+    "slow_events": [
+     {
+      "type": "pointerover",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerenter",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "pointerdown",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "touchstart",
+      "s": 51650.1,
+      "delay": 13.3,
+      "d": 32
+     },
+     {
+      "type": "gotpointercapture",
+      "s": 51671.9,
+      "delay": 23.3,
+      "d": 40
+     }
+    ],
+    "network": {
+     "requests": 32,
+     "total_kb": 1490,
+     "kb_per_s": 235.3,
+     "non_get": [],
+     "top": [
+      {
+       "url": "/api/creator/presentation",
+       "n": 3,
+       "per_min": 14,
+       "kb_per_req": 373.1,
+       "kb_per_s": 87.1,
+       "interval_s": 5.63,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/event-statuses",
+       "n": 2,
+       "per_min": 9.3,
+       "kb_per_req": 264.7,
+       "kb_per_s": 41.2,
+       "interval_s": 5.59,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/operations",
+       "n": 2,
+       "per_min": 9.3,
+       "kb_per_req": 136.3,
+       "kb_per_s": 21.2,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/bionic_activity.json",
+       "n": 8,
+       "per_min": 37.4,
+       "kb_per_req": 13.6,
+       "kb_per_s": 8.5,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/codex_activity.json",
+       "n": 8,
+       "per_min": 37.4,
+       "kb_per_req": 6.8,
+       "kb_per_s": 4.2,
+       "interval_s": 1.5,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/renguin/projects",
+       "n": 2,
+       "per_min": 9.3,
+       "kb_per_req": 23.6,
+       "kb_per_s": 3.7,
+       "interval_s": 5.64,
+       "methods": "GET"
+      },
+      {
+       "url": "/status",
+       "n": 14,
+       "per_min": 65.4,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.5,
+       "interval_s": 1,
+       "methods": "GET"
+      },
+      {
+       "url": "/agents",
+       "n": 4,
+       "per_min": 18.7,
+       "kb_per_req": 0.3,
+       "kb_per_s": 0.1,
+       "interval_s": 3.46,
+       "methods": "GET"
+      },
+      {
+       "url": "/api/creator/browser-bridge/status",
+       "n": 2,
+       "per_min": 9.3,
+       "kb_per_req": 0.4,
+       "kb_per_s": 0.1,
+       "interval_s": 5.64,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-projects-v2.json",
+       "n": 2,
+       "per_min": 9.3,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": 5,
+       "methods": "GET"
+      },
+      {
+       "url": "/static/renguin-achievements.json",
+       "n": 1,
+       "per_min": 4.7,
+       "kb_per_req": 0,
+       "kb_per_s": 0,
+       "interval_s": null,
+       "methods": "GET"
+      }
+     ]
+    }
+   },
+   "back_at_desk": {
+    "scrollY": 780,
+    "world_booted": true,
+    "paused": true,
+    "near": [],
+    "world_running_animations": 0,
+    "all_running": 42.5
+   },
+   "desk_idle_after": {
+    "fps": 120,
+    "p99_ms": 8.55,
+    "task_ms_per_s": 169.6,
+    "running": 42.5
+   },
+   "world_heap_mb": 26.45,
+   "errors": []
+  }
+ }
+}

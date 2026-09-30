@@ -137,6 +137,34 @@ The Python tests want the environment variables above. Frontend logic is
 tested by loading the real files into a `vm` context in
 `tests/test_creator_truth.cjs` — put display-rule regressions there.
 
+## Performance
+
+The Office is one page with 50–100 running animations, a WebGL canvas, a 6.8 MB projection and a reader on a 120 Hz
+panel. It is measured, not guessed: `tests/perf/README.md` says how, `audit/PERFORMANCE_LOOP_LOG.md` records every change
+with the evidence behind it. Average FPS is not the measure — P99, the worst frame, main-thread spikes and long tasks are —
+and a change that trades one of those for a better average is not a fix.
+
+What the measurements taught (break one and the numbers come back):
+
+- **Never compare payloads by serialising them.** The desk asks `/api/renguin/projects?known=<digest>` and keeps the
+  parsed projection while the server answers `projection_unchanged`; change is decided by `projection_stable_digest`, never
+  by `JSON.stringify` of 6 MB. The generated registry file is revalidated by ETag (`creator-fetch-cache.js`).
+- **Server caches are bounded, invalidated by the ledger stamp, single-flight, and never keep a failure**; what they hand out
+  is read-only (`renguin_boundary.Memo`). Freshness is recomputed per request, never cached.
+- **Scroll handlers are passive and never read layout after writing it.**
+- **An animation nobody can see must not run.** Chrome samples every running animation on the main thread every frame even
+  when the compositor draws it; one on a `visibility:hidden` target cannot run on the compositor at all; and once it is more
+  than ~4000 px from the viewport each running one makes Blink rebuild the page's layers every frame. A new looping
+  animation gets an off-screen gate like the existing ones (`is-shown`, `is-amb-idle`, `is-off-screen`, `is-on-screen`,
+  `is-live`, `is-zone-live`).
+- **Loops animate `transform`, `translate`, `rotate`, `scale` and `opacity`.** `background-position`, `box-shadow`,
+  `width`, `border-color` repaint the page every frame. Check a new loop with the `blink.animations` trace (`compositeFailed`
+  on its `Animation` event) before shipping it.
+- **The pixel office's frame loop sleeps while it is off screen** (`sleepWhenOffscreen` in `index.html`); its `/status` and
+  `/agents` polls keep their pace on timers meanwhile.
+- The Office extension's never-ending `suppressUpstreamCat` frame loop costs main-thread time on every scroll position; the
+  change it needs is in `docs/performance/Office_Extension_Handoff_20260930.md`.
+
 ## Never
 
 - `git push --force`, `git reset --hard`, `git clean -fd`

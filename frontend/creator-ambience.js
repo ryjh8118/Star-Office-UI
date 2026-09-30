@@ -189,7 +189,11 @@
   /* Offscreen panels and hidden tabs stop paying for the animation. */
   function idleGuard(host) {
     let onScreen = true;
-    const mark = () => host.classList.toggle("is-amb-live", onScreen && !document.hidden);
+    const mark = () => {
+      const live = onScreen && !document.hidden;
+      host.classList.toggle("is-amb-live", live);
+      host.classList.toggle("is-amb-idle", !live);
+    };
     const observer = new IntersectionObserver(
       (entries) => {
         onScreen = entries[entries.length - 1].isIntersecting;

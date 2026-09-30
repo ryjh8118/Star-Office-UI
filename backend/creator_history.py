@@ -7,14 +7,22 @@ from flask import Blueprint, jsonify, request
 bp = Blueprint('creator_history', __name__)
 
 def snapshot():
-    from renguin_boundary import producer
+    """Every validated ledger entry. The read is shared for a moment (renguin_boundary.Memo): the desk's
+    poll asks for it from three endpoints back to back. The entries are shared, so callers must not edit them."""
+    from renguin_boundary import producer, SNAPSHOT, ledger_stamp
     authority = producer()
     root = Path(os.environ.get('RENGUIN_CANONICAL_ROOT', r'E:\Renguin_AISystem\Content_OS'))
-    entries, source = authority.snapshot(root)
-    if os.environ.get('RENGUIN_PROJECT_SOURCE_ROOTS'):
-        from workspace_ledgers import extend
-        entries, _ = extend(entries, json.loads(os.environ['RENGUIN_PROJECT_SOURCE_ROOTS']),
-                            authority.strict_json(authority.read_bytes(authority.SCHEMAS / 'OS_PROGRESS_LEDGER_ENTRY.schema.json')))
+    roots = os.environ.get('RENGUIN_PROJECT_SOURCE_ROOTS')
+
+    def read():
+        entries, source = authority.snapshot(root)
+        if roots:
+            from workspace_ledgers import extend
+            entries, _ = extend(entries, json.loads(roots),
+                                authority.strict_json(authority.read_bytes(authority.SCHEMAS / 'OS_PROGRESS_LEDGER_ENTRY.schema.json')))
+        return entries, source
+
+    (entries, source), _, _ = SNAPSHOT.get((str(root), roots or '', ledger_stamp(authority, root)), read)
     return authority, entries, source
 
 @bp.get('/api/creator/event-statuses')

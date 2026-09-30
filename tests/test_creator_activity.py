@@ -124,5 +124,71 @@ class CreatorActivityTests(unittest.TestCase):
     def test_missing_native_coverage_is_left_alone(self):
         self.assertEqual(enrich({'native_coverage':None},self.home),{'native_coverage':None})
 
+
+class JournalCacheTests(unittest.TestCase):
+    """Most native journals are not being written; reading and classifying all of them again on every poll was the cost."""
+    def setUp(self):
+        import creator_activity
+        self.module=creator_activity
+        creator_activity._CLASSIFIED.clear()
+        self.temp=tempfile.TemporaryDirectory()
+        self.home=Path(self.temp.name)
+        self.path=self.home/'.claude/projects/proj/sid.jsonl'
+        self.path.parent.mkdir(parents=True)
+    def tearDown(self):
+        self.module._CLASSIFIED.clear()
+        self.temp.cleanup()
+    def write(self,rows,mode='w'):
+        with self.path.open(mode,encoding='utf-8') as handle:
+            handle.write(''.join(json.dumps(r,ensure_ascii=False)+chr(10) for r in rows))
+    def item(self):
+        return {'agent':'CLAUDE','source':'CLAUDE_NATIVE_SESSION','provenance':{'journal':{'path':str(self.path)}}}
+    def run_enrich(self):
+        item=self.item()
+        enrich({'native_coverage':{'observations':[item]}},self.home)
+        return item
+    def test_an_unchanged_journal_is_read_once(self):
+        from unittest.mock import patch
+        self.write([tool_use(5)])
+        with patch.object(self.module,'tail',wraps=self.module.tail) as tail:
+            first=self.run_enrich(); second=self.run_enrich(); third=self.run_enrich()
+        self.assertEqual(tail.call_count,1)
+        for item in (first,second,third):
+            self.assertEqual(item['visual_activity']['state'],'WORKING')
+    def test_a_journal_that_grew_is_read_again(self):
+        self.write([tool_use(30)])
+        self.assertEqual(self.run_enrich()['visual_activity']['action'],'正在使用工具')
+        self.write([{'type':'assistant','message':{'stop_reason':'end_turn','content':[{'type':'text','text':'好了'}]},'timestamp':stamp(2)}],mode='a')
+        item=self.run_enrich()
+        self.assertEqual(item['last_work_event']['action'],'工作已完成')
+        self.assertEqual(item['visual_activity']['state'],'RECENT')
+    def test_the_clock_is_never_frozen_by_the_cache(self):
+        # A row dated ahead of the first look becomes real without the file changing, and work ends when its 90 s do.
+        from unittest.mock import patch
+        base=datetime.now(timezone.utc)
+        self.write([{'type':'assistant','message':{'stop_reason':'tool_use','content':[{'type':'tool_use'}]},'timestamp':(base+timedelta(seconds=30)).isoformat().replace('+00:00','Z')}])
+        class At(datetime):
+            moment=base
+            @classmethod
+            def now(cls,tz=None): return cls.moment
+        with patch.object(self.module,'datetime',At):
+            At.moment=base
+            self.assertNotIn('visual_activity',self.run_enrich())          # still in the future
+            At.moment=base+timedelta(seconds=45)
+            self.assertEqual(self.run_enrich()['visual_activity']['state'],'WORKING')
+            At.moment=base+timedelta(seconds=200)
+            self.assertEqual(self.run_enrich()['visual_activity']['state'],'RECENT')
+    def test_the_cache_is_bounded(self):
+        self.module._CLASSIFIED_LIMIT=3
+        try:
+            for i in range(8):
+                path=self.home/('.claude/projects/proj/s%d.jsonl'%i)
+                path.write_text(json.dumps(tool_use(5))+chr(10),encoding='utf-8')
+                item={'agent':'CLAUDE','source':'CLAUDE_NATIVE_SESSION','provenance':{'journal':{'path':str(path)}}}
+                enrich({'native_coverage':{'observations':[item]}},self.home)
+            self.assertLessEqual(len(self.module._CLASSIFIED),3)
+        finally:
+            self.module._CLASSIFIED_LIMIT=256
+
 if __name__=='__main__':
     unittest.main()

@@ -124,8 +124,18 @@ def renguin_collision():
 @app.get("/api/renguin/projects")
 def renguin_projects():
     from renguin_boundary import projects
-    result = projects(FRONTEND_DIR)
+    # `known` is the projection_stable_digest of the copy the desk already holds: when it is still current the
+    # 6 MB projection is not sent again, only the (small) envelope that says how fresh it is.
+    result = projects(FRONTEND_DIR, known=request.args.get("known") or None)
     return jsonify(result), (503 if result["status"] == "SYNC_ERROR" else 200)
+
+
+@app.get("/static/renguin-projects-v2.json")
+def renguin_projects_v2_file():
+    # The generated ~12 MB projection Content OS rewrites every few seconds. Served exactly as before, plus an
+    # ETag of its content, so a reader that already has this content is answered 304 instead of 12 MB.
+    import projection_file
+    return projection_file.serve(os.path.join(FRONTEND_DIR, "renguin-projects-v2.json"))
 
 
 @app.after_request
