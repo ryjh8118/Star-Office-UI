@@ -33,17 +33,23 @@
       origRAF(tick);
     };
   }
+  var t0 = 0;
   so.startFrames = function () {
     n = 0;
     recording = true;
     gen++;
+    // a mark in the trace, and the page clock at that instant: this is how a trace and the frames line up
+    try {
+      performance.mark("so-frames-start");
+    } catch (e) {}
+    t0 = performance.now();
     origRAF(makeTick(gen));
   };
   // frame timestamps and where the page was scrolled to at each one
   so.stopFrames = function () {
     recording = false;
     gen++;
-    return { t: Array.prototype.slice.call(frames, 0, n), y: Array.prototype.slice.call(scrolls, 0, n) };
+    return { t: Array.prototype.slice.call(frames, 0, n), y: Array.prototype.slice.call(scrolls, 0, n), t0: t0 };
   };
 
   // ------------------------------------------------------------- observers of the platform
