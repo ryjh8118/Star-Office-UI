@@ -2781,6 +2781,34 @@ function toggleBrokerPanel() {
             }
         }
 
+        // The pixel office is redrawn every frame whether or not anyone can see it. Scrolled off the screen it is a
+        // WebGL canvas drawn 120 times a second for nobody, and because it is a frame loop it also keeps the whole page
+        // producing a frame every vsync, which makes Chrome sample every running CSS animation on the main thread each
+        // time. Off screen (with room to wake before it comes back) the loop sleeps. The status and guest polls the
+        // loop drives keep their pace on timers meanwhile, and stop while the tab is hidden, as the loop's did.
+        function sleepWhenOffscreen(phaser) {
+            const stage = document.getElementById('game-container');
+            const loop = phaser && phaser.loop;
+            if (!stage || !loop || typeof loop.sleep !== 'function' || typeof loop.wake !== 'function' || typeof IntersectionObserver !== 'function') return;
+            let onScreen = true;
+            let timers = [];
+            const stopPolling = () => { timers.forEach(clearInterval); timers = []; };
+            const apply = () => {
+                stopPolling();
+                if (onScreen) {
+                    if (!loop.running) loop.wake(true);
+                    return;
+                }
+                if (loop.running) loop.sleep();
+                if (!document.hidden) timers = [setInterval(fetchStatus, FETCH_INTERVAL), setInterval(fetchGuestAgents, GUEST_AGENTS_FETCH_INTERVAL)];
+            };
+            new IntersectionObserver((entries) => {
+                onScreen = entries[entries.length - 1].isIntersecting;
+                apply();
+            }, { rootMargin: '200px 0px' }).observe(stage);
+            document.addEventListener('visibilitychange', () => { if (!onScreen) apply(); });
+        }
+
         function showRoomLoadingOverlay(baseText) {
             const overlay = document.getElementById('room-loading-overlay');
             const textEl = document.getElementById('room-loading-text');
@@ -4059,6 +4087,7 @@ function toggleBrokerPanel() {
 
         function create() {
             game = this;
+            sleepWhenOffscreen(this.game);
             hideGameSkeleton();
             officeBgSprite = this.add.image(640, 360, 'office_bg');
 
