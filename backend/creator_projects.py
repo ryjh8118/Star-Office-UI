@@ -12,7 +12,10 @@ def resolve(sources, data):
         meta = data['projects'].get(pid,{})
         sid = meta.get('source_project_id', pid if pid in by_id else None)
         source = by_id.get(sid)
-        value = deepcopy(source or card)
+        # Only the card's own top-level fields are set below, and every caller reads the result
+        # (normalize, assign). A deep copy of ~450 projects at ~14 kB each was most of what a
+        # presentation poll cost, and the source projection is shared, so nothing may edit it.
+        value = dict(source or card)
         if source is None and 'source_project_id' in meta:
             value = {k:v for k,v in card.items() if k in ('project_id','project_name','classification','project_type')}
         value.update(project_id=pid, source_project_id=sid,

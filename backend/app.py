@@ -124,8 +124,11 @@ def renguin_collision():
 @app.get("/api/renguin/projects")
 def renguin_projects():
     from renguin_boundary import projects
-    result = projects(FRONTEND_DIR)
+    # `known` is the projection_stable_digest of the copy the desk already holds: when it is still current the
+    # 6 MB projection is not sent again, only the (small) envelope that says how fresh it is.
+    result = projects(FRONTEND_DIR, known=request.args.get("known") or None)
     return jsonify(result), (503 if result["status"] == "SYNC_ERROR" else 200)
+
 
 
 @app.after_request

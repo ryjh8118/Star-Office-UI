@@ -163,6 +163,7 @@
   };
   let response = { status: "UNKNOWN", projection: null },
     lastGood = null,
+    lastGoodDigest = null,
     eventStatuses = {},
     presentation = { projects: {}, inbox: {}, order: [] },
     storeReady = false;
@@ -3237,8 +3238,11 @@
             hour12: false,
           })
         : "尚無紀錄");
+    // What changed in the projects is what the server's own digest of them says. Hashing the projection
+    // itself (6 MB, every poll) was a ~28 ms stall every ~6.6 s even when nothing had changed.
+    const projectsKey = response.projection ? response.projection_stable_digest || payload?.projects : lastGoodDigest || payload?.projects;
     const hash = JSON.stringify([
-      payload?.projects,
+      projectsKey,
       eventStatuses,
       // The environment is scenery and the revision a counter; neither changes a card.
       { ...presentation, revision: undefined, environment: undefined },
@@ -3429,7 +3433,13 @@
       browserStatus = { connected: false, observations: [] };
     }
     try {
-      const r = await json("/api/renguin/projects");
+      // Tell the server which projection is already here: when it is still current it answers with the
+      // (small) freshness envelope alone, and the 6 MB projection is neither sent nor parsed again.
+      const r = await json("/api/renguin/projects" + (lastGood && lastGoodDigest ? "?known=" + encodeURIComponent(lastGoodDigest) : ""));
+      if (r.projection_unchanged && lastGood && r.projection_stable_digest === lastGoodDigest && r.projection_meta) {
+        // Same projects, so the same array; only when it was generated moves, and freshness is judged on that.
+        r.projection = { ...lastGood, generated_at: r.projection_meta.generated_at, projection_digest: r.projection_meta.projection_digest };
+      }
       if (
         ![
           "LIVE",
@@ -3446,7 +3456,10 @@
       )
         throw Error();
       response = r;
-      if (r.projection) lastGood = r.projection;
+      if (r.projection) {
+        lastGood = r.projection;
+        lastGoodDigest = r.projection_stable_digest || null;
+      }
       window.RenguinReadiness?.projects(r);
     } catch {
       response = { status: "SYNC_ERROR", projection: null };
