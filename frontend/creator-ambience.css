@@ -466,6 +466,17 @@ body::before {
 #game-container:not(.is-amb-live) .co-amb {
   animation-play-state: paused !important;
 }
+/* The residents' idle loops (breathing, typing, the warm pool) stop with the room. Far above or below the
+   screen a running animation is not free: Chrome keeps sampling it on the main thread every frame, and past
+   what it paints ahead each one also has the page's layers rebuilt every frame. */
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character,
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character::before,
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character::after,
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character *,
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character *::before,
+#game-container.is-amb-idle #renguin-office-layer .renguin-scene-character *::after {
+  animation-play-state: paused !important;
+}
 @media (prefers-reduced-motion: reduce) {
   .co-amb,
   .co-amb *,

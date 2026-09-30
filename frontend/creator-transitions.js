@@ -911,6 +911,8 @@
       if (o.shown === on) return;
       o.shown = on;
       o.el.style.visibility = on ? "visible" : "hidden";
+      // creator-islands.css stops the loops of whatever the camera cannot see.
+      o.el.classList.toggle("is-shown", on);
     }
     function place(pose) {
       for (const o of objects) {
