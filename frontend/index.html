@@ -1557,6 +1557,11 @@
             height: 720,
             parent: 'game-container',
             pixelArt: true,
+            // Phaser swallows every wheel event over its canvas (a non-passive listener that calls preventDefault),
+            // so a reader whose pointer sits on the pixel office could not scroll the page at all, and Chrome had to
+            // wait for the main thread before it dared to scroll anywhere near it. Nothing in the office uses the
+            // wheel, so the page scrolls under the pointer like everywhere else.
+            input: { mouse: { preventDefaultWheel: false } },
             // 桌面端保持 FIT；手机端用 RESIZE，并在相机里按高度做 fit（可横向 pan）
             scale: {
                 mode: IS_TOUCH_DEVICE ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
@@ -4307,7 +4312,22 @@ function toggleBrokerPanel() {
             statusText = document.getElementById('status-text');
             placeOverlayAndStatusAtCanvasBottomLeft();
             window.addEventListener('resize', placeOverlayAndStatusAtCanvasBottomLeft);
-            window.addEventListener('scroll', placeOverlayAndStatusAtCanvasBottomLeft, { passive: true });
+            // A scroll moves the canvas but never the status text's place inside it, and the only thing
+            // that has to follow the canvas is the loading overlay, which is hidden except while a room
+            // loads. Measuring the canvas on every scroll event forced a layout each time (0.8 ms on
+            // average, 7 ms at worst, on every frame of a scroll): a scroll now only re-places the overlay
+            // when it is showing, and a change in the canvas' or its container's size re-places the rest.
+            window.addEventListener('scroll', function () {
+                const overlay = document.getElementById('room-loading-overlay');
+                if (overlay && overlay.style.display === 'flex') placeOverlayAndStatusAtCanvasBottomLeft();
+            }, { passive: true });
+            if (typeof ResizeObserver === 'function') {
+                const placer = new ResizeObserver(() => placeOverlayAndStatusAtCanvasBottomLeft());
+                const stage = document.getElementById('game-container');
+                if (stage) placer.observe(stage);
+                const canvas = stage && stage.querySelector('canvas');
+                if (canvas) placer.observe(canvas);
+            }
             coordsOverlay = document.getElementById('coords-overlay');
             coordsDisplay = document.getElementById('coords-display');
             coordsToggle = document.getElementById('coords-toggle');
