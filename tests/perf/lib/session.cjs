@@ -204,7 +204,39 @@ function netSummary(reqs, seconds) {
 // ---------------------------------------------------------------- input
 /** A reader's scroll through the browser's own input path (wheel events at the gesture's speed). */
 async function scrollGesture(s, { x, y, distance, speed, source = "mouse" }) {
+  if (source === "touch") return touchDrag(s, { x, distance, speed });
   await s.c.send("Input.synthesizeScrollGesture", { x, y, yDistance: -distance, speed, gestureSourceType: source, preventFling: true, repeatCount: 0 }, 120000);
+}
+
+/**
+ * A finger dragging the page: real touch events, at `speed` px/s, in swipes of at most 60% of the screen (a finger runs out of
+ * screen), each held still for a few frames before it lifts so that it carries no fling. Positive distance scrolls down.
+ * (Input.synthesizeScrollGesture does not scroll a page in a phone-emulated headless Chrome.)
+ */
+async function touchDrag(s, { x, distance, speed }) {
+  const vh = (s.vp.emulate && s.vp.emulate.height) || 844;
+  const dir = distance >= 0 ? 1 : -1;
+  let left = Math.abs(distance);
+  const send = (type, y) => s.c.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y: Math.round(y) }] });
+  while (left > 0) {
+    const len = Math.min(left, Math.round(vh * 0.6));
+    const y0 = dir > 0 ? vh * 0.8 : vh * 0.2;
+    await send("touchStart", y0);
+    const t0 = performance.now();
+    let moved = 0;
+    while (moved < len) {
+      moved = Math.min(len, ((performance.now() - t0) / 1000) * speed);
+      await send("touchMove", y0 - dir * moved);
+      await sleep(4);
+    }
+    for (let k = 0; k < 6; k++) {
+      await send("touchMove", y0 - dir * len);
+      await sleep(16);
+    }
+    await send("touchEnd");
+    left -= len;
+    await sleep(30);
+  }
 }
 
 async function click(s, selector, { index = 0 } = {}) {

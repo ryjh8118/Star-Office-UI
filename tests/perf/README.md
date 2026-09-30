@@ -20,8 +20,12 @@ node tests/perf/report.cjs merged.json report.md --title "..."
 node tests/perf/merge.cjs --out merged.json run1.json run2.json run3.json
 ```
 
-Scenarios (`--scenarios`): `load` (cold and warm), `idle` (30 s at the top), `scroll` (real wheel input at 1500 and
-6000 px/s, and whether the wheel scrolls over the pixel office), `projects` (the deck expanded to every project),
+Scenarios (`--scenarios`): `load` (cold and warm), `intro` (the entry film's frame pacing: held at the airlock while the
+desk loads underneath, and the way in, for a returning reader and a first visit), `idle` (30 s at the top, plus a
+10 s window with nothing of the harness running in the page), `scroll` (real wheel input: the first pass over a fresh
+page, then 1500 and 6000 px/s warm, and whether the wheel scrolls over the pixel office), `regions` (what each part of
+the page costs at rest: main thread, CPU of the whole browser and running animations at eight scroll positions),
+`projects` (the deck expanded to every project),
 `panels` (open/close cycles, latency, heap/DOM/listener growth), `character` (a DOM character walking), `world`
 (the way down, the city, its panels, the way back, and whether the world sleeps at the desk), `soak` (repeated
 Office → World → Office cycles), `backend` (sequential request latency), `spikes` (a Chrome trace and a JS sampling
@@ -40,6 +44,14 @@ loop, observer, listener and fetch by call site, and the time each one took).
   counters (recalcs, layouts, script) and on frames.
 - **CPU % of one core**: `SystemInfo.getProcessInfo` for the browser, renderer and GPU processes.
 - **interaction latency**: mouse release to the third painted frame.
+
+## Measuring on a warm browser profile
+
+A fresh Chrome profile has no GPU shader cache, so the first scroll of a run pays about a second of one-time shader
+compiles that a reader's profile does not. The harness keeps one profile between runs (`SO_PERF_PROFILE`, default a
+directory under the temp dir; `--fresh-profile` to measure a first-ever visit instead). A profile is one browser: run
+harness invocations one after another, never side by side. `scroll_first` is the first pass over a fresh page (its tiles
+have never been drawn), `scroll_normal` / `scroll_fast` the warm ones.
 
 ## Ground rules
 
