@@ -32,6 +32,11 @@ const add = (label, x) => {
 };
 const d = m.desk || {};
 const w = m.world || {};
+const film = m.intro || {};
+add("Entry film (returning reader): held at the airlock while the desk loads", film.quick && film.quick.hold);
+add("Entry film (returning reader): the way in", film.quick && film.quick.the_way_in);
+add("Entry film (first visit): held at the airlock", film.full && film.full.hold);
+add("Entry film (first visit): the way in", film.full && film.full.the_way_in);
 add("Office idle (30 s)", d.idle);
 add("Office first scroll of a fresh page (1500 px/s)", d.scroll_first);
 add("Office scroll, warm, normal (1500 px/s)", d.scroll_normal);
@@ -50,7 +55,9 @@ const addc = (label, x) => {
   if (!x || !x.main) return;
   cpuRows.push([label, n(x.main.task_ms_per_s, 0), n(x.main.script_ms_per_s, 0), n(x.main.style_ms_per_s, 0), n(x.main.style_recalcs_per_s, 0), n(x.main.layouts_per_s, 1), n(x.long_tasks && x.long_tasks.count, 0), n(x.long_tasks && x.long_tasks.max_ms, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.renderer, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.gpu, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.total, 0), n(x.main.heap_mb, 1), n(x.main.dom_nodes, 0)]);
 };
-addc("Office idle", d.idle);
+addc("Entry film held at the airlock (returning reader)", film.quick && film.quick.hold);
+addc("Office idle (frame recorder running in the page)", d.idle);
+addc("Office idle (nothing of the harness in the page)", d.idle_quiet);
 addc("Office first scroll", d.scroll_first);
 addc("Office scroll, warm, normal", d.scroll_normal);
 addc("Office scroll, warm, fast", d.scroll_fast);
@@ -61,6 +68,14 @@ addc("City idle", w.city_idle);
 addc("Ascent", w.ascent);
 L.push("## Main thread and CPU", "", "Wall-clock main-thread time swings ±25% between identical runs on this machine (see the notes on measuring); style recalculations, layouts and script time are exact counters, frames are what is felt.", "");
 table(["scenario", "main ms/s", "script", "style ms/s", "recalcs/s", "layouts/s", "long tasks", "longest", "renderer %", "GPU %", "total %", "heap MB", "nodes"], cpuRows);
+
+if (m.regions) {
+  L.push("## What each part of the page costs at rest", "", `Scrolled to each position and left alone for 6 s (the page is ${n(m.regions.page_height, 0)} px tall); nothing of the harness runs in the page. Main-thread time is wall-clock and noisy; the counters (style recalcs per second, running animations) are exact.`, "");
+  const rows = Object.entries(m.regions)
+    .filter(([k, v]) => /^y\d+$/.test(k) && v && !v.error)
+    .map(([k, v]) => [k.slice(1), n(v.task_ms_per_s, 0), n(v.script_ms_per_s, 0), n(v.style_ms_per_s, 0), n(v.style_recalcs_per_s, 0), n(v.cpu_pct_of_one_core && v.cpu_pct_of_one_core.renderer, 0), n(v.cpu_pct_of_one_core && v.cpu_pct_of_one_core.gpu, 0), n(v.cpu_pct_of_one_core && v.cpu_pct_of_one_core.total, 0), n(v.running_animations, 0)]);
+  table(["scroll y (px)", "main ms/s", "script", "style ms/s", "recalcs/s", "renderer %", "GPU %", "total %", "running animations"], rows);
+}
 
 if (d.idle && d.idle.network) {
   L.push("## What the desk asks for, at rest (30 s)", "", `Total: ${n(d.idle.network.kb_per_s, 0)} KB/s over ${d.idle.network.requests} requests. Non-GET requests: ${JSON.stringify(d.idle.network.non_get)}.`, "");

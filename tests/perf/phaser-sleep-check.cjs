@@ -18,7 +18,7 @@ const check = (name, pass, detail) => {
   const s = await S.open({ base: BASE, urlPath: "/?intro=off", viewport: "desktop" });
   try {
     await sleep(2500);
-    const loop = () => s.json(`(function(){var g=window.game.game; return {running: g.loop.running, frame: g.loop.frame, actualFps: Math.round(g.loop.actualFps)};})()`);
+    const loop = () => s.json(`(function(){var g=game.game; return {running: g.loop.running, frame: g.loop.frame, actualFps: Math.round(g.loop.actualFps)};})()`);
     const statusHits = (from) => s.reqOrder.slice(from).filter((r) => r.url.split("?")[0] === "/status").length;
     const guestHits = (from) => s.reqOrder.slice(from).filter((r) => r.url.split("?")[0] === "/agents").length;
 
@@ -80,7 +80,7 @@ const check = (name, pass, detail) => {
     await sleep(500);
     await s.navigate(BASE + "/?intro=off");
     await sleep(6000);
-    const restored = await s.json(`(function(){var g=window.game.game; return {y: Math.round(scrollY), running: g.loop.running};})()`);
+    const restored = await s.json(`(function(){var g=game.game; return {y: Math.round(scrollY), running: g.loop.running};})()`);
     if (restored.y > 1500) {
       check("Loaded already scrolled away, the loop sleeps and the page is still alive", restored.running === false, restored);
       await s.ev(`window.scrollTo({top:0,behavior:'instant'});1`);

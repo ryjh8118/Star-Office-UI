@@ -1558,6 +1558,9 @@
             height: 720,
             parent: 'game-container',
             pixelArt: true,
+            // The office plays no sound. Without this Phaser builds a Web Audio context (a 30 ms task at load) and keeps
+            // it for the life of the page.
+            audio: { noAudio: true },
             // Phaser swallows every wheel event over its canvas (a non-passive listener that calls preventDefault),
             // so a reader whose pointer sits on the pixel office could not scroll the page at all, and Chrome had to
             // wait for the main thread before it dared to scroll anywhere near it. Nothing in the office uses the

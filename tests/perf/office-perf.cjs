@@ -3,7 +3,7 @@
 // polling load, memory — measured in a real Chrome at the size and refresh rate it is used at.
 //
 //   node tests/perf/office-perf.cjs --base http://127.0.0.1:19391 --label baseline \
-//        [--scenarios load,idle,scroll,projects,panels,character,world,soak,backend,spikes,audit]
+//        [--scenarios load,intro,idle,scroll,regions,projects,panels,character,world,soak,backend,spikes,audit]
 //        [--viewport ultrawide|desktop|mobile] [--runs 3] [--out file.json] [--headed]
 //
 // Average frames per second is reported but is not the measure: p95/p99/worst frame time,
@@ -34,7 +34,7 @@ const HEADLESS = !arg("headed", false);
 const PATH = arg("path", "/?intro=off");
 const IDLE_S = Number(arg("idle-seconds", 30));
 const OUT = arg("out", null);
-const ALL = ["load", "idle", "scroll", "projects", "panels", "character", "world", "soak", "backend"];
+const ALL = ["load", "intro", "idle", "scroll", "regions", "projects", "panels", "character", "world", "soak", "backend"];
 const WANT = new Set(String(arg("scenarios", ALL.join(","))).split(",").map((x) => x.trim()).filter(Boolean));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -148,6 +148,12 @@ async function desk(ctx) {
         m.animations = await s.json(`(function(){var a=document.getAnimations(); return {total:a.length, running:a.filter(function(x){return x.playState==='running'}).length};})()`);
         m.layers_note = "see spikes/audit for attribution";
         return m;
+      });
+      // The frame recorder is itself a requestAnimationFrame loop with a scroll read in it; the cost of the page alone
+      // is this window, taken with nothing of the harness running in the page.
+      out.idle_quiet = await guard("idle-quiet", async () => {
+        await toTop(s);
+        return S.measure(s, () => sleep(10000), { label: "idle-quiet", frames: false });
       });
     }
     if (WANT.has("scroll")) {
@@ -394,8 +400,8 @@ async function world(ctx) {
       )
     );
     await sleep(2500);
-    out.back_at_desk = await s.json(`(function(){var d=window.RenguinSeamlessWorld.debug(); var running=document.getAnimations().filter(function(a){var t=a.effect&&a.effect.target; return a.playState==='running' && t && t.closest && t.closest('#sw-world');}).length;
-      return {scrollY: Math.round(scrollY), paused: d.paused, near: d.near, world_running_animations: running, all_running: document.getAnimations().filter(function(a){return a.playState==='running'}).length};})()`);
+    out.back_at_desk = await s.json(`(function(){var d=window.RenguinSeamlessWorld&&window.RenguinSeamlessWorld.debug(); var running=document.getAnimations().filter(function(a){var t=a.effect&&a.effect.target; return a.playState==='running' && t && t.closest && t.closest('#sw-world');}).length;
+      return {scrollY: Math.round(scrollY), world_booted: !!d, paused: d&&d.paused, near: d&&d.near, world_running_animations: running, all_running: document.getAnimations().filter(function(a){return a.playState==='running'}).length};})()`);
     log("  desk idle after");
     const idleAfter = await S.measure(s, () => sleep(8000), { label: "desk-idle-after" });
     out.desk_idle_after = { fps: idleAfter.frames.fps, p99_ms: idleAfter.frames.p99_ms, task_ms_per_s: idleAfter.main.task_ms_per_s, running: out.back_at_desk.all_running };
@@ -403,6 +409,78 @@ async function world(ctx) {
   } finally {
     out.errors = s.errors.slice(0, 8);
     await s.shutdown();
+  }
+  return out;
+}
+
+/** What each part of the page costs while nobody touches it, as a reader has it (nothing of the harness in the page). */
+async function regions() {
+  const ys = String(arg("regions", "0,800,1600,2600,3600,4900,5900,6600")).split(",").map(Number);
+  const s = await S.open({ base: BASE, urlPath: PATH, viewport: VIEWPORT, headless: HEADLESS });
+  const out = {};
+  try {
+    await sleep(4500);
+    const g = await deskGeometry(s);
+    out.page_height = g.height;
+    for (const y of ys) {
+      if (y > g.height - g.vh + 60) continue;
+      log("  region y =", y);
+      out["y" + y] = await guard("region-" + y, async () => {
+        await s.ev(`window.scrollTo({top:${y},behavior:'instant'});1`);
+        await sleep(2500);
+        const m = await S.measure(s, () => sleep(6000), { label: "y" + y, frames: false });
+        const running = await s.ev(`document.getAnimations().filter(function(a){return a.playState==='running'}).length`);
+        return { task_ms_per_s: m.main.task_ms_per_s, script_ms_per_s: m.main.script_ms_per_s, style_ms_per_s: m.main.style_ms_per_s, style_recalcs_per_s: m.main.style_recalcs_per_s, cpu_pct_of_one_core: m.cpu_pct_of_one_core, running_animations: running };
+      });
+    }
+  } finally {
+    out.errors = s.errors.slice(0, 5);
+    await s.shutdown();
+  }
+  return out;
+}
+
+/** The entry film a reader sees on every visit: held at the airlock while the desk loads underneath, then the way in. */
+async function intro() {
+  const out = {};
+  for (const mode of ["quick", "full"]) {
+    const s = await S.open({ base: BASE, urlPath: null, viewport: VIEWPORT, headless: HEADLESS });
+    try {
+      // record from the first script of the page: the film starts before the load event
+      await s.c.send("Page.addScriptToEvaluateOnNewDocument", { source: "window.__so && window.__so.startFrames && window.__so.startFrames();" });
+      await s.navigate(BASE + "/?intro=" + mode, { wait: null });
+      let held = false;
+      for (let i = 0; i < 300 && !held; i++) {
+        held = await s.ev(`!!document.querySelector('.so-intro.is-waiting')`).catch(() => false);
+        if (!held) await sleep(50);
+      }
+      const holdFrom = await s.ev(`performance.now()`).catch(() => 0);
+      await sleep(3500);
+      const clickAt = await s.ev(`(function(){ var b=document.querySelector('.so-intro-enter'); if(b) b.click(); return performance.now(); })()`);
+      let gone = false;
+      for (let i = 0; i < 200 && !gone; i++) {
+        gone = await s.ev(`!document.querySelector('.so-intro')`).catch(() => false);
+        if (!gone) await sleep(50);
+      }
+      const endAt = await s.ev(`performance.now()`);
+      await sleep(600);
+      const rec = await s.json(`window.__so.stopFrames()`);
+      const lt = await s.json(`window.__so.longtasks`);
+      const window_ = (a, b) => {
+        const t = rec.t.filter((x) => x >= a && x <= b);
+        const longs = lt.filter((l) => l.s >= a && l.s <= b).map((l) => l.d);
+        return { frames: t.length > 3 ? frameStats(t) : null, long_tasks: { count: longs.length, sum_ms: round(longs.reduce((x, y) => x + y, 0), 0), max_ms: longs.length ? Math.max(...longs) : 0 } };
+      };
+      out[mode] = {
+        held_at_the_door: held,
+        hold: window_(holdFrom, clickAt),
+        the_way_in: window_(clickAt, endAt),
+        the_way_in_ms: round(endAt - clickAt, 0),
+        errors: s.errors.slice(0, 3),
+      };
+    } finally {
+      await s.shutdown();
+    }
   }
   return out;
 }
@@ -562,7 +640,9 @@ async function main() {
     log(`run ${r + 1}/${RUNS}`);
     const one = {};
     if (WANT.has("load")) one.load = await guard("load", load);
+    if (WANT.has("intro")) one.intro = await guard("intro", intro);
     if (["idle", "scroll", "projects", "panels", "character"].some((k) => WANT.has(k))) one.desk = await guard("desk", desk);
+    if (WANT.has("regions")) one.regions = await guard("regions", regions);
     if (WANT.has("world")) one.world = await guard("world", world);
     if (WANT.has("soak")) one.soak = await guard("soak", soak);
     if (WANT.has("backend")) one.backend = await guard("backend", backend);
@@ -592,4 +672,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { load, desk, world, soak, backend, spikes, audit, aggregate };
+module.exports = { load, intro, desk, regions, world, soak, backend, spikes, audit, aggregate };
