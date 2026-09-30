@@ -3612,6 +3612,15 @@
       "一起讓故事成形的夥伴",
       "co-members",
     );
+    // The lodge's loops (creator-lodge.css) rest while it is off the screen.
+    if (typeof IntersectionObserver === "function")
+      new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries)
+            entry.target.classList.toggle("is-off-screen", !entry.isIntersecting);
+        },
+        { rootMargin: "200px 0px" },
+      ).observe(membersRoot.closest("section"));
     // The lodge is the mother island: the rock it rests on hangs under its members.
     const homeBase = window.CreatorEnvironment?.under?.("home");
     if (homeBase) membersRoot.closest("section").append(homeBase);

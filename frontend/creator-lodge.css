@@ -180,14 +180,14 @@
 .co-member.is-running::after {
   display: none;
 }
-/* creator-environment.js marks a zone live while it is within 80px of the screen; the members' loops (the
-   working pulse, the running portrait) wait for it, as the yards and crystals do. */
-.co-section#office-members:not(.is-zone-live) .co-member,
-.co-section#office-members:not(.is-zone-live) .co-member::before,
-.co-section#office-members:not(.is-zone-live) .co-member::after,
-.co-section#office-members:not(.is-zone-live) .co-member *,
-.co-section#office-members:not(.is-zone-live) .co-member *::before,
-.co-section#office-members:not(.is-zone-live) .co-member *::after {
+/* creator-office.js marks the lodge is-off-screen while it is more than a screen's edge away; the members' loops
+   (the working pulse, the running portrait) rest meanwhile, as the yards' and crystals' do. */
+.co-section#office-members.is-off-screen .co-member,
+.co-section#office-members.is-off-screen .co-member::before,
+.co-section#office-members.is-off-screen .co-member::after,
+.co-section#office-members.is-off-screen .co-member *,
+.co-section#office-members.is-off-screen .co-member *::before,
+.co-section#office-members.is-off-screen .co-member *::after {
   animation-play-state: paused !important;
 }
 @keyframes co-lodge-beat {
