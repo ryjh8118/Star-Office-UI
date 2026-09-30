@@ -3,6 +3,7 @@
 What must never happen: a stale answer that outlives its window, a projection reported unchanged when a
 project changed, freshness that stops moving because an answer was reused, or a failure that is remembered.
 """
+import os
 import sys
 import tempfile
 import threading
@@ -76,6 +77,8 @@ class BoundaryMemoTests(unittest.TestCase):
         ]
         for p in self.patches:
             p.start()
+        # the ledger snapshot is read without the per-project source roots the runtime sets (they need Content OS's own modules)
+        os.environ.pop('RENGUIN_PROJECT_SOURCE_ROOTS', None)
         rb.PROJECTION.clear()
         rb.SNAPSHOT.clear()
 
