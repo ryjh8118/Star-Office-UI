@@ -121,7 +121,9 @@ const check = (name, pass, detail) => {
     const back = await cards();
     check("When the server answers again the notice goes and the real projection is back", !back.notice && back.n === before.n && back.text === before.text, back);
 
-    check("No page errors", s.errors.length === 0, s.errors.slice(0, 3));
+    // the 503 the browser logs is the one this check feeds it on purpose; anything else is a real error
+    const real = s.errors.filter((e) => !/^log:Failed to load resource: the server responded with a status of 503/.test(e));
+    check("No page errors (other than the 503 this check itself injects)", real.length === 0, real.slice(0, 3));
   } finally {
     await s.shutdown();
   }
