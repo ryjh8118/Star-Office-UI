@@ -13,6 +13,7 @@ Nothing here writes, or decides anything about, the file.
 import hashlib
 import re
 import threading
+import time
 from pathlib import Path
 
 from flask import Response, abort, request, send_file
@@ -50,9 +51,15 @@ def matches(header, tag):
 
 def serve(path):
     path = Path(path)
-    try:
-        tag = semantic_etag(path)
-    except OSError:
+    tag = None
+    for attempt in range(3):
+        try:
+            tag = semantic_etag(path)
+            break
+        except OSError:
+            # the producer replaces the file atomically; for an instant Windows can refuse a reader
+            time.sleep(0.03)
+    if tag is None:
         abort(404)
     if matches(request.headers.get('If-None-Match'), tag):
         return Response(status=304, headers={'ETag': tag})
