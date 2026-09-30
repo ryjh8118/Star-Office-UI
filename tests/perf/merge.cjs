@@ -24,7 +24,8 @@ const thin = (v) => {
 };
 const result = {
   meta: { ...parsed[0].meta, runs: runs.length, merged_from: files.map((f) => f.split(/[\/]/).pop()) },
-  runs: slim ? runs.map(thin) : runs,
+  // the diagnostic reads (spikes, audit) are kept whole for the first run that has them: they are what the report explains from
+  runs: slim ? runs.map((r, i) => Object.assign(thin(r), ["spikes", "audit"].reduce((keep, k) => (r[k] && runs.findIndex((x) => x[k]) === i ? { ...keep, [k]: r[k] } : keep), {}))) : runs,
   median: aggregate(runs.map((r) => JSON.parse(JSON.stringify(r)))),
 };
 if (out) fs.writeFileSync(out, JSON.stringify(result, null, 1));

@@ -33,8 +33,9 @@ const add = (label, x) => {
 const d = m.desk || {};
 const w = m.world || {};
 add("Office idle (30 s)", d.idle);
-add("Office scroll, normal (1500 px/s)", d.scroll_normal);
-add("Office scroll, fast (6000 px/s)", d.scroll_fast);
+add("Office first scroll of a fresh page (1500 px/s)", d.scroll_first);
+add("Office scroll, warm, normal (1500 px/s)", d.scroll_normal);
+add("Office scroll, warm, fast (6000 px/s)", d.scroll_fast);
 add("Project list: expanded deck scroll", d.projects && d.projects.scroll_through_expanded);
 add("Character walking (DOM)", d.character && d.character.walking);
 add("Office → World descent", w.descent);
@@ -50,8 +51,9 @@ const addc = (label, x) => {
   cpuRows.push([label, n(x.main.task_ms_per_s, 0), n(x.main.script_ms_per_s, 0), n(x.main.style_ms_per_s, 0), n(x.main.style_recalcs_per_s, 0), n(x.main.layouts_per_s, 1), n(x.long_tasks && x.long_tasks.count, 0), n(x.long_tasks && x.long_tasks.max_ms, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.renderer, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.gpu, 0), n(x.cpu_pct_of_one_core && x.cpu_pct_of_one_core.total, 0), n(x.main.heap_mb, 1), n(x.main.dom_nodes, 0)]);
 };
 addc("Office idle", d.idle);
-addc("Office scroll, normal", d.scroll_normal);
-addc("Office scroll, fast", d.scroll_fast);
+addc("Office first scroll", d.scroll_first);
+addc("Office scroll, warm, normal", d.scroll_normal);
+addc("Office scroll, warm, fast", d.scroll_fast);
 addc("Expanded deck scroll", d.projects && d.projects.scroll_through_expanded);
 addc("Character walking", d.character && d.character.walking);
 addc("Descent to the World", w.descent);
@@ -93,20 +95,20 @@ const runsCount = (data.runs || []).length;
 const spikes = (data.runs || []).map((r) => r.spikes).filter((s) => s && !s.error)[0];
 if (spikes) {
   L.push("## Main-thread spikes at rest (trace + JS profile, first run)", "", `${spikes.over_threshold} tasks over ${spikes.threshold_ms} ms in ${spikes.seconds} s = **${n(spikes.spikes_per_min, 0)}/min**, ${n(spikes.spike_ms_total, 0)} ms in total.`, "");
-  table(["family (what ran)", "count", "total ms", "longest ms", "period s"], spikes.families.slice(0, 10).map((f) => [f.family.replace(/\|/g, "/"), n(f.count, 0), n(f.total_ms, 0), n(f.max_ms, 1), n(f.period_s, 2)]));
+  table(["family (what ran)", "count", "total ms", "longest ms", "period s"], (spikes.families || []).slice(0, 10).map((f) => [f.family.replace(/\|/g, "/"), n(f.count, 0), n(f.total_ms, 0), n(f.max_ms, 1), n(f.period_s, 2)]));
   L.push("Who owns the JavaScript time (sampled, ms per second):", "");
-  table(["owner", "ms/s"], spikes.js_owners.slice(0, 10).map((o) => [o.owner.replace(/\|/g, "/"), n(o.ms_per_s, 2)]));
+  table(["owner", "ms/s"], (spikes.js_owners || []).slice(0, 10).map((o) => [o.owner.replace(/\|/g, "/"), n(o.ms_per_s, 2)]));
 }
 
 const audit = (data.runs || []).map((r) => r.audit).filter((a) => a && !a.error)[0];
 if (audit) {
   L.push("## Audit: timers, animation-frame loops, observers, listeners (20 s at rest)", "");
   L.push(`Counts in the window: ${JSON.stringify(audit.counts)}; live listeners in the page: ${audit.dom_listeners}. Passive-ness of listeners added: ${JSON.stringify(audit.passive)}.`, "");
-  table(["kind @ interval — site", "live"], Object.entries(audit.activeTimers).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
-  table(["animation-frame loop", "live"], Object.entries(audit.activeRafs).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
-  table(["observer", "live"], Object.entries(audit.liveObservers).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
+  table(["kind @ interval — site", "live"], Object.entries(audit.activeTimers || {}).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
+  table(["animation-frame loop", "live"], Object.entries(audit.activeRafs || {}).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
+  table(["observer", "live"], Object.entries(audit.liveObservers || {}).map(([k, v]) => [k.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, ""), n(v, 0)]));
   L.push("Work by call site while the desk is at rest:", "");
-  table(["kind", "site", "calls", "total ms", "avg ms", "max ms"], audit.sites.slice(0, 14).map((s) => [s.kind.replace(/\|/g, "/"), s.site.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, "").slice(0, 96), n(s.calls, 0), n(s.total_ms, 1), n(s.avg_ms, 3), n(s.max_ms, 1)]));
+  table(["kind", "site", "calls", "total ms", "avg ms", "max ms"], (audit.sites || []).slice(0, 14).map((s) => [s.kind.replace(/\|/g, "/"), s.site.replace(/\|/g, "/").replace(/\?v=[^:)]+/g, "").slice(0, 96), n(s.calls, 0), n(s.total_ms, 1), n(s.avg_ms, 3), n(s.max_ms, 1)]));
   if (audit.fetchByUrl && audit.fetchByUrl.length) table(["fetch", "count in 20 s", "total ms", "max ms"], audit.fetchByUrl.map((f) => [`\`${f.url}\``, n(f.n, 0), n(f.total_ms, 0), n(f.max_ms, 0)]));
 }
 

@@ -98,7 +98,11 @@ class Client {
 
 async function launchChrome({ headless = true, width = 3413, height = 960, dpr = 1.5, args = [], scrollbars = true } = {}) {
   const port = await freePort();
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "so-perf-"));
+  // A fresh profile has no GPU shader cache, so its first scroll pays for compiling every shader the page needs, once
+  // per run; a reader's profile has them. SO_PERF_PROFILE names a profile directory to keep between runs.
+  const kept = process.env.SO_PERF_PROFILE || null;
+  const userDataDir = kept || fs.mkdtempSync(path.join(os.tmpdir(), "so-perf-"));
+  if (kept) fs.mkdirSync(kept, { recursive: true });
   const flags = [
     headless ? "--headless=new" : null,
     `--remote-debugging-port=${port}`,
@@ -166,7 +170,7 @@ async function launchChrome({ headless = true, width = 3413, height = 960, dpr =
       try {
         spawnSync("taskkill", ["/PID", String(proc.pid), "/T", "/F"], { stdio: "ignore" });
       } catch {}
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 20 && !kept; i++) {
         try {
           fs.rmSync(userDataDir, { recursive: true, force: true, maxRetries: 3 });
           break;

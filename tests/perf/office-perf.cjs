@@ -22,6 +22,10 @@ const arg = (name, dflt) => {
   const i = argv.indexOf("--" + name);
   return i >= 0 ? (argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : true) : dflt;
 };
+// A fresh Chrome profile has no GPU shader cache, so its first scroll pays about a second of one-time shader compiles that a
+// reader's profile does not. The harness therefore keeps one profile between runs (sequential runs only: a profile is one
+// browser); --fresh-profile measures that first-ever visit instead.
+if (!process.env.SO_PERF_PROFILE && !argv.includes("--fresh-profile")) process.env.SO_PERF_PROFILE = path.join(require("node:os").tmpdir(), "so-perf-profile");
 const BASE = String(arg("base", "http://127.0.0.1:19391")).replace(/\/$/, "");
 const LABEL = arg("label", "run");
 const VIEWPORT = arg("viewport", "ultrawide");
@@ -162,6 +166,22 @@ async function desk(ctx) {
         const y = await s.ev("Math.round(scrollY)");
         await toTop(s);
         return y > 0;
+      });
+      // The first scroll of a page is not the tenth: its tiles have never been drawn. Measured alone (down and up once),
+      // then the warm ones.
+      out.scroll_first = await guard("scroll-first", async () => {
+        await toTop(s);
+        log("  scroll first pass 1500px/s");
+        const m = await S.measure(
+          s,
+          async () => {
+            await S.scrollGesture(s, { x: pointerX(s), y: g.vh / 2, distance: limit, speed: 1500, source: source(s) });
+            await S.scrollGesture(s, { x: pointerX(s), y: g.vh / 2, distance: -limit, speed: 1500, source: source(s) });
+          },
+          { label: "scroll-first" }
+        );
+        await toTop(s);
+        return m;
       });
       for (const [name, speed] of [["normal", 1500], ["fast", 6000]]) {
         log("  scroll", name, speed + "px/s");
